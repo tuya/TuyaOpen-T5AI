@@ -814,7 +814,10 @@ static int hostap_sta_add(void *priv, struct hostapd_sta_add_params *params)
 	if (params->he_capab)
 		flags |= STA_HE_CAPA;
 	if (params->flags & WPA_STA_WMM)
+	{
+		param.u.add_sta.qos_info = params->qosinfo;
 		flags |= STA_QOS_CAPA;
+	}
 	if (params->flags & WPA_STA_MFP)
 		flags |= STA_MFP_CAPA;
 	param.u.add_sta.flags = flags;

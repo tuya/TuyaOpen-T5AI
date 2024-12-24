@@ -45,7 +45,7 @@
     !defined(MBEDTLS_CHACHAPOLY_C)
 int main(void)
 {
-    mbedtls_printf("MBEDTLS_MD_C and/or "
+    printf("MBEDTLS_MD_C and/or "
            "MBEDTLS_AES_C and/or MBEDTLS_GCM_C and/or "
            "MBEDTLS_CHACHAPOLY_C not defined\r\n");
     return 0;
@@ -81,11 +81,11 @@ const unsigned char key_bytes[32] = { 0x2a };
 /* Print the contents of a buffer in hex */
 void print_buf(const char *title, unsigned char *buf, size_t len)
 {
-    mbedtls_printf("%s:", title);
+    printf("%s:", title);
     for (size_t i = 0; i < len; i++) {
-        mbedtls_printf(" %02x", buf[i]);
+        printf(" %02x", buf[i]);
     }
-    mbedtls_printf("\n");
+    printf("\n");
 }
 
 /* Run an Mbed TLS function and bail out if it fails.
@@ -166,7 +166,7 @@ static void aead_info(const mbedtls_cipher_context_t *ctx, size_t tag_len)
                          : mode == MBEDTLS_MODE_CHACHAPOLY ? "ChachaPoly"
                          : "???";
 
-    mbedtls_printf("%s, %d, %s, %u\n",
+    printf("%s, %d, %s, %u\n",
            ciph, key_bits, mode_str, (unsigned) tag_len);
 }
 

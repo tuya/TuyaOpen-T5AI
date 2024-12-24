@@ -874,6 +874,9 @@ int rw_msg_send_me_sta_add(struct add_sta_st *param,
 	req->vif_idx = param->ap_vif_idx;
 	req->aid = param->aid;
 	req->flags = param->flags; // 1:STA_QOS_CAPA 2: STA_HT_CAPA BIT(3)STA_MFP_CAPA
+	req->uapsd_queues = param->qos_info & 0xf;
+	req->max_sp_len = (((param->qos_info & 0x60) >> 5) * 2);
+	RWNX_LOGI("%s qos_info = 0x%x req->uapsd_queues = 0x%x; max_sp_len = %d\n", __FUNCTION__, param->qos_info, req->uapsd_queues, req->max_sp_len);
 
 	RWNX_LOGI("hapd_intf_sta_add:%d, vif:%d\r\n", req->aid, req->vif_idx);
 
@@ -1035,9 +1038,18 @@ int rw_msg_send_scanu_req(SCAN_PARAM_T *scan_param)
 			req->chan[i].flags = 0;
 			req->chan[i].freq = *freqs;
 			req->chan[i].tx_power = VIF_UNDEF_POWER;
+
+			#if CONFIG_WIFI_AUTO_COUNTRY_CODE
+			// If auto mode, disable 12, 13 active scan
+			if (country_code_policy_is_auto() &&
+					(req->chan[i].freq == 2467 || req->chan[i].freq == 2472 || req->chan[i].freq == 2484)) {
+					req->chan[i].flags |= CHAN_NO_IR;
+					// os_printf("XXX disable IR chan for %d\n", req->chan[i].freq);
+			}
+			#endif // CONFIG_WIFI_AUTO_COUNTRY_CODE
 		}
 		req->chan_cnt = i;
-		//RWNX_LOGI("Using specified freqs\n");
+		// RWNX_LOGI("XXX Using specified freqs, chan_cnt %d\n", req->chan_cnt);
 	}
 
 	os_memcpy(&req->bssid, &scan_param->bssid, sizeof(req->bssid));
@@ -1354,6 +1366,10 @@ int rw_msg_send_sm_connect_req(CONNECT_PARAM_T *sme, void *cfm)
 	os_memcpy(req->ssid.array, sme->ssid.array, sme->ssid.length);
 	os_memcpy(&req->bssid, &sme->bssid, sizeof(sme->bssid));
 
+#if CONFIG_UAPSD
+	//(bit0: VO, bit1: VI, bit2: BK, bit3: BE, bit5-6: max_sp_len)
+	req->uapsd_queues = 0x2f;//default config
+#endif
 	req->vif_idx = sme->vif_idx;
 	req->chan.band = sme->chan.band;
 	req->chan.flags = sme->chan.flags;
@@ -1759,4 +1775,37 @@ int rw_msg_send_ftm_start_req(uint8_t vif_idx, uint8_t ftm_per_burst, uint8_t nb
 	return rw_msg_send(req, 1, FTM_DONE_IND, ind);
 }
 #endif
+
+int rw_msg_send_set_td_para_req(uint8_t reset, uint8_t def_td_intv, uint8_t dtim10_td_intv, uint8_t td_reduce_intv)
+{
+	struct mm_set_td_para_req *req;
+
+	/* Build the MM_SET_TD_PARA_REQ message */
+	req = ke_msg_alloc(MM_SET_TD_PARA_REQ, TASK_MM, TASK_API,
+                          sizeof(struct mm_set_td_para_req));
+	if (!req)
+		return -ENOMEM;
+
+	/* Set parameters */
+	req->reset = reset;
+	req->td_default_intv_tu = def_td_intv;
+	req->dtim10_td_default_intv_tu = dtim10_td_intv;
+	req->td_reduce_intv_tu = td_reduce_intv;
+
+	/* Send the MM_SET_TD_PARA_REQ message to LMAC FW */
+	return rw_msg_send(req, 1, MM_SET_TD_PARA_CFM, NULL);
+}
+
+
+int rw_msg_send_get_td_para_req(void *cfm)
+{
+	void *req;
+	req = ke_msg_alloc(MM_GET_TD_PARA_REQ, TASK_MM, TASK_API,0);
+
+	if (!req)
+		return BK_ERR_NO_MEM;
+
+	return rw_msg_send(req, 1, MM_GET_TD_PARA_CFM, cfm);
+}
+
 

@@ -36,14 +36,26 @@ uint32_t aon_pmu_ll_get_r0(void);
 void aon_pmu_ll_set_r0_memchk_bps(uint32_t v);
 
 uint32_t aon_pmu_ll_get_r0_memchk_bps(void);
+uint32_t aon_pmu_ll_get_r7b_memchk_bps(void);
 
 void aon_pmu_ll_set_r0_fast_boot(uint32_t v);
 
 uint32_t aon_pmu_ll_get_r0_fast_boot(void);
+uint32_t aon_pmu_ll_get_r7b_fast_boot(void);
 
 void aon_pmu_ll_set_r0_gpio_sleep(uint32_t v);
 
 uint32_t aon_pmu_ll_get_r0_gpio_sleep(void);
+uint32_t aon_pmu_ll_get_r7b_gpio_sleep(void);
+
+void aon_pmu_ll_set_r0_ota_finish(uint32_t v);
+
+uint32_t aon_pmu_ll_get_r0_ota_finish(void);
+uint32_t aon_pmu_ll_get_r7b_ota_finish(void);
+
+void aon_pmu_ll_set_r0_ota_finish(uint32_t v);
+
+uint32_t aon_pmu_ll_get_r0_ota_finish(void);
 
 //reg r1:
 

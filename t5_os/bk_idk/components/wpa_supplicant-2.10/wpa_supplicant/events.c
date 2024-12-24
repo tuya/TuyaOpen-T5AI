@@ -774,6 +774,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 		return 1;
 	}
 
+#if !BK_SUPPLICANT
 #ifdef CONFIG_IEEE80211W
 	if (wpas_get_ssid_pmf(wpa_s, ssid) == MGMT_FRAME_PROTECTION_REQUIRED &&
 	    (!(ssid->key_mgmt & WPA_KEY_MGMT_OWE) || ssid->owe_only)) {
@@ -783,6 +784,7 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 		return 0;
 	}
 #endif /* CONFIG_IEEE80211W */
+#endif
 
 	wpa_ie = wpa_bss_get_vendor_ie(bss, WPA_IE_VENDOR_TYPE);
 	while ((ssid->proto & WPA_PROTO_WPA) && wpa_ie) {
@@ -848,6 +850,18 @@ static int wpa_supplicant_ssid_bss_match(struct wpa_supplicant *wpa_s,
 				"   selected based on WPA IE");
 		return 1;
 	}
+
+#if BK_SUPPLICANT
+#ifdef CONFIG_IEEE80211W
+	if (wpas_get_ssid_pmf(wpa_s, ssid) == MGMT_FRAME_PROTECTION_REQUIRED &&
+		(!(ssid->key_mgmt & WPA_KEY_MGMT_OWE) || ssid->owe_only)) {
+		if (debug_print)
+			wpa_dbg(wpa_s, MSG_DEBUG,
+				"	skip - MFP Required but network not MFP Capable");
+		return 0;
+	}
+#endif /* CONFIG_IEEE80211W */
+#endif
 
 	if ((ssid->key_mgmt & WPA_KEY_MGMT_IEEE8021X_NO_WPA) && !wpa_ie &&
 	    !rsn_ie) {
@@ -3159,6 +3173,12 @@ static int wpa_supplicant_use_own_rsne_params(struct wpa_supplicant *wpa_s,
 }
 
 
+#if BK_SUPPLICANT
+extern wifi_connect_tick_t sta_tick;
+extern bool g_bk_ap_connected;
+#endif
+
+
 static int wpa_supplicant_event_associnfo(struct wpa_supplicant *wpa_s,
 					  union wpa_event_data *data)
 {
@@ -3228,6 +3248,11 @@ static int wpa_supplicant_event_associnfo(struct wpa_supplicant *wpa_s,
 				 BAND_2_4_GHZ);
 			wpa_s->connection_he = req_elems.he_capabilities &&
 				resp_elems.he_capabilities;
+#if BK_SUPPLICANT
+			if (resp_elems.bk_vsie && resp_elems.bk_vsie_len) {
+				g_bk_ap_connected = true;
+			}
+#endif
 		}
 	}
 
@@ -3536,9 +3561,6 @@ static void wpas_fst_update_mb_assoc(struct wpa_supplicant *wpa_s,
 #endif /* CONFIG_FST */
 }
 
-#if BK_SUPPLICANT
-extern wifi_connect_tick_t sta_tick;
-#endif
 static void wpa_supplicant_event_assoc(struct wpa_supplicant *wpa_s,
 				       union wpa_event_data *data)
 {
@@ -3569,6 +3591,9 @@ static void wpa_supplicant_event_assoc(struct wpa_supplicant *wpa_s,
 
 #ifdef CONFIG_IEEE80211R
 	ft_completed = wpa_ft_is_completed(wpa_s->wpa);
+#endif
+#if BK_SUPPLICANT
+	g_bk_ap_connected = false;
 #endif
 	if (data && wpa_supplicant_event_associnfo(wpa_s, data) < 0)
 		return;

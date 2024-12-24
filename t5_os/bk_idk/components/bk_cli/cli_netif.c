@@ -3,6 +3,7 @@
 #include "bk_private/bk_wifi.h"
 #if CONFIG_LWIP
 #include "lwip/ping.h"
+#include "lwip/etharp.h"
 #endif
 #include <components/netif.h>
 #include "cli.h"
@@ -105,6 +106,50 @@ error:
 	return;
 }
 
+#if CONFIG_LWIP
+extern int hwaddr_aton(const char *txt, u8 *addr);
+
+void cli_arp_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+	int i;
+
+	if (argc <= 1) {
+		/* find requested entry */
+		for (i = 0; i < ARP_TABLE_SIZE; i++) {
+			ip4_addr_t *ip;
+			struct netif *netif;
+			struct eth_addr *ethaddr;
+
+			if (etharp_get_entry(i, &ip, &netif, &ethaddr)) {
+				os_printf("%s @ %pm, %c%c\n", ip4addr_ntoa(ip), ethaddr,
+				  netif ? netif->name[0] : ' ', netif? netif->name[1] : ' ');
+			}
+		}
+	}
+
+	// add static entry
+	if (argc == 4 && strcmp(argv[1], "-s") == 0) {
+		char *ip = argv[2];
+		char *mac = argv[3];
+		struct eth_addr ethaddr;;
+		ip4_addr_t ipaddr;
+		ipaddr_aton(ip, &ipaddr);
+		hwaddr_aton(mac, (uint8_t *)&ethaddr);
+		etharp_add_static_entry(&ipaddr, &ethaddr);
+
+		return ;
+	}
+
+	// remove static entry
+	if (argc == 3 && strcmp(argv[1], "-d") == 0) {
+		char *ip = argv[2];
+		ip4_addr_t ipaddr;
+		ipaddr_aton(ip, &ipaddr);
+
+		etharp_remove_static_entry(&ipaddr);
+	}
+}
+#endif
 
 #if 0// CONFIG_IPV6
 static void ip6_cmd_show_ip(int ifx)
@@ -251,7 +296,7 @@ int mqtt_cmd_msg_send(char *topic, char *msg);
 void cli_ali_mqtt_send_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
 	int ret = 0;
-	
+
 	if (argc == 3) {
 		ret = mqtt_cmd_msg_send(argv[1], argv[2]);
 	} else {
@@ -330,6 +375,9 @@ static const struct cli_command s_netif_commands[] = {
 	{"ipconfig", "ipconfig [sta|ap][{ip}{mask}{gate}{dns}]", cli_ip_cmd},
 	{"dhcpc", "dhcpc", cli_dhcpc_cmd},
 	{"ping", "ping <ip>", cli_ping_cmd},
+#if CONFIG_LWIP
+	{"arp", "arp [-s] [-d]<ip>", cli_arp_cmd},
+#endif
 #if 0//def CONFIG_IPV6
 	{"ping6", "ping6 xxx", cli_ping_cmd},
 	{"ip6", "ip6 [sta|ap][{ip}{state}]", cli_ip6_cmd},
@@ -343,7 +391,7 @@ static const struct cli_command s_netif_commands[] = {
 #endif
 #if CONFIG_ALI_MQTT
 	{"mqttali", "ali mqtt test", cli_ali_mqtt_cmd},
-	{"mqttsend", "mqttsend [topic] [msg]", cli_ali_mqtt_send_cmd},	
+	{"mqttsend", "mqttsend [topic] [msg]", cli_ali_mqtt_send_cmd},
 #endif
 #if CONFIG_OTA_HTTP
 	{"httplog", "httplog [1|0].", cli_http_debug_cmd},

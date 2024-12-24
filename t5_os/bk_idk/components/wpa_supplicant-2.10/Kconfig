@@ -163,8 +163,16 @@ menu "modules::wpa_supplicant-2.10"
 			bool "Enable WiFi OCV"
 			default n
 
+		config HOSTAPD_ACL
+			bool "Enable HOSTAPD ACL"
+			default n
+
 		config MINIMUM_SCAN_RESULTS
 			bool "Enable minimum scan results"
+			default n
+
+		config UAPSD
+			bool "Enable UAPSD"
 			default n
 	endmenu
 

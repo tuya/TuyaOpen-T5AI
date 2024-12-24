@@ -1,5 +1,5 @@
 if (BL2_DOWNLOAD)
-	add_library(download 
+	add_library(download
 		bl_bk_hci_protocol.c
 		bl_extflash.c
 		bl_spi.c
@@ -16,7 +16,7 @@ if (BL2_DOWNLOAD)
 		./inc
 		./inc/pal
 		./hal/inc
-		${TFM_BEKEN}/bk7236/armino/driver/hal
+		${TFM_BEKEN}/${TFM_SOC}/armino/driver/hal
 		../${TFM_SOC}/cmsis_core
 		${TFM_BEKEN}/retarget
 		${TFM_BEKEN}/partition
@@ -37,6 +37,13 @@ if (BL2_DOWNLOAD)
 		target_compile_definitions(download
 			PUBLIC
 				CONFIG_BL2_UPDATE_WITH_PC
+		)
+	endif()
+
+	if (CONFIG_RANDOM_AES_UPGRADE_BL2 STREQUAL "y")
+		target_compile_definitions(download
+			PUBLIC
+				CONFIG_RANDOM_AES_UPGRADE_BL2
 		)
 	endif()
 

@@ -77,6 +77,24 @@ bk_err_t bk_timer_driver_deinit(void);
  */
 bk_err_t bk_timer_start(timer_id_t timer_id, uint32_t time_ms, timer_isr_t callback);
 
+// Modified by TUYA Start
+/**
+ * @brief     Start the timer
+ *
+ * @param timer_id the timer ID to be started
+ * @param time_us time delay value of the timer, the unit is us
+ * @param callback the timer call back function
+ *
+ * @return
+ *    - BK_OK: succeed
+ *    - BK_ERR_TIMER_NOT_INIT: timer driver not init
+ *    - BK_ERR_TIMER_ID: timer id is invalid
+ *    - BK_ERR_TIMER_IS_RUNNING: timer id is running
+ *    - others: other errors.
+ */
+bk_err_t bk_timer_start_us(timer_id_t timer_id, uint64_t time_us, timer_isr_t callback);
+// Modified by TUYA End
+
 /**
  * @brief     Start the timer without set callback
  *

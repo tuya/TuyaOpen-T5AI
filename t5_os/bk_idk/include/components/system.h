@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <stdarg.h>
 #include <common/bk_err.h>
 
 #ifdef __cplusplus
@@ -50,8 +51,16 @@ typedef enum {
     RESET_SOURCE_DEBUG_MONITOR_FAULT = 0x16,
     RESET_SOURCE_DEFAULT_EXCEPTION = 0x17,
     RESET_SOURCE_OTA_REBOOT = 0x18,
+    RESET_SOURCE_BROWN_OUT = 0x19,
 
-    RESET_SOURCE_UNKNOWN = 0xff,
+    RESET_SOURCE_BOOTLOADER_REBOOT = 0x1a,
+    RESET_SOURCE_BOOTLOADER_NMI_WDT = 0x1b,
+    RESET_SOURCE_BOOTLOADER_MPU_FAULT = 0x1c,
+    RESET_SOURCE_BOOTLOADER_BUS_FAULT = 0x1d,
+    RESET_SOURCE_BOOTLOADER_HARD_FAULT = 0x1e,
+    RESET_SOURCE_BOOTLOADER_UNKNOWN = 0x1f,
+
+    RESET_SOURCE_UNKNOWN = 0x7f,
 } RESET_SOURCE_STATUS;
 
 typedef enum {
@@ -135,7 +144,13 @@ void bk_buf_printf_sync(char *buf, int buf_len);  /* Obsoleted  API */
 void bk_printf_ex(int level, char * tag, const char *fmt, ...);  /* Obsoleted  API */
 
 void bk_printf_ext(int level, char * tag, const char *fmt, ...);
+void bk_printf_nonblock(int level, char * tag, const char *fmt, ...);
+void bk_printf_static_nonblock(int level, char *tag, const char *fmt, ...);
+void bk_printf_static_block(int level, char *tag, const char *fmt, ...);
+void bk_vprintf_ext(int level, char *tag, const char *fmt, va_list args);
 void bk_printf_raw(int level, char * tag, const char *fmt, ...);
+void bk_printf_raw_nonblock(int level, char * tag, const char *fmt, ...);
+void bk_vprintf_raw(int level, char *tag, const char *fmt, va_list args);
 
 void bk_disable_mod_printf(char *mod_name, uint8_t disable);
 char * bk_get_disable_mod(int * idx);

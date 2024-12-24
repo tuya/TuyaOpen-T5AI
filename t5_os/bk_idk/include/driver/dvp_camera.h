@@ -25,6 +25,7 @@ int get_sensor_config_devices_num(void);
 
 const dvp_sensor_config_t *get_sensor_config_interface_by_id(sensor_id_t id);
 
+void bk_dvp_camera_cp2_rotate_finish(void);
 
 /**
 * @brief	This API set dvp camera device list
@@ -114,20 +115,6 @@ bk_err_t bk_dvp_camera_power_enable(uint8_t enable);
  *    - return NULL
  */
 const dvp_sensor_config_t *bk_dvp_get_sensor_auto_detect(void);
-
-/**
- * @brief     free encode mem
- *
- * This API called by user, once call this api, will free malloc sram for jpeg enc or h264 encode
- *
- * @attation 1. This api only effect in camera is not working, and call this api when you do not use dvp again,
- * if you want use again, you maybe malloc encode mem success.
- *
- * @return
- *    - BK_OK: succeed
- *    - others: other errors.
- */
-bk_err_t bk_dvp_camera_free_encode_mem(void);
 
 /**
  * @brief     regenerate idr frame

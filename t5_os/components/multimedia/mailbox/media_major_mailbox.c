@@ -24,6 +24,7 @@
 #include "bk_list.h"
 #include "media_core.h"
 #include "media_evt.h"
+#include <driver/dvp_camera.h>
 #include <driver/mailbox_channel.h>
 #include "media_mailbox_list_util.h"
 
@@ -367,6 +368,7 @@ static void media_major_mailbox_mailbox_rx_isr(void *param, mb_chnl_cmd_t *cmd_b
 			LOGE("%s %d ack flag error %d Event:%x\n", __func__, __LINE__, msg->ack_flag, msg->event);
 			return;
 		}
+		msg->count = 0;
 		media_send_msg_to_queue(msg, 0);
 	}
 	else
@@ -592,6 +594,13 @@ void media_major_mailbox_msg_handle(media_mailbox_msg_t *msg)
 				#endif
 				}
 				break;
+
+				case EVENT_YUV_ROTATE_NOTIFY:
+				#if CONFIG_DVP_CAMERA
+					bk_dvp_camera_cp2_rotate_finish();
+				#endif
+				break;
+
 				default:
 					break;
 			}

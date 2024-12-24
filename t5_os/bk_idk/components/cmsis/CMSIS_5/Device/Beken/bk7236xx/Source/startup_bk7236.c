@@ -52,7 +52,7 @@
 #define SYSTEM_BASE_ADDRESS              SOC_SYS_REG_BASE
 #define OTP_APB_BASE_ADDRESS             SOC_OTP_REG_BASE
 #define MEM_CHECK_BASE_ADDRESS           SOC_MEM_CHECK_REG_BASE
-#define BIT_ID(num)                      (num) 
+#define BIT_ID(num)                      (num)
 #define GET_BIT_VAL(val, bit)            ((val >> bit) & 1)
 #define SET_BIT_VAL(val, bit, new_val)   ((val & (~ (1 << bit)))|(new_val << bit))
 
@@ -393,8 +393,9 @@ static inline void boot_mem_check(void)
  *----------------------------------------------------------------------------*/
 __NO_RETURN ENTRY_SECTION void Reset_Handler(void)
 {
+#if (CONFIG_SYS_CPU0)
 	boot_mem_check();
-
+#endif
     __set_MSPLIM((uint32_t)(&__STACK_LIMIT));
 
     /* CMSIS System Initialization */
@@ -515,7 +516,7 @@ __attribute__((naked, section(".itcm")))  void NMI_Handler(void)
 	uint32_t lr = __get_LR();
 	uint32_t sp = __get_MSP();
 
-    __asm volatile 
+    __asm volatile
     (
         "	push {r4-r11}								\n"
     );
@@ -551,7 +552,7 @@ __attribute__((naked)) void SecureFault_Handler(void)
 
 void debug_monitor_handler_c(CONTEXT_FRAME_T *frame);
 
-__attribute__((naked)) void DebugMon_Handler(void) 
+__attribute__((naked)) void DebugMon_Handler(void)
 {
   __asm volatile(
       "tst lr, #4 \n"

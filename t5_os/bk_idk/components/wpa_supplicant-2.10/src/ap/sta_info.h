@@ -353,6 +353,7 @@ struct sta_info {
  * after AP_DEAUTH_DELAY seconds has passed after disassociation. */
 #if BK_SUPPLICANT
 #define AP_MAX_INACTIVITY        (31)
+#define AP_DEFAULT_MAX_INACTIVITY (5 * 60)
 #define AP_DISASSOC_DELAY        (1)
 #else
 #define AP_MAX_INACTIVITY (5 * 60)

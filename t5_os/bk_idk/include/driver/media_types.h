@@ -320,16 +320,18 @@ typedef struct {
 	yuv_mode_t     mode;
 	pixel_format_t fmt;
 	frame_info_t   info;
-
+	media_rotate_t rot_angle;
 	uint32_t num_uvc_dev;
-    uint16_t dualstream;
+	uint16_t dualstream;
 	yuv_mode_t     d_mode;
 	pixel_format_t d_fmt;
 	frame_info_t   d_info;
     media_uvc_device_t uvc_device[2];
+// Modified by TUYA Start
 #ifdef CONFIG_TUYA_GPIO_MAP
-    uint8_t ty_param[4];
+    uint8_t ty_param[8];
 #endif // CONFIG_TUYA_GPIO_MAP
+// Modified by TUYA End
 } media_camera_device_t;
 
 
@@ -504,6 +506,13 @@ typedef struct
 	uint16_t retry_times;
 	uint16_t count;
 } media_debug_t;
+
+typedef struct
+{
+	frame_buffer_t *src_yuv;
+	frame_buffer_t *dst_yuv;
+	media_rotate_t rot_angle;
+} rotate_nofity_t;
 
 /**
  * @brief get camera width
@@ -842,13 +851,14 @@ static inline void h264_encode_sei_init(uint8_t *sei)
 		.info.resolution.width = 640,    \
 		.info.resolution.height = 480,   \
 		.info.fps = FPS25,         \
+		.rot_angle = ROTATE_NONE,   \
 		.num_uvc_dev = 1,                \
 		.dualstream = 0,                 \
 		.d_mode = H264_MODE,             \
 		.d_fmt = PIXEL_FMT_JPEG,         \
-        .d_info.resolution.width = 1920, \
-        .d_info.resolution.height = 1080,\
-        .d_info.fps = FPS25,             \
+		.d_info.resolution.width = 1920, \
+		.d_info.resolution.height = 1080,\
+		.d_info.fps = FPS25,             \
 }
 
 

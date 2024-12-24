@@ -30,43 +30,43 @@ void psa_pm_nsc_stub(void)
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_shanhai_backup(uint64_t sleep_time, void *args)
+static int shanhai_backup(uint64_t sleep_time, void *args)
 {
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_shanhai_restore(uint64_t sleep_time, void *args)
+static int shanhai_restore(uint64_t sleep_time, void *args)
 {
 	crypto_hw_accelerator_init();
 
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_otp_ahb_backup(uint64_t sleep_time, void *args)
+static int otp_ahb_backup(uint64_t sleep_time, void *args)
 {
 	//TODO
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_otp_ahb_restore(uint64_t sleep_time, void *args)
+static int otp_ahb_restore(uint64_t sleep_time, void *args)
 {
 	//TODO
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_otp_apb_backup(uint64_t sleep_time, void *args)
+static int otp_apb_backup(uint64_t sleep_time, void *args)
 {
 	//TODO
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_otp_apb_restore(uint64_t sleep_time, void *args)
+static int otp_apb_restore(uint64_t sleep_time, void *args)
 {
 	//TODO
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_uart1_backup(uint64_t sleep_time, void *args)
+static int uart1_backup(uint64_t sleep_time, void *args)
 {
 	uart_hw_t *hw = (uart_hw_t *)(SOC_UART1_REG_BASE);
 
@@ -80,7 +80,7 @@ __tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_uart1_backup(uint64_t 
 	return 0;
 }
 
-__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_uart1_restore(uint64_t sleep_time, void *args)
+static int uart1_restore(uint64_t sleep_time, void *args)
 {
 	uart_hw_t *hw = (uart_hw_t *)(SOC_UART1_REG_BASE);
 
@@ -91,5 +91,39 @@ __tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_uart1_restore(uint64_t
 	hw->wake_config.v      = s_pm_uart1_backup[4];
 	hw->global_ctrl.v      = s_pm_uart1_backup[5];
 
+	return 0;
+}
+
+static int dma_backup(uint64_t sleep_time, void* args)
+{
+	return 0;
+}
+
+void tfm_hal_dma_init(void);
+static int dma_restore(uint64_t sleep_time, void* args)
+{
+	uint32_t ppc_r7_old;
+	uint32_t ppc_r7_new;
+
+	ppc_r7_old = *((volatile uint32_t *)(0x41040000 + (7 << 2)));
+	ppc_r7_new = ppc_r7_old & ~3;
+	*((volatile uint32_t *)(0x41040000 + (7 << 2))) = ppc_r7_new;
+	tfm_hal_dma_init();
+	*((volatile uint32_t *)(0x41040000 + (7 << 2))) = ppc_r7_old;
+	return 0;
+}
+
+__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_secure_world_backup(uint64_t sleep_time, void *args)
+{
+	uart1_backup(sleep_time, args);
+	dubhe_driver_cleanup();
+	return 0;
+}
+
+__tfm_psa_secure_gateway_no_naked_attributes__ int psa_pm_secure_world_restore(uint64_t sleep_time, void *args)
+{
+	uart1_restore(sleep_time, args);
+	dma_restore(sleep_time, args);
+	dubhe_driver_init(SOC_SHANHAI_BASE);
 	return 0;
 }

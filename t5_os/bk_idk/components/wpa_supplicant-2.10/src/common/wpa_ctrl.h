@@ -570,6 +570,7 @@ typedef enum wpa_ctrl_cmd {
 	WPA_CTRL_CMD_AP_CHAN_SWITCH,
 	WPA_CTRL_CMD_UPDATE_BEACON,
 	WPA_CTRL_CMD_UPDATE_BEACON_VSIE,
+	WPA_CTRL_CMD_STA_REPORT_CSA_INFO,
 
 	/* ============== MISC ================ */
 

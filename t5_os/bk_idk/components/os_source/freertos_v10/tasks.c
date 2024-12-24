@@ -2395,6 +2395,28 @@ BaseType_t xTaskResumeAll( void )
                     {
                         do
                         {
+                            const TickType_t xConstTickCount = xTickCount;
+                            const TickType_t xConstTickNext = xConstTickCount + xPendedCounts;
+
+                            /* Correct the tick count value after a period during which the tick
+                            * was suppressed.  Note this does *not* call the tick hook function for
+                            * each stepped tick. */
+                            if ( xConstTickNext > xConstTickCount )
+                            {
+                                xTickCount = xConstTickNext - 1;
+                                xPendedCounts = 0;
+                            }
+                            else  /* xTickCount wrap around. */
+                            {
+                                if(xTickCount == portMAX_DELAY)
+                                    xPendedCounts--;
+                                else
+                                {
+                                    xTickCount = portMAX_DELAY - 1;
+                                    xPendedCounts = xConstTickNext + 1;
+                                }
+                            }
+                          
                             if( xTaskIncrementTick() != pdFALSE )
                             {
                                 xYieldPending = pdTRUE;
@@ -2403,8 +2425,6 @@ BaseType_t xTaskResumeAll( void )
                             {
                                 mtCOVERAGE_TEST_MARKER();
                             }
-
-                            --xPendedCounts;
                         } while( xPendedCounts > ( TickType_t ) 0U );
 
                         xPendedTicks = 0;
@@ -3213,6 +3233,25 @@ BaseType_t xTaskIncrementTick( void )
 
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
+typedef struct  task_list_recorder
+{
+    uint32_t tick;
+
+    uint32_t TCB_ptr;
+
+    uint32_t uxProirity;
+
+    uint32_t stack_top;
+
+    uint32_t stack_bottom; 
+
+    uint32_t stack_size;
+
+}task_list_recorder_t;
+
+static volatile  uint32_t task_cnt = 0;
+
+static volatile  task_list_recorder_t  task_recorder[10];
 
 void vTaskSwitchContext( void )
 {
@@ -3274,6 +3313,26 @@ void vTaskSwitchContext( void )
          * optimised asm code. */
         taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
         traceTASK_SWITCHED_IN();
+
+        {
+
+            task_recorder[task_cnt].tick = xTickCount;
+
+            task_recorder[task_cnt].TCB_ptr = (uint32_t) pxCurrentTCB;
+
+            task_recorder[task_cnt].uxProirity = (uint32_t) pxCurrentTCB->uxPriority;
+
+            task_recorder[task_cnt].stack_top = (uint32_t) pxCurrentTCB->pxTopOfStack;
+
+            task_recorder[task_cnt].stack_bottom = (uint32_t)(pxCurrentTCB->pxStack + pxCurrentTCB->ulStackSize);    
+
+            task_recorder[task_cnt].stack_size   = pxCurrentTCB->ulStackSize;              
+
+            task_cnt++;
+
+            task_cnt = task_cnt % 10;
+
+        }
 
         /* After the new task is switched in, update the global errno. */
         #if ( configUSE_POSIX_ERRNO == 1 )

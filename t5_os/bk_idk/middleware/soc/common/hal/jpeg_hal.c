@@ -99,7 +99,7 @@ bk_err_t jpeg_hal_switch_mode(jpeg_hal_t *hal, const jpeg_config_t *config)
 		jpeg_ll_set_y_pixel(hal->hw, config->y_pixel);
 		jpeg_ll_init_quant_table(hal->hw);
 		jpeg_hal_set_target_bitrate(hal, config->x_pixel);
-
+		jpeg_ll_enable_bitrate_ctrl(hal->hw);
 		jpeg_ll_set_default_bitrate_step(hal->hw);
 		jpeg_ll_enable_video_byte_reverse(hal->hw);
 		jpeg_ll_enable_enc_size(hal->hw);

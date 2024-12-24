@@ -60,6 +60,13 @@ target_compile_definitions(tfm_psa_rot_partition_fwu
         $<$<BOOL:${TFM_FWU_BUF_SIZE}>:TFM_FWU_BUF_SIZE=${TFM_FWU_BUF_SIZE}>
 )
 
+if(CONFIG_OTA_CONFIRM_UPDATE)
+    target_compile_definitions(tfm_psa_rot_partition_fwu
+        PUBLIC
+        	-DCONFIG_OTA_CONFIRM_UPDATE=1
+    )
+endif()
+
 ############################ Secure API ########################################
 
 target_sources(tfm_secure_api

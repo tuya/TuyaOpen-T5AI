@@ -62,6 +62,7 @@ static inline void jpeg_ll_soft_reset(jpeg_hw_t *hw)
 
 static inline void jpeg_ll_init(jpeg_hw_t *hw)
 {
+	hw->global_ctrl.soft_reset = 0;
 	hw->global_ctrl.soft_reset = 1;
 	jpeg_ll_reset_config_to_default(hw);
 }

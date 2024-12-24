@@ -101,7 +101,14 @@ void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)
 	bss->eap_sim_db_timeout = 1;
 	bss->eap_sim_id = 3;
 #endif
-	bss->ap_max_inactivity = AP_MAX_INACTIVITY;
+#if BK_SUPPLICANT && CONFIG_BRIDGE
+		extern uint8 bridge_is_enabled;
+		extern uint8_t bridge_open;
+		if (bridge_is_enabled && bridge_open)
+			bss->ap_max_inactivity = AP_DEFAULT_MAX_INACTIVITY;
+		else
+#endif
+		bss->ap_max_inactivity = AP_MAX_INACTIVITY;
 	bss->eapol_version = EAPOL_VERSION;
 
 	bss->max_listen_interval = 65535;

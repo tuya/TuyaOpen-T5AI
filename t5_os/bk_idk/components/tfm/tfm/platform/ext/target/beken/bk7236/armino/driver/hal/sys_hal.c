@@ -23,6 +23,8 @@
 #include <driver/hal/hal_spi_types.h>
 #include "gpio_hal.h"
 #include "timer_hal.h"
+#include <driver/pwr_clk.h>
+#include "bk_misc.h"
 
 static sys_hal_t s_sys_hal;
 uint32 sys_hal_get_int_group2_status(void);
@@ -269,44 +271,280 @@ void sys_hal_module_RF_power_ctrl (module_name_t module,power_module_state_t pow
 	sys_ll_set_ana_reg6_value(value);
 
 }
-void sys_hal_core_bus_clock_ctrl(high_clock_module_name_t core, uint32_t clksel,uint32_t clkdiv, high_clock_module_name_t bus,uint32_t bus_clksel,uint32_t bus_clkdiv)
+
+
+#define PM_FREQUNCY_DIV_MAX                              (15)
+#define PM_FREQUNCY_DIV_BUS_MAX                          (1)
+#define PM_FREQUNCY_DIV_CPU_MAX                          (1)
+
+uint32_t sys_hal_vdddig_h_vol_get();
+bk_err_t sys_hal_core_bus_clock_ctrl(uint32_t cksel_core, uint32_t ckdiv_core,uint32_t ckdiv_bus, uint32_t ckdiv_cpu0,uint32_t ckdiv_cpu1)
 {
-    uint32_t clock_value = 0;
-	clock_value = sys_ll_get_cpu_clk_div_mode1_value();
-    /*core:0: clk_DCO      1 : XTAL      2 : 320M      3 : 480M*/
-	clock_value &= ~(0x7F);
-    /*1.cpu0:120m ,maxtrix:120m*/
-	if((core == HIGH_FREQUECY_CLOCK_MODULE_CPU0) &&(clksel == 3))
+	uint32_t clk_param  = 0;
+	uint32_t     h_vol  = 0;
+	if(cksel_core > 3)
 	{
-		clock_value |=  0x3 << 4; // select 480m
-		clock_value |=  0x3 << 0; //4//  480m/4 = 120m
-		//clock_value |=  0x1 << 6; //bus 120m
-	}/*2.cpu0:320m ,maxtrix:160m*/
-	else if((core == HIGH_FREQUECY_CLOCK_MODULE_CPU0) &&(clksel == 2))
-	{
-        clock_value |=  0x2 << 4;
-        clock_value |=  0x1 << 6;
-	}/*3.cpu0:240m ,maxtrix:120m*/
-	else if((core == HIGH_FREQUECY_CLOCK_MODULE_CPU0) &&(clksel == 0))
-	{
-		clock_value |=  0x3 << 4;
-		clock_value |=  0x1 << 0;
-		clock_value |=  0x1 << 6; //bus 120m
-	}/*3.cpu0:26m ,maxtrix:26m*/
-	else if((core == HIGH_FREQUECY_CLOCK_MODULE_CPU0) &&(clksel == 1))
-	{
-        clock_value |=  0x1 << 4;
-        clock_value |=  0x0 << 6;
-	}
-	else
-	{
-        clock_value |=  0x0 << 4;
-        clock_value |=  0x0 << 6;
+		printf("set dvfs cksel core > 3 invalid %u\r\n",cksel_core);
+		return BK_FAIL;
 	}
 
-	sys_ll_set_cpu_clk_div_mode1_value(clock_value);
+	if((ckdiv_core > PM_FREQUNCY_DIV_MAX) || (ckdiv_bus > PM_FREQUNCY_DIV_BUS_MAX)||(ckdiv_cpu1 > PM_FREQUNCY_DIV_CPU_MAX)||(ckdiv_cpu0 > PM_FREQUNCY_DIV_CPU_MAX))
+	{
+		printf("set dvfs ckdiv_core ckdiv_bus ckdiv_cpu0_1  ckdiv_cpu0_1  > 1 invalid\r\n");
+		return BK_FAIL;
+	}
+	if((cksel_core == PM_CLKSEL_CORE_320M)&&(ckdiv_core == PM_CLKDIV_CORE_0)&&(ckdiv_cpu0 != PM_CLKDV_CPU0_0))
+	{
+		printf("unsupport the cpu freq setting %u %u %u\r\n",cksel_core,ckdiv_core,ckdiv_cpu0);
+		return BK_FAIL;
+	}
 
+	if((cksel_core == PM_CLKSEL_CORE_320M)&&(ckdiv_core == PM_CLKDIV_CORE_0))
+	{
+		h_vol = sys_hal_vdddig_h_vol_get();
+		if(h_vol < PM_VDDDIG_H_VOL_0v9)
+		{
+			sys_hal_ctrl_vddd_h_vol(PM_VDDD_H_VOL_1V);
+			sys_hal_ctrl_vdddig_h_vol(PM_VDDDIG_H_VOL_0v9);
+		}
+	}
+	clk_param = 0;
+	clk_param = sys_hal_all_modules_clk_div_get(CLK_DIV_REG0);
+	if(((clk_param >> 0x4)&0x3) > cksel_core)//when it from the higher frequency to lower frequency
+	{
+		/*1.core clk select*/
+		clk_param = 0;
+		clk_param = sys_hal_all_modules_clk_div_get(CLK_DIV_REG0);
+		clk_param &=  ~(0x3 << 4);
+		clk_param |=  cksel_core << 4;
+		sys_hal_all_modules_clk_div_set(CLK_DIV_REG0,clk_param);
+
+		/*2.config bus and core clk div*/
+		clk_param = 0;
+		clk_param = sys_hal_all_modules_clk_div_get(CLK_DIV_REG0);
+		clk_param &=  ~(0xF << 0);
+		clk_param |=  ckdiv_core << 0;
+		sys_hal_all_modules_clk_div_set(CLK_DIV_REG0,clk_param);
+
+		/*3.config cpu clk div*/
+		sys_hal_cpu_clk_div_set(0,ckdiv_cpu0);
+		sys_hal_cpu_clk_div_set(1,ckdiv_cpu1);
+		sys_hal_cpu_clk_div_set(2,1);//config cpu2
+	}
+	else//when it from the lower frequency to higher frequency
+	{
+		/*1.config bus and core clk div*/
+		if(ckdiv_core == 0)
+		{
+			sys_hal_cpu_clk_div_set(0,ckdiv_cpu0);//avoid the bus freq > 240m
+		}
+
+		clk_param = 0;
+		clk_param = sys_hal_all_modules_clk_div_get(CLK_DIV_REG0);
+		clk_param &=  ~(0xF << 0);
+		clk_param |=  ckdiv_core << 0;
+		sys_hal_all_modules_clk_div_set(CLK_DIV_REG0,clk_param);
+
+		/*2.config cpu clk div*/
+		if(ckdiv_core != 0)
+		{
+			sys_hal_cpu_clk_div_set(0,ckdiv_cpu0);
+		}
+		sys_hal_cpu_clk_div_set(1,ckdiv_cpu1);
+		sys_hal_cpu_clk_div_set(2,1);//config cpu2
+
+		/*3.core clk select*/
+
+		clk_param = 0;
+		clk_param = sys_hal_all_modules_clk_div_get(CLK_DIV_REG0);
+		clk_param &=  ~(0x3 << 4);
+		clk_param |=  cksel_core << 4;
+		sys_hal_all_modules_clk_div_set(CLK_DIV_REG0,clk_param);
+	}
+
+	return BK_OK;
 }
+
+bk_err_t sys_hal_ctrl_vddd_h_vol(uint32_t vol_value)
+{
+#if 0//CONFIG_RX_OPTIMIZE
+	if(sys_ll_get_ana_reg9_vdighsel() != vol_value)
+	{
+		sys_ll_set_ana_reg9_spi_latch1v(1);
+		sys_ll_set_ana_reg9_vdighsel(vol_value);
+		sys_ll_set_ana_reg9_spi_latch1v(0);
+		sys_hal_delay(SYS_SWITCH_VDDDIG_VOL_DELAY_TIME);//when cpu0 max freq 240m ,it delay 10uS for voltage stability
+	}
+#endif
+	return BK_OK;
+}
+
+bk_err_t sys_hal_ctrl_vdddig_h_vol(uint32_t vol_value);
+
+
+uint32_t sys_hal_vdddig_h_vol_get()
+{
+	return sys_ll_get_ana_reg9_vcorehsel();
+}
+bk_err_t sys_hal_switch_cpu_bus_freq_high_to_low(pm_cpu_freq_e cpu_bus_freq)
+{
+	bk_err_t ret = BK_OK;
+	switch(cpu_bus_freq)
+	{
+		case PM_CPU_FRQ_480M://cpu0:240m;cpu1:480m;cpu2:480m;bus:240m
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x0,0x0,0x0,0x1);
+#if	CONFIG_DO_MIPS_FUNCTION
+			printf("high-to-low \r\n");
+			sys_hal_ctrl_vddd_h_vol(0x7);	// 1.05v
+			sys_hal_ctrl_vdddig_h_vol(0xB);	//0.875V basic_vol:0.6v scale:0.025v
+#else
+			sys_hal_ctrl_vddd_h_vol(0x7);//  1.05v
+			sys_hal_ctrl_vdddig_h_vol(0xE);//0.95V
+#endif
+			break;
+		case PM_CPU_FRQ_320M://cpu0:160m;cpu1:320m;cpu2:320m;bus:160m
+		    ret = sys_hal_core_bus_clock_ctrl(0x2,0x0,0x0,0x0,0x1);
+			sys_hal_ctrl_vddd_h_vol(0x7);// 1.05 v
+			sys_hal_ctrl_vdddig_h_vol(0xD);//0.925V
+
+			break;
+		case PM_CPU_FRQ_240M://cpu0:240m;cpu1:240m;;cpu2:240m;bus:240m
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x1,0x0,0x1,0x1);
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0 v
+			sys_hal_ctrl_vdddig_h_vol(0xD);//0.925V
+
+			break;
+		case PM_CPU_FRQ_120M://cpu0:120m;cpu1:120m;cpu2:120m;bus:120m
+#if CONFIG_DCO_CLK_ENABLE
+			ret = sys_hal_core_bus_clock_ctrl(0x1,0x1,0x0,0x1,0x1);
+#else
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x3,0x0,0x1,0x1);
+#endif
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			#if CONFIG_ATE_TEST
+			sys_hal_ctrl_vdddig_h_vol(0x7);//0.775V
+			#else
+			sys_hal_ctrl_vdddig_h_vol(0xC);//0.9V
+			#endif
+
+			break;
+		case PM_CPU_FRQ_80M://cpu0:80m;cpu1:80m;cpu2:80m;bus:80m
+#if CONFIG_DCO_CLK_ENABLE
+			ret = sys_hal_core_bus_clock_ctrl(0x1,0x2,0x0,0x1,0x1);
+#else
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x5,0x0,0x1,0x1);
+#endif
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+
+			break;
+		case PM_CPU_FRQ_60M://cpu0:60m;cpu1:60m;cpu2:60m;bus:60m
+#if CONFIG_DCO_CLK_ENABLE
+			ret = sys_hal_core_bus_clock_ctrl(0x1,0x3,0x0,0x1,0x1);
+#else
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x7,0x0,0x1,0x1);
+#endif
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+			break;
+		case PM_CPU_FRQ_26M://cpu0:26m;cpu1:26m;cpu2:26m;bus:26m
+			ret = sys_hal_core_bus_clock_ctrl(0x0,0x0,0x0,0x1,0x1);
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+			break;
+		default:
+			break;
+	}
+
+	return ret;
+}
+bk_err_t sys_hal_switch_cpu_bus_freq_low_to_high(pm_cpu_freq_e cpu_bus_freq)
+{
+	bk_err_t ret = BK_OK;
+	switch(cpu_bus_freq)
+	{
+		case PM_CPU_FRQ_480M://cpu0:240m;cpu1:480m;cpu2:480m;bus:240m
+#if	CONFIG_DO_MIPS_FUNCTION
+			printf("low-to-high \r\n");
+			sys_hal_ctrl_vddd_h_vol(0x7);// 1.05v
+			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V  //basic_vol:0.6v scale:0.025v
+#else
+			sys_hal_ctrl_vddd_h_vol(0x7);// 1.05v
+			sys_hal_ctrl_vdddig_h_vol(0xE);//0.95V
+#endif
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x0,0x0,0x0,0x1);
+			break;
+		case PM_CPU_FRQ_320M://cpu0:160m;cpu1:320m;cpu2:320m;bus:160m
+			sys_hal_ctrl_vddd_h_vol(0x7);// 1.05v
+			sys_hal_ctrl_vdddig_h_vol(0xD);//0.925V
+			ret = sys_hal_core_bus_clock_ctrl(0x2,0x0,0x0,0x0,0x1);
+			break;
+		case PM_CPU_FRQ_240M://cpu0:240m;cpu1:240m;;cpu2:240m;bus:240m
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0v
+			sys_hal_ctrl_vdddig_h_vol(0xD);//0.925V
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x1,0x0,0x1,0x1);
+			break;
+		case PM_CPU_FRQ_120M://cpu0:120m;cpu1:120m;cpu2:120m;bus:120m
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			sys_hal_ctrl_vdddig_h_vol(0xC);//0.9V
+#if CONFIG_DCO_CLK_ENABLE
+			ret = sys_hal_core_bus_clock_ctrl(0x1,0x1,0x0,0x1,0x1);
+#else
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x3,0x0,0x1,0x1);
+#endif
+			break;
+		case PM_CPU_FRQ_80M://cpu0:80m;cpu1:80m;cpu2:80m;bus:80m
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+#if CONFIG_DCO_CLK_ENABLE
+			ret = sys_hal_core_bus_clock_ctrl(0x1,0x2,0x0,0x1,0x1);
+#else
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x5,0x0,0x1,0x1);
+#endif
+			break;
+		case PM_CPU_FRQ_60M://cpu0:60m;cpu1:60m;cpu2:60m;bus:60m
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+#if CONFIG_DCO_CLK_ENABLE
+			ret = sys_hal_core_bus_clock_ctrl(0x1,0x3,0x0,0x1,0x1);
+#else
+			ret = sys_hal_core_bus_clock_ctrl(0x3,0x7,0x0,0x1,0x1);
+#endif
+			break;
+		case PM_CPU_FRQ_26M://cpu0:26m;cpu1:26m;cpu2:26m;bus:26m
+			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0V
+			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+			ret = sys_hal_core_bus_clock_ctrl(0x0,0x0,0x0,0x1,0x1);
+			break;
+		default:
+			break;
+	}
+	return ret;
+}
+
+static pm_cpu_freq_e s_pre_cpu_freq = PM_CPU_FRQ_26M;
+int32 sys_hal_switch_cpu_bus_freq(pm_cpu_freq_e cpu_bus_freq)
+{
+	int32 ret = BK_OK;
+
+	pm_cpu_freq_e prev_freq = s_pre_cpu_freq;
+
+	if(prev_freq == cpu_bus_freq)
+		return BK_OK;
+
+
+	if(prev_freq > cpu_bus_freq)// eg: 480->60
+	{
+		sys_hal_switch_cpu_bus_freq_high_to_low(cpu_bus_freq);
+	}
+	else // eg: 60-480
+	{
+		sys_hal_switch_cpu_bus_freq_low_to_high(cpu_bus_freq);
+	}
+	s_pre_cpu_freq = cpu_bus_freq;
+	return ret;
+}
+
 void sys_hal_cpu0_main_int_ctrl(dev_clk_pwr_ctrl_t clock_state)
 {
     sys_ll_set_cpu0_int_halt_clk_op_cpu0_int_mask( clock_state);
@@ -1970,7 +2208,10 @@ void sys_hal_i2s_disckg_set(uint32_t value)
 
 void sys_hal_apll_en(uint32_t value)
 {
-	//NOT SUPPORT
+	if (value == 0)
+		sys_ll_set_ana_reg5_pwdaudpll(1);
+	else
+		sys_ll_set_ana_reg5_pwdaudpll(0);
 }
 
 void sys_hal_cb_manu_val_set(uint32_t value)
@@ -1992,10 +2233,24 @@ void sys_hal_ana_reg11_spi_trigger_set(uint32_t value)
 {
 	//NOT SUPPORT
 }
+void sys_hal_apll_cal_val_set(uint32_t value)
+{
+	sys_ll_set_ana_reg26_value(value);
+}
+
+void sys_hal_apll_spi_trigger_set(uint32_t value)
+{
+	sys_ll_set_ana_reg25_spi_trigger(value);
+}
 
 void sys_hal_i2s0_ckdiv_set(uint32_t value)
 {
 	//NOT SUPPORT
+}
+
+void sys_hal_apll_config_set(uint32_t value)
+{
+	sys_ll_set_ana_reg25_value(value);
 }
 
 /**  I2S End  **/
@@ -2512,7 +2767,7 @@ void sys_hal_dpll_cpu_flash_time_early_init(void)
 		{
 			if(sys_ll_get_cpu_clk_div_mode2_ckdiv_flash() != 0x1)// 480/6
 			{
-				sys_ll_set_cpu_clk_div_mode2_ckdiv_flash(0x1);
+				sys_ll_set_cpu_clk_div_mode2_ckdiv_flash(0x2);
 			}
 			sys_hal_flash_set_clk(PM_CLKSEL_FLASH_480M);
 		}

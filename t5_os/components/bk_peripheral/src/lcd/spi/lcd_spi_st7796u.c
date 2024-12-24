@@ -42,6 +42,7 @@ static const lcd_qspi_init_cmd_t st7796u_init_cmds[] =
 
 static const lcd_spi_t lcd_spi_st7796u_config =
 {
+    .clk = LCD_QSPI_60M,
     .init_cmd = st7796u_init_cmds,
     .device_init_cmd_len = sizeof(st7796u_init_cmds) / sizeof (lcd_qspi_init_cmd_t),
 };

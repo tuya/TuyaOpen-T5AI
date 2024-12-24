@@ -1,6 +1,6 @@
 /*
  * cc.h       - Architecture environment, some compiler specific, some
- *             environment specific (probably should move env stuff 
+ *             environment specific (probably should move env stuff
  *             to sys_arch.h.)
  *
  * Typedefs for the types used by lwip -
@@ -30,7 +30,7 @@
  * the standard *nix error codes, or it should #define LWIP_PROVIDE_ERRNO
  * to make lwip/arch.h define the codes which are used throughout.
  */
- 
+
 #ifndef __CC_H__
 #define __CC_H__
 
@@ -54,7 +54,7 @@ typedef uint16_t  u16_t;
 typedef int16_t   s16_t;
 typedef uint32_t  u32_t;
 typedef int32_t   s32_t;
-#endif 
+#endif
 
 typedef int			       intptr_t;
 typedef unsigned int       uintptr_t;
@@ -92,19 +92,19 @@ typedef uintptr_t mem_ptr_t;
 
 #ifndef LWIP_PLATFORM_DIAG
 #define LWIP_PLATFORM_DIAG(x) do {fatal_prf x ;} while(0)
-#endif 
- 
-#define U16_F "4d"
-#define S16_F "4d"
-#define X16_F "4x"
-#define U32_F "8ld"
-#define S32_F "8ld"
-#define X32_F "8lx"
+#endif
+
+#define U16_F "d"
+#define S16_F "d"
+#define X16_F "x"
+#define U32_F "ld"
+#define S32_F "ld"
+#define X32_F "lx"
 
 /*
  * unknow defination
  */
-// cup byte order 
+// cup byte order
 #ifndef BYTE_ORDER
 #define BYTE_ORDER          LITTLE_ENDIAN
 #endif

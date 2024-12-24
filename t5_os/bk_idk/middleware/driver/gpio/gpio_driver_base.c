@@ -37,6 +37,12 @@
 #include "usr_gpio_cfg.h"
 #endif
 
+// Modified by TUYA Start
+#include "driver/media_types.h"
+#include "tkl_display.h"
+#include "tkl_video_in.h"
+// Modified by TUYA End
+
 gpio_driver_t s_gpio = {
 	.hal.hw = (gpio_hw_t *)GPIO_LL_REG_BASE,
 };
@@ -127,7 +133,9 @@ bk_err_t bk_gpio_driver_init(void)
 {
 	//avoid re-init caused some info lost
 	if(s_gpio_is_init) {
-		GPIO_LOGI("%s:has inited \r\n", __func__);
+        // Modified by TUYA Start
+		// GPIO_LOGI("%s:has inited \r\n", __func__);
+        // Modified by TUYA End
 		return BK_OK;
 	}
 
@@ -393,8 +401,8 @@ static void gpio_isr(void)
 			if (s_gpio_isr[gpio_id]) {
 				GPIO_LOGD("gpio int: index:%d \r\n",gpio_id);
 				s_gpio_isr[gpio_id](gpio_id);
+				bk_gpio_clear_interrupt(gpio_id);
 			}
-			bk_gpio_clear_interrupt(gpio_id);
 		}
 	}
 
@@ -431,13 +439,15 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
 					BK_LOG_ON_ERR(bk_gpio_enable_output(s_gpio_ctrl_ldo_output[i].gpio_id));
 					BK_LOG_ON_ERR(bk_gpio_set_output_high(s_gpio_ctrl_ldo_output[i].gpio_id));
 				}
-                // Modified by tuya Start
+                // Modified by TUYA Start
 #ifdef CONFIG_TUYA_GPIO_MAP
                 else {
-                    uint8_t usb_ldo = 56, lcd_ldo = 56, lcd_active_level = 0, usb_active_level = 0;
-                    tkl_vi_get_power_info(&usb_ldo, &usb_active_level);
+                    uint8_t usb_ldo = 56, dvp_ldo = 56, lcd_ldo = 56;
+                    uint8_t lcd_active_level = 0, dvp_active_level = 0, usb_active_level = 0;
+                    tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &usb_active_level);
+                    tkl_vi_get_power_info(DVP_CAMERA, &dvp_ldo, &dvp_active_level);
                     tkl_display_power_ctrl_pin(&lcd_ldo, &lcd_active_level);
-                    if ((gpio_id == lcd_ldo) || (gpio_id == usb_ldo)) {
+                    if ((gpio_id == lcd_ldo) || (gpio_id == usb_ldo) || (gpio_id == dvp_ldo)) {
                         /*gpio dev unmap*/
                         BK_LOG_ON_ERR(bk_gpio_disable_output(gpio_id));
                         BK_LOG_ON_ERR(bk_gpio_disable_input(gpio_id));
@@ -463,7 +473,7 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
                     }
                 }
 #endif  // CONFIG_TUYA_GPIO_MAP
-                // Modified by tuya End
+                // Modified by TUYA End
 			}
 		}
 	}
@@ -491,13 +501,15 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
 						BK_LOG_ON_ERR(bk_gpio_enable_output(s_gpio_ctrl_ldo_output[i].gpio_id));
 						BK_LOG_ON_ERR(bk_gpio_set_output_low(s_gpio_ctrl_ldo_output[i].gpio_id));
 					}
-                    // Modified by tuya Start
+                    // Modified by TUYA Start
 #ifdef CONFIG_TUYA_GPIO_MAP
                     else {
-                        uint8_t usb_ldo = 56, lcd_ldo = 56, lcd_active_level = 0, usb_active_level = 0;
-                        tkl_vi_get_power_info(&usb_ldo, &usb_active_level);
+                        uint8_t usb_ldo = 56, dvp_ldo = 56, lcd_ldo = 56;
+                        uint8_t lcd_active_level = 0, dvp_active_level = 0, usb_active_level = 0;
+                        tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &usb_active_level);
+                        tkl_vi_get_power_info(DVP_CAMERA, &dvp_ldo, &dvp_active_level);
                         tkl_display_power_ctrl_pin(&lcd_ldo, &lcd_active_level);
-                        if ((gpio_id == lcd_ldo) || (gpio_id == usb_ldo)) {
+                        if ((gpio_id == lcd_ldo) || (gpio_id == usb_ldo) || (gpio_id == dvp_ldo)) {
                             /*gpio dev unmap*/
                             BK_LOG_ON_ERR(bk_gpio_disable_output(gpio_id));
                             BK_LOG_ON_ERR(bk_gpio_disable_input(gpio_id));
@@ -523,7 +535,7 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
                         }
                     }
 #endif  // CONFIG_TUYA_GPIO_MAP
-                    // Modified by tuya End
+                    // Modified by TUYA End
 				}
 			}
 		}

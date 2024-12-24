@@ -1636,14 +1636,7 @@ int bkreg_run_command1(unsigned char *content, int cnt)
             {
                 /* BLE DUT */
                 evm_stop_bypass_mac();
-
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-                ble_dut_start(CONFIG_TUYA_UART_PRINT_PORT);
-#else
                 ble_dut_start(CONFIG_UART_PRINT_PORT);
-#endif
-// Modified by TUYA End
                 break;
             }
 

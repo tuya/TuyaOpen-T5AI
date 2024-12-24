@@ -273,9 +273,11 @@ typedef struct wlan_sta_ap {
 typedef struct wlan_sta_scan_param {
 	uint8_t scan_only;    /* do scan only */
 	uint8_t scan_passive; /* passive scan */
+	uint8_t scan_cc;      /* country code scan */
 	uint8_t scan_ssid;    /* Scan SSID of configured network with Probe Requests */
 	uint8_t num_ssids;
 	wlan_ssid_t ssids[WLAN_SCAN_SSID_MAX];
+	uint32_t id;
 } wlan_sta_scan_param_t;
 
 /**
@@ -898,6 +900,12 @@ struct wifi_bcn_frame
 #define MAC_DS_LEN_OFT                          1
 #define MAC_DS_CHANNEL_OFT                      2
 #define MAC_DS_PARAM_LEN                        3
+
+#define MAC_ELTID_COUNTRY                 7
+// Country
+#define MAC_COUNTRY_LEN_OFT                     1
+#define MAC_COUNTRY_STRING_OFT                  2
+#define MAC_COUNTRY_STRING_LEN                  3
 
 /* param_config */
 #define CONFIG_ROLE_NULL        0

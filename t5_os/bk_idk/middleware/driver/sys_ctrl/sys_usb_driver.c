@@ -18,11 +18,7 @@
 
 uint32_t sys_drv_usb_analog_phy_en(bool ctrl, void *arg)
 {
-	uint32_t int_level = sys_drv_enter_critical();
-
 	sys_hal_usb_analog_phy_en(ctrl);
-
-	sys_drv_exit_critical(int_level);
 	return SYS_DRV_SUCCESS;
 }
 

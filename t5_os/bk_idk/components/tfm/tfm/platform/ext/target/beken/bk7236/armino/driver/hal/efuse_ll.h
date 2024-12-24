@@ -119,6 +119,31 @@ static inline void efuse_ll_disable_vdd25(efuse_hw_t *hw)
 	hw->ctrl.vdd25_en = 0;
 }
 
+#define EFUSE_REG2_MODULE        *((volatile unsigned long *) (0x44880000 + 0x2*4))
+#define EFUSE_REG4_CTRL          *((volatile unsigned long *) (0x44880000 + 0x4*4))
+#define EFUSE_REG5_DATA          *((volatile unsigned long *) (0x44880000 + 0x5*4))
+#define EFUSE_READ_IS_VALID       ((EFUSE_REG5_DATA & 0x100) >> 8)
+#define EFUSE_FAST_BOOT_DISABLE_BIT         (1<<2)
+
+static inline bool efuse_ll_is_enable_fast_boot(void)
+{
+        volatile uint32_t loop_cnt = 0;
+        uint32_t efuse_data;
+
+        EFUSE_REG2_MODULE = 0x03;
+        EFUSE_REG4_CTRL = 0x01;
+
+        while((EFUSE_READ_IS_VALID == 0)) {
+                if (loop_cnt ++ > 1020000) {
+                        return 0;
+                }   
+        }   
+
+        efuse_data = EFUSE_REG5_DATA;
+
+        return (!(efuse_data & EFUSE_FAST_BOOT_DISABLE_BIT));
+}
+
 #ifdef __cplusplus
 }
 #endif

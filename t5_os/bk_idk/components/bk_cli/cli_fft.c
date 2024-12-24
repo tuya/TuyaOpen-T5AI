@@ -133,7 +133,7 @@ uint32 data_comp[] = {
 	0xffb00000, 0xff7a0000, 0xff4a0000, 0xff250000, 0xff0c0000, 0xff000000, 0xff03ffff, 0xff13ffff,
 } ;
 
-extern void delay(int num);//TODO fix me
+extern void bk_delay(int num);//TODO fix me
 
 static void cli_fft_help(void)
 {

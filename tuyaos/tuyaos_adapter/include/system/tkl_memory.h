@@ -39,6 +39,28 @@ void *tkl_system_malloc(SIZE_T size);
 void tkl_system_free(void* ptr);
 
 /**
+* @brief set memory
+*
+* @param[in] size: memory size
+*
+* @note This API is used to alloc memory of system.
+*
+* @return the memory address malloced
+*/
+void *tkl_system_memset(void* src, int ch, const SIZE_T n);
+
+/**
+* @brief Alloc memory of system
+*
+* @param[in] size: memory size
+*
+* @note This API is used to alloc memory of system.
+*
+* @return the memory address malloced
+*/
+void *tkl_system_memcpy(void* src, const void* dst, const SIZE_T n);
+
+/**
  * @brief Allocate and clear the memory
  * 
  * @param[in]       nitems      the numbers of memory block
@@ -66,6 +88,34 @@ void *tkl_system_realloc(void* ptr, size_t size);
 * @return heap size
 */
 int tkl_system_get_free_heap_size(void);
+
+int tkl_system_memcmp(const void *str1, const void *str2, SIZE_T n);
+
+
+#if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM==1)
+/**
+* @brief Alloc psram memory of system
+*
+* @param[in] size: memory size
+*
+* @note ENABLE_EXT_RAM neeed define in tuyaos_kernel.config.
+*
+* @return the memory address malloced
+*/
+void *tkl_system_psram_malloc(SIZE_T size);
+
+/**
+* @brief Free psram memory of system
+*
+* @param[in] ptr: memory point
+*
+* @note ENABLE_EXT_RAM neeed define in tuyaos_kernel.config.
+*
+* @return void
+*/
+void tkl_system_psram_free(void* ptr);
+
+#endif
 
 #ifdef __cplusplus
 }

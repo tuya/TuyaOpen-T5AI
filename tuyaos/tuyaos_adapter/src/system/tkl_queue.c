@@ -10,6 +10,7 @@
 
 #include "tkl_queue.h"
 #include "tkl_system.h"
+#include "tkl_output.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

@@ -38,10 +38,13 @@ if ("${MBEDCRYPTO_PATH}" STREQUAL "")
     endif()
 endif()
 
-
 set(MCUBOOT_IMAGE_VERSION_S             0.0.1 CACHE STRING "Version number of S image")
 set(MCUBOOT_IMAGE_VERSION_NS            0.0.1 CACHE STRING "Version number of NS image")
-set(MCUBOOT_PATH ${ARMINO_SDK_PATH}/components/mcuboot CACHE PATH "Path to MCUBOOT (or DOWNLOAD to get automatically" FORCE)
+if (CONFIG_MCUBOOT_V2_1_0)
+    set(MCUBOOT_PATH ${ARMINO_SDK_PATH}/components/mcuboot/v2.1.0 CACHE PATH "Path to MCUBOOT (or DOWNLOAD to get automatically" FORCE)
+else()
+    set(MCUBOOT_PATH ${ARMINO_SDK_PATH}/components/mcuboot/v1.9.0 CACHE PATH "Path to MCUBOOT (or DOWNLOAD to get automatically" FORCE)
+endif()
 
 if (NOT MCUBOOT_PATH)
     set(MCUBOOT_VERSION                     "60d4e39c"  CACHE STRING    "The version of MCUboot to use")

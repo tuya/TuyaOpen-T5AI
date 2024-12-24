@@ -47,7 +47,7 @@ static int32_t *temp_speaker_addr = NULL;     //存放从speaker_ring_buff中取
 static dma_id_t dac_dma_id = DMA_ID_MAX;
 static RingBufferContext speaker_rb;
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 static bk_err_t audio_send_msg(audio_play_msg_t msg)
 {
@@ -303,7 +303,7 @@ static void audio_play_main(void)
 	/* read a fram pcm data before start test */
 	audio_play_ready();
 	//audio_dma_dac_finish_isr();
-	delay(100);
+	bk_delay(100);
 	bk_aud_start_dac();
 
 	while(1) {
@@ -452,7 +452,7 @@ void cli_cp0_audio_play_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 			os_printf("deinit audio play task fail \r\n");
 		}
 
-		delay(1000);
+		bk_delay(1000);
 		/* close encoder file */
 		fr = f_close(&speaker_file);
 		if (fr != FR_OK) {

@@ -35,6 +35,13 @@
       "version_policy": "STRICT"
     },
     {
+      "name": "TFM_FWU_CONFIRM",
+      "signal": "TFM_FWU_CONFIRM_REQ",
+      "non_secure_clients": true,
+      "version": 1,
+      "version_policy": "STRICT"
+    },
+    {
       "name": "TFM_FWU_QUERY",
       "signal": "TFM_FWU_QUERY_REQ",
       "non_secure_clients": true,
@@ -95,6 +102,13 @@
     {
       "name": "TFM_FWU_ACCEPT",
       "sid": "0x000000A5",
+      "non_secure_clients": true,
+      "version": 1,
+      "version_policy": "STRICT"
+    },
+    {
+      "name": "TFM_FWU_CONFIRM",
+      "sid": "0x000000A6",
       "non_secure_clients": true,
       "version": 1,
       "version_policy": "STRICT"

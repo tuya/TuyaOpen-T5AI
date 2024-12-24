@@ -85,6 +85,10 @@ int wlan_ap_reload(void);
 int wlan_ap_disable(void);
 int wlan_ap_sta_num(int *num);
 int wlan_ap_sta_info(wlan_ap_stas_t *stas);
+int wlan_ap_add_blacklist(wlan_ap_blacklist_t *req);
+int wlan_ap_del_blacklist(wlan_ap_blacklist_t *req);
+int wlan_ap_clear_blacklist(void);
+int wlan_ap_sta_info(wlan_ap_stas_t *stas);
 int wlan_ap_set_beacon_vsie(wlan_ap_vsie_t *vsie);
 int wlan_dhcp_done_ind(u8 vif_idx);
 #if CONFIG_P2P

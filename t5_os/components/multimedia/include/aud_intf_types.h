@@ -211,6 +211,9 @@ typedef enum {
 typedef struct {
 	bool aec_enable;						/**< true: enable aec, false: disable aec */
 	uint32_t samp_rate;		/**< voice transfer sample rate */
+    // Modified by TUYA Start
+	uint32_t spk_samp_rate;		/**< speaker transfer sample rate */
+    // Modified by TUYA End
 	aud_intf_voc_data_type_t data_type;		/**< voice data type */
 	uint8_t mic_gain;						/**< mic gain: value range:0x0 ~ 0x3f, suggest:0x2d */
 	uint16_t spk_gain;						/**< spk gain: value range:0x0 ~ 0x3f, suggest:0x2d */

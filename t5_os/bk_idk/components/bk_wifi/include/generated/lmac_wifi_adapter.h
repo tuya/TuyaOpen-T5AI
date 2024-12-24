@@ -172,6 +172,8 @@ typedef struct {
 	int (*_bk_feature_network_found_event)(void);
 	int (*_bk_feature_get_mac_sup_sta_max_num)(void);
 	int (*_bk_feature_tcp_protect_enable)(void);
+	int (*_bk_feature_ap_ps_enable)(void);
+	int (*_bk_feature_tx_tim_enable)(void);
 	void (*_flush_all_dcache)(void);
 	unsigned long (*_bk_ms_to_ticks)(unsigned long ms);
 	bk_err_t (*_dma_memcpy)(void *out, const void *in, uint32_t len);
@@ -326,6 +328,8 @@ typedef struct {
 	uint32_t _int_src_modem;
 	uint32_t _int_src_modem_rc;
 	bool _improve_he_tb_enable;
+	uint8_t _wifi_mac_short_retry;
+	uint8_t _wifi_mac_long_retry;
 } wifi_os_variable_t;
 extern wifi_os_variable_t g_wifi_os_variable;
 

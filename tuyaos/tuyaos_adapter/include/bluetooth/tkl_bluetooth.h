@@ -109,6 +109,75 @@ OPERATE_RET tkl_ble_gap_adv_rsp_data_set(TKL_BLE_DATA_T const *p_adv, TKL_BLE_DA
 OPERATE_RET tkl_ble_gap_adv_rsp_data_update(TKL_BLE_DATA_T const *p_adv, TKL_BLE_DATA_T const *p_scan_rsp);
 
 /**
+ * @brief   Create extended advertising
+ * @param   [in] p_ext_adv:     extended advertising handle
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+OPERATE_RET tkl_ble_gap_ext_adv_create(TKL_BLE_GAP_EXT_ADV_T *p_ext_adv);
+
+/**
+ * @brief   Config extended advertising
+ * @param   [in] p_ext_adv:     extended advertising handle
+ *          [in] p_adv_params:  pointer to advertising parameters
+ *          [in] p_adv:         Data to be used in advertisement packets, and include adv data len
+ *          [in] p_scan_rsp:    Data to be used in advertisement respond packets, and include rsp data len
+ * @Note    Please Check p_adv and p_scan_rsp, if data->p_data == NULL or data->length == 0, we will not update these values.
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+OPERATE_RET tkl_ble_gap_ext_adv_config(TKL_BLE_GAP_EXT_ADV_T ext_adv, TKL_BLE_GAP_EXT_ADV_PARAMS_T const *p_adv_params, 
+                                       TKL_BLE_DATA_T const *p_adv_data, TKL_BLE_DATA_T const *p_scan_rsp);
+
+/**
+ * @brief   Start extended advertising
+ * @param   [in] p_ext_adv:     extended advertising handle
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+OPERATE_RET tkl_ble_gap_ext_adv_start(TKL_BLE_GAP_EXT_ADV_T ext_adv);
+
+/**
+ * @brief   Stop extended advertising
+ * @param   [in] p_ext_adv:     extended advertising handle
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+OPERATE_RET tkl_ble_gap_ext_adv_stop(TKL_BLE_GAP_EXT_ADV_T ext_adv);
+
+/**
+ * @brief   Delete extended advertising
+ * @param   [in] p_ext_adv:     extended advertising handle
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+OPERATE_RET tkl_ble_gap_ext_adv_delete(TKL_BLE_GAP_EXT_ADV_T ext_adv);
+
+/**
+ * @brief   Clear all extended advertising
+ * @param   void
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+OPERATE_RET tkl_ble_gap_ext_adv_clear(void);
+
+/**
+ * @brief   Query the max data length of extended advertising supported by the controller
+ * @param   void
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+uint16_t    tkl_ble_gap_ext_adv_get_max_data_length(void);
+
+/**
+ * @brief   Query the max number of extended advertising supported by the controller
+ * @param   void
+ * @return  SUCCESS
+ *          ERROR
+ * */ 
+uint8_t     tkl_ble_gap_ext_adv_get_support_number(void);
+
+/**
  * @brief   Start scanning
  * @param   [in] scan_param:    scan parameters including interval, windows
  * @return  SUCCESS

@@ -30,7 +30,7 @@ static void mbox0_rx_isr(mbox0_message_t *msg)
 	}
 	else
 	{
-		memset(&data, 0, sizeof(data));
+		return;
 	}
 
 	if(mailbox_callback[chnl] != NULL)
@@ -59,6 +59,15 @@ bk_err_t bk_mailbox_deinit(void)
 		return BK_FAIL;
 
 	return BK_OK;
+}
+
+bk_err_t bk_mailbox_ready(mailbox_endpoint_t src, mailbox_endpoint_t dst, uint32_t box_id)
+{
+	if(dst >= MBOX_CHNL_NUM)
+		return BK_ERR_MAILBOX_SRC_DST;
+
+	return BK_OK;
+
 }
 
 bk_err_t bk_mailbox_send(mailbox_data_t *data, mailbox_endpoint_t src, mailbox_endpoint_t dst, void *arg)

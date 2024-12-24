@@ -34,6 +34,7 @@ typedef struct {
     OPERATE_RET (*set_cur_channel)              (const UCHAR_T chan);
     OPERATE_RET (*get_cur_channel)              (UCHAR_T *chan);
     OPERATE_RET (*set_sniffer)                  (const BOOL_T en, const SNIFFER_CALLBACK cb);
+    OPERATE_RET (*set_ip)                       (const WF_IF_E wf, NW_IP_S *ip);
     OPERATE_RET (*get_ip)                       (const WF_IF_E wf, NW_IP_S *ip);
     OPERATE_RET (*get_ipv6)                     (const WF_IF_E wf, NW_IP_TYPE type, NW_IP_S *ip);
     OPERATE_RET (*set_mac)                      (const WF_IF_E wf, const NW_MAC_S *mac);
@@ -43,6 +44,8 @@ typedef struct {
     OPERATE_RET (*get_connected_ap_info)        (FAST_WF_CONNECTED_AP_INFO_T **fast_ap_info);
     OPERATE_RET (*get_bssid)                    (UCHAR_T *mac);
     OPERATE_RET (*set_country_code)             (const COUNTRY_CODE_E ccode);
+    OPERATE_RET (*set_country_code_v2)          (const UCHAR_T *ccode);
+    OPERATE_RET (*get_country_code)             (UCHAR_T *ccode);
     OPERATE_RET (*set_lp_mode)                  (const BOOL_T en, const UCHAR_T dtim);
     BOOL_T      (*set_rf_calibrated)            (void);
     OPERATE_RET (*station_fast_connect)         (const FAST_WF_CONNECTED_AP_INFO_T *fast_ap_info);

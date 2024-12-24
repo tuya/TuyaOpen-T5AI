@@ -3,7 +3,7 @@
 #include "bl_config.h"
 #include "system.h"
 
-void delay(int num) {
+void bk_delay(int num) {
 	volatile int i, j;
 
 	for (i = 0; i < num; i++) {

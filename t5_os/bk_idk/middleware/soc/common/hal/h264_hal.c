@@ -171,3 +171,10 @@ void h264_hal_int_config(h264_hal_t *hal,uint32_t int_mode)
 {
 	h264_ll_set_int_mode(hal->hw,int_mode);
 }
+
+void h264_hal_set_vui_fps(h264_hal_t *hal,uint32_t fps)
+{
+    uint32_t default_vui_num_u_tick_L = 0x3E8;
+    uint32_t vui_time_scale_L = default_vui_num_u_tick_L * 2 * fps;
+    h264_ll_set_vui_time_scale_L(hal->hw, vui_time_scale_L);
+}

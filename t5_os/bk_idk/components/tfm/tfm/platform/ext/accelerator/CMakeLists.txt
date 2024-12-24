@@ -19,7 +19,9 @@ if(TEST_NS)
     add_library(test_ns_crypto_hw STATIC)
 endif()
 
+if (CONFIG_BUILD_TFM)
 add_library(crypto_service_crypto_hw STATIC)
+endif()
 
 add_subdirectory(${CRYPTO_HW_ACCELERATOR_TYPE})
 
@@ -53,6 +55,7 @@ endif()
 
 ############################ Crypto Service ####################################
 
+if (CONFIG_BUILD_TFM)
 target_include_directories(crypto_service_crypto_hw
     PUBLIC
         interface
@@ -62,3 +65,4 @@ target_compile_definitions(crypto_service_crypto_hw
     PUBLIC
         CRYPTO_HW_ACCELERATOR
 )
+endif()

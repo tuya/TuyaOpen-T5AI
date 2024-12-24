@@ -44,7 +44,7 @@
  * Data width values for ARM_FLASH_CAPABILITIES::data_width
  * \ref ARM_FLASH_CAPABILITIES
  */
- enum {
+enum {
     DATA_WIDTH_8BIT   = 0u,
     DATA_WIDTH_16BIT,
     DATA_WIDTH_32BIT,
@@ -184,7 +184,7 @@ static ARM_FLASH_CAPABILITIES Flash_GetCapabilities(void)
 
 static int32_t Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
 {
-	SYS_LOCK_DECLARATION();
+    SYS_LOCK_DECLARATION();
     uint32_t flash_size = 0;
     ARG_UNUSED(cb_event);
 

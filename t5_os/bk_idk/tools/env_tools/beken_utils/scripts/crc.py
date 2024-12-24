@@ -36,6 +36,6 @@ class crc:
                     of.write(crc)
                     b_success = True
         if (b_success == True):
-            logging.info(f'crc success {outfile}')
+            logging.debug(f'crc success {outfile}')
         else:
             logging.info(f'crc fail {outfile}')

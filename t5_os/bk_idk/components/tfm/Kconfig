@@ -76,6 +76,12 @@ menu "Tfm"
 			help
 				Enable BL2: ON/OFF
 
+		config JUMP_BIN
+			string "Define Tfm Jump.bin"
+			default "OFF"
+			help
+				Enable JUMP: ON/OFF
+
 		config TFM_BL2_DOWNLOAD
 			bool "Enable BL2 download"
 			default y
@@ -140,7 +146,7 @@ menu "Tfm"
 				Enable flash API for non-security, for chip verification only.
 				Should be disabled in release version!
 
-        config TFM_READ_FLASH_NSC
+		config TFM_READ_FLASH_NSC
 			bool "Enable read flash NSC by cbus api"
 			default n
 			help
@@ -198,6 +204,10 @@ menu "Tfm"
 			bool "Bl2 skip validate"
 			default n
 
+		config OTA_UPDATE_PUBKEY
+			bool "pubkey from flash and can be updated"
+			default n
+
 		config BL2_VALIDATE_ENABLED_BY_EFUSE
 			bool "BL2 validate is enabled by eFuse"
 			default y
@@ -226,9 +236,35 @@ menu "Tfm"
 			help
 				update BL2 with pc
 
+		config RANDOM_AES_UPGRADE_BL2
+			bool "upgrade bl2 for random aes key"
+			default n
+			help
+				upgrade bl2 for random aes key
+
 		config TFM_CRYPTO_IOVEC_BUFFER_SIZE
 			hex "TFM_CRYPTO_IOVEC_BUFFER_SIZE"
 			default 0x2400
+
+		config BUILD_TFM
+			bool "Enable TFM build"
+			default y
+
+		config OTA_CONFIRM_UPDATE
+			bool "confirm update after ota download"
+			default n
+
+		config MCUBOOT_V2_1_0
+			bool "Build with new version bootloader"
+			default n
+
+		config DBUS_CHECK_CRC
+			bool "do crc check before cbus read"
+			default y
+
+		config DECOMPRESS_RESUME
+			bool "record decompress progress rate"
+			default n
 	endmenu
 endmenu
 
@@ -237,7 +273,7 @@ config SECURITY_FIRMWARE
     default n
     help
         enable security firmware / no-security firmware
-	
+
 config STARTUP_PERFORMANCE
     bool "startup_performance, include in bl2 / tfm / app"
     default n

@@ -3,9 +3,12 @@
 typedef struct
 {
 	void *(* malloc)(size_t size);
-	void (* free)(void *ptr);
 	void *(* zalloc)(size_t num, size_t size);
 	void *(* realloc)(void *old_mem, size_t size);
+	void *(* psram_malloc)(size_t size);
+	void *(* psram_zalloc)(size_t num, size_t size);
+	void *(* psram_realloc)(void *old_mem, size_t size);
+	void (* free)(void *ptr);
 	void *(* memcpy)(void *out, const void *in, uint32_t n);
 	void (* memcpy_word)(void *out, const void *in, uint32_t n);
 

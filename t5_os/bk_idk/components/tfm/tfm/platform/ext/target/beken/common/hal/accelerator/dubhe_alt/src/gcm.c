@@ -95,7 +95,7 @@ void mbedtls_gcm_init( mbedtls_gcm_context *ctx )
         return;
     }
     memset( ctx, 0, sizeof( *ctx ) );
-    armgcm = mbedtls_calloc(1, sizeof(*armgcm));
+    armgcm = (arm_ce_gcm_ctx_t*)mbedtls_calloc(1, sizeof(*armgcm));
     if ( NULL == armgcm ) {
         return;
     }

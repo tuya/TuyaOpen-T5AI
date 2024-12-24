@@ -2,11 +2,11 @@
 #include <driver/pwm.h>
 #include <driver/pwm_types.h>
 
-#define __PWM_FREQ2PERIOD(x) ((unsigned int)((1000000.0/x)))
+#define __PWM_FREQ2PERIOD(x) ((unsigned int)((26000000.0/x)))
 
 pwm_chan_t ty_to_bk_pwm(TUYA_PWM_NUM_E ch_id)
 {
-    pwm_chan_t pwm;
+    pwm_chan_t pwm = PWM_ID_MAX;
     switch(ch_id) {
         case TUYA_PWM_NUM_0:
             pwm = PWM_ID_0;
@@ -47,6 +47,9 @@ OPERATE_RET tkl_pwm_init(TUYA_PWM_NUM_E ch_id, const TUYA_PWM_BASE_CFG_T *cfg)
 
     period = __PWM_FREQ2PERIOD(cfg->frequency);
     duty = (unsigned int)(cfg->duty / 10000.0 * period);
+    if(cfg->duty && duty == 0) {
+        duty = 1;
+    }
 
     config.period_cycle = period;
     config.duty_cycle = duty;
@@ -142,6 +145,10 @@ OPERATE_RET tkl_pwm_info_set(TUYA_PWM_NUM_E ch_id, const TUYA_PWM_BASE_CFG_T *in
 
     period = __PWM_FREQ2PERIOD(info->frequency);
     duty = (unsigned int)(info->duty / 10000.0 * period);
+ 
+    if(info->duty && duty == 0) {
+        duty = 1;
+    }
 
     config.period_cycle = period;
     config.duty_cycle = duty;
@@ -180,7 +187,7 @@ OPERATE_RET tkl_pwm_info_set(TUYA_PWM_NUM_E ch_id, const TUYA_PWM_BASE_CFG_T *in
  */
 OPERATE_RET tkl_pwm_info_get(TUYA_PWM_NUM_E ch_id, TUYA_PWM_BASE_CFG_T *info)
 {
-    pwm_chan_t pwm_port;
-    pwm_port = ty_to_bk_pwm(ch_id);
+    //pwm_chan_t pwm_port;
+    //pwm_port = ty_to_bk_pwm(ch_id);
     return OPRT_NOT_SUPPORTED;
 }

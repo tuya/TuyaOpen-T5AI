@@ -1,0 +1,19 @@
+BK7258
+===================
+
+:link_to_translation:`en:[English]`
+
+开发板简介
+------------------------
+
+ - 为三核 CM33 架构
+ - 支持 FreeRTOS V10
+
+.. figure:: ../../_static/demo_board_7258.png
+    :align: center
+    :alt: BK7258 Demo Board
+    :figclass: align-center
+
+    BK7258 Demo Board
+
+

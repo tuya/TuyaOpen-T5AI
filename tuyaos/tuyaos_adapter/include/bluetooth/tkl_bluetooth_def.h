@@ -79,13 +79,23 @@ typedef struct {
     UCHAR_T     *p_data;                                /**< Ble Data Pointer */
 } TKL_BLE_DATA_T;
 
- typedef enum {
+typedef enum {
     TKL_BLE_ADV_DATA,                                   /**< Adv Data - Only */
     TKL_BLE_RSP_DATA,                                   /**< Scan Response Data - Only */
     TKL_BLE_ADV_RSP_DATA,                               /**< Adv Data + Scan Response Data */
     TKL_BLE_NONCONN_ADV_DATA,                           /**< None-Connectable Adv Data - Only */
     TKL_BLE_EXTENDED_ADV_DATA,                          /**< [Bluetooth 5.0]Extended Adv Data - Only */
 } TKL_BLE_GAP_ADV_TYPE_E;
+
+typedef struct {
+    uint16_t connectable   : 1;                         /**< Connectable advertising event type. */
+    uint16_t scannable     : 1;                         /**< Scannable advertising event type. */
+    uint16_t directed      : 1;                         /**< Directed advertising event type. */
+    uint16_t scan_response : 1;                         /**< Received a scan response. */
+    uint16_t extended_pdu  : 1;                         /**< Received an extended advertising set. */
+    uint16_t status        : 2;                         /**< Data status. See @ref BLE_GAP_ADV_DATA_STATUS. */
+    uint16_t reserved      : 9;                         /**< Reserved for future use. */
+} TKL_BLE_GAP_EXT_ADV_TYPE_T;
 
 /**@brief GAP advertising parameters. */
 typedef struct {
@@ -98,6 +108,36 @@ typedef struct {
                                                                 0x04 = adv channel index 39. Default Value: 0x07*/
 } TKL_BLE_GAP_ADV_PARAMS_T;
 
+typedef struct {
+    void* handle;                                       /**< advertising handle */
+} TKL_BLE_GAP_EXT_ADV_T;
+
+typedef struct {
+    uint8_t type;                                       /**< Adv Type. Refer to TKL_BLE_GAP_ADV_TYPE_CONN_SCANNABLE_UNDIRECTED etc.*/
+    uint8_t anonymous:1;                                /**< Omit advertiser's address from all PDUs. */
+    uint8_t include_tx_power:1;                         /**< Whether to include advertising tx power. */
+} TKL_BLE_GAP_EXT_ADV_PROPERTIES_T;
+
+typedef struct {
+    TKL_BLE_GAP_EXT_ADV_PROPERTIES_T properties;
+    TKL_BLE_GAP_ADDR_T      direct_addr;                /**< For Directed Advertising, you can fill in direct address */
+    uint16_t                adv_interval_min;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
+    uint16_t                adv_interval_max;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
+    uint8_t                 adv_channel_map;            /**< Advertising Channel Map, 0x01 = adv channel index 37,  0x02 = adv channel index 38,
+                                                                0x04 = adv channel index 39. Default Value: 0x07*/
+	uint8_t					primary_phy;                /**< Primary advertising PHY. Refer to @TKL_BLE_GAP_PHY_1MBPS */
+  	uint8_t					secondary_phy;              /**< Secondary advertising PHY. Refer to @TKL_BLE_GAP_PHY_1MBPS */
+  	uint8_t					secondary_phy_skip;         
+  	uint8_t					tx_power;                   /**< Preferred advertiser TX Power */
+  	uint8_t					sid;                        /**< The advertising set identifier distinguishes this advertising set from other
+                                                         advertising sets transmitted by this and other devices. */
+  	uint8_t					max_adv_evts;               /**< Maximum advertising events that shall be sent prior to disabling
+                                                         advertising. Setting the value to 0 disables the limitation. When
+                                                         the count of advertising events specified by this parameter
+                                                         (if not 0) is reached, advertising will be automatically stopped. */
+    uint8_t                 scan_req_notif:1;           /**< Enable scan request notifications for this advertising set. */
+} TKL_BLE_GAP_EXT_ADV_PARAMS_T;
+
 /**@brief GAP adv report parameters. */
 typedef struct {
     TKL_BLE_GAP_ADV_TYPE_E  adv_type;                   /**< Advertising report type. Refer to @TKL_BLE_GAP_ADV_TYPE_E */
@@ -107,9 +147,22 @@ typedef struct {
     TKL_BLE_DATA_T          data;                       /**< Received advertising or scan response data.  */
 } TKL_BLE_GAP_ADV_REPORT_T;
 
+/**@brief GAP adv report parameters. */
+typedef struct {
+    TKL_BLE_GAP_EXT_ADV_TYPE_T  adv_type;               /**< Advertising report type. Refer to @TKL_BLE_GAP_EXT_ADV_TYPE_T */
+    TKL_BLE_GAP_ADDR_T      peer_addr;                  /**< Bluetooth address of the peer device. */
+    uint8_t                 primary_phy;                /**< Primary advertising PHY. Refer to @TKL_BLE_GAP_PHY_1MBPS */
+    uint8_t                 secondary_phy;              /**< Secondary advertising PHY. Refer to @TKL_BLE_GAP_PHY_1MBPS */
+    uint8_t                 tx_power;                   /**< TX Power reported by the advertiser */
+    uint8_t                 set_id;                     /**< Set ID of the received advertising data. */
+    int8_t                  rssi;                       /**< Received Signal Strength Indication in dBm of the last packet received. */
+    uint8_t                 channel_index;              /**< Channel Index on which the last advertising packet is received (37-39).channel index = 37, it means that we do advertisement in channel 37. */
+    TKL_BLE_DATA_T          data;                       /**< Received advertising or scan response data.  */
+} TKL_BLE_GAP_EXT_ADV_REPORT_T;
+
 /**@brief GAP scanning parameters. */
 typedef struct {
-    UCHAR_T                 extended;                   /**< If 1, the scanner will accept extended advertising packets.
+    UCHAR_T                 extended;                   /**< If 1, the scanner will accept extended advertising packets. Refer to @TKL_BLE_GAP_EVT_EXT_ADV_REPORT
                                                             If set to 0, the scanner will not receive advertising packets
                                                             on secondary advertising channels, and will not be able
                                                             to receive long advertising PDUs. */
@@ -119,7 +172,7 @@ typedef struct {
     USHORT_T                interval;                   /**< Scan interval in 625 us units. */
     USHORT_T                window;                     /**< Scan window in 625 us units. */
     USHORT_T                timeout;                    /**< Scan timeout in 10 ms units. */
-    UCHAR_T                 scan_channel_map;           /**< Scan Channel Index, refer to @TKL_BLE_GAP_ADV_PARAMS_T*/
+    UCHAR_T                 scan_channel_map;           /**< Scan Channel Index */
 } TKL_BLE_GAP_SCAN_PARAMS_T;
 
 /** @brief  Definition of LE connection request parameter.*/
@@ -220,6 +273,8 @@ typedef enum {
 
     TKL_BLE_GAP_EVT_ADV_REPORT,                         /**< Scan result report */
 
+    TKL_BLE_GAP_EVT_EXT_ADV_REPORT,                     /**< Scan result report (extend adv). Refer to @TKL_BLE_GAP_EXT_ADV_REPORT_T */
+
     TKL_BLE_GAP_EVT_CONN_PARAM_REQ,                     /**< Parameter update request */
 
     TKL_BLE_GAP_EVT_CONN_PARAM_UPDATE,                  /**< Parameter update successfully */
@@ -309,6 +364,7 @@ typedef struct {
         TKL_BLE_GAP_CONNECT_EVT_T       connect;        /**< Receive connect callback, This value can be used with TKL_BLE_EVT_PERIPHERAL_CONNECT and TKL_BLE_EVT_CENTRAL_CONNECT_DISCOVERY*/
         TKL_BLE_GAP_DISCONNECT_EVT_T    disconnect;     /**< Receive disconnect callback*/
         TKL_BLE_GAP_ADV_REPORT_T        adv_report;     /**< Receive Adv and Respond report*/
+        TKL_BLE_GAP_EXT_ADV_REPORT_T    ext_adv_report; /**< Receive Ext Adv report*/
         TKL_BLE_GAP_CONN_PARAMS_T       conn_param;     /**< We will update connect parameters.This value can be used with TKL_BLE_EVT_CONN_PARAM_REQ and TKL_BLE_EVT_CONN_PARAM_UPDATE*/
         char                          link_rssi;      /**< Peer device RSSI value */
     }gap_event;

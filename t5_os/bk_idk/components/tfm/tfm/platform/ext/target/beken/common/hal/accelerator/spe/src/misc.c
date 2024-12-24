@@ -58,9 +58,9 @@ int psa_vprintf(const char *format, va_list vargs)
 	len = vsnprintf(string, sizeof(string) - 1, format, vargs);
 
 	string[CONFIG_STDIO_PRINTF_BUF_SIZE - 1] = 0;
-
+#if MCUBOOT_LOG_LEVEL > MCUBOOT_LOG_LEVEL_OFF || TEST_BL2
 	stdio_output_string((const unsigned char *)string, len);
-
+#endif
 	return len;
 }
 

@@ -67,7 +67,11 @@
 
 #include "bk_drv_model.h"
 #include <os/mem.h>
-
+#ifdef CONFIG_BRIDGE
+#include "bridgeif.h"
+#include "rwnx_config.h"
+#endif
+#include "fhost_msg.h"
 #include <os/os.h>
 
 /* Define those to better describe your network interface. */
@@ -81,11 +85,10 @@
 //TODO should use registered callback here!!!
 extern int ke_l2_packet_tx(unsigned char *buf, int len, int flag);
 extern int bmsg_tx_sender(struct pbuf *p, uint32_t vif_idx);
+extern uint8_t vif_mgmt_get_staid(void *vif, uint8_t *sta_addr);
 #if CONFIG_WIFI6_CODE_STACK
 extern int bmsg_special_tx_sender(struct pbuf *p, uint32_t vif_idx);
 #endif
-/* Forward declarations. */
-void ethernetif_input(int iface, struct pbuf *p);
 
 /**
  * In this function, the hardware should be initialized.
@@ -106,7 +109,7 @@ static void low_level_init(struct netif *netif)
 {
     void *vif = netif->state;
     u8 *macptr = wifi_netif_vif_to_mac(vif);
-	int vif_index = wifi_netif_vif_to_vifid(vif);
+    int vif_index = wifi_netif_vif_to_vifid(vif);
 
 #if LWIP_NETIF_HOSTNAME
     /* Initialize interface hostname */
@@ -127,7 +130,7 @@ static void low_level_init(struct netif *netif)
 #if !CONFIG_BRIDGE
     netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 #else
-	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET | NETIF_FLAG_LINK_UP;
+    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET | NETIF_FLAG_LINK_UP;
 #endif
  #ifdef LWIP_IGMP
     netif->flags |= NETIF_FLAG_IGMP;
@@ -155,38 +158,38 @@ static void low_level_init(struct netif *netif)
  */
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
-	int ret;
-	err_t err = ERR_OK;
-	uint8_t vif_idx = wifi_netif_vif_to_vifid(netif->state);
+    int ret;
+    err_t err = ERR_OK;
+    uint8_t vif_idx = wifi_netif_vif_to_vifid(netif->state);
 
-	// Sanity check
-	if (vif_idx == 0xff)
-		return ERR_ARG;
+    // Sanity check
+    if (vif_idx == 0xff)
+        return ERR_ARG;
 
 #if CONFIG_WIFI6_CODE_STACK
-	//LWIP_LOGI("output:%x\r\n", p);
-	extern bool special_arp_flag;
-	if(special_arp_flag)
-	{
-		ret = bmsg_special_tx_sender(p, (uint32_t)vif_idx);
-		special_arp_flag = false;
-	}
-	else
+    //LWIP_LOGI("output:%x\r\n", p);
+    extern bool special_arp_flag;
+    if(special_arp_flag)
+    {
+        ret = bmsg_special_tx_sender(p, (uint32_t)vif_idx);
+        special_arp_flag = false;
+    }
+    else
 #endif
-	{
-		ret = bmsg_tx_sender(p, (uint32_t)vif_idx);
-	}
-	if(0 != ret)
-	{
-		err = ERR_TIMEOUT;
-	}
+    {
+        ret = bmsg_tx_sender(p, (uint32_t)vif_idx);
+    }
+    if(0 != ret)
+    {
+        err = ERR_TIMEOUT;
+    }
 
     return err;
 }
 
 static inline int is_broadcast_mac_addr(const u8 *a)
 {
-	return (a[0] & a[1] & a[2] & a[3] & a[4] & a[5]) == 0xff;
+    return (a[0] & a[1] & a[2] & a[3] & a[4] & a[5]) == 0xff;
 }
 
 /**
@@ -199,20 +202,20 @@ static inline int is_broadcast_mac_addr(const u8 *a)
  * @param netif the lwip network interface structure for this ethernetif
  */
 void
-ethernetif_input(int iface, struct pbuf *p)
+ethernetif_input(int iface, struct pbuf *p, int dst_idx)
 {
     struct eth_hdr *ethhdr;
-	struct netif *netif;
-	void *vif;
+    struct netif *netif;
+    void *vif;
 
-	if (p->len <= SIZEOF_ETH_HDR) {
-		pbuf_free(p);
-		return;
-	}
+    if (p->len <= SIZEOF_ETH_HDR) {
+        pbuf_free(p);
+        return;
+    }
 
-	vif = wifi_netif_vifid_to_vif(iface);
-	netif = (struct netif *)wifi_netif_get_vif_private_data(vif);
-	if(!netif) {
+    vif = wifi_netif_vifid_to_vif(iface);
+    netif = (struct netif *)wifi_netif_get_vif_private_data(vif);
+    if(!netif) {
         //LWIP_LOGI("ethernetif_input no netif found %d\r\n", iface);
         pbuf_free(p);
         p = NULL;
@@ -222,27 +225,67 @@ ethernetif_input(int iface, struct pbuf *p)
     /* points to packet payload, which starts with an Ethernet header */
     ethhdr = p->payload;
 
-    if( (memcmp(netif->hwaddr,ethhdr->src.addr,NETIF_MAX_HWADDR_LEN)==0) && (htons(ethhdr->type) !=ETHTYPE_ARP) )
-    {
-        LWIP_DEBUGF(ETHARP_DEBUG ,("ethernet_input frame is my send,drop it\r\n"));
-        pbuf_free(p);
-        return;
+    /* need to forward */
+    if (wifi_netif_vif_to_netif_type(vif) == NETIF_IF_AP) {
+        // If dest sta is known, or packet is multicast, forward this packet
+        if ((ethhdr->dest.addr[0] & 1) || dst_idx != 0xff) {
+            // check if is arp request to us, doesn't need to forward
+            struct pbuf *q;
+
+            // unicast frame, check da staidx
+            // for softap+ap, if sta under softap sends packets to router,
+            // dst_idx will be valid, and packets will be forwarded in our
+            // softap bss.
+            if (!(ethhdr->dest.addr[0] & 1) && dst_idx < NX_REMOTE_STA_MAX) {
+                void *sta = sta_mgmt_get_entry(dst_idx);
+                // if STA doesn't belong to this vif
+                if (mac_sta_mgmt_get_inst_nbr(sta) != mac_vif_mgmt_get_index(vif)) {
+                    goto process;
+                }
+            }
+
+            if (ethhdr->type == PP_HTONS(ETHTYPE_ARP)) {
+                struct etharp_hdr *hdr = (struct etharp_hdr *)(ethhdr + 1);
+                if (hdr->opcode != PP_HTONS(ARP_REQUEST))
+                    goto forward;
+#if CONFIG_BRIDGE
+                // FIXME: Handle ARP Probe
+                struct netif *brif;
+                bridgeif_port_t *port;
+                if (bridgeif_netif_client_id != 0xff) {
+                    port = (bridgeif_port_t *)netif_get_client_data(netif, bridgeif_netif_client_id);
+                    if (!port || !port->bridge || !port->bridge->netif)
+                        goto forward;
+                    brif = port->bridge->netif;
+                    if (!memcmp(&hdr->dipaddr, &brif->ip_addr, 4)) {
+                        // os_printf("DIP TO BR\n");
+                        goto process;
+                    }
+                } else {
+                    if (!memcmp(&hdr->dipaddr, &netif->ip_addr, 4)) {
+                        // os_printf("DIP TO SOFTAP\n");
+                        goto process;
+                    }
+                }
+#else
+                if (!memcmp(&hdr->dipaddr, &netif->ip_addr, 4)) {
+                    // os_printf("DIP TO SOFTAP\n");
+                    goto process;
+                }
+#endif
+            }
+forward:
+            q = pbuf_clone(PBUF_RAW_TX, PBUF_RAM, p);
+            if (q != NULL) {
+                low_level_output(netif, q);
+                pbuf_free(q);
+            } else {
+                LWIP_LOGE("alloc pbuf failed, don't forward\r\n");
+            }
+        }
     }
 
-	/* need to forward*/
-	if (wifi_netif_vif_to_netif_type(vif) == NETIF_IF_AP) {
-		if (((!is_broadcast_mac_addr(ethhdr->dest.addr) &&
-			(memcmp(netif->hwaddr,ethhdr->dest.addr,NETIF_MAX_HWADDR_LEN) != 0))) ||
-			(is_broadcast_mac_addr(ethhdr->dest.addr))) {
-				struct pbuf *q;
-				q = pbuf_clone(PBUF_RAW_TX, PBUF_RAM, p);
-				if (q != NULL) {
-					low_level_output(netif, q);
-					pbuf_free(q);
-				} else
-					LWIP_LOGI("alloc pbuf failed, dont forward\r\n");
-		}
-	}
+process:
 
     switch (htons(ethhdr->type))
     {
@@ -251,7 +294,7 @@ ethernetif_input(int iface, struct pbuf *p)
     case ETHTYPE_ARP:
 #ifdef CONFIG_IPV6
     case ETHTYPE_IPV6:
-	wlan_set_multicast_flag();
+    wlan_set_multicast_flag();
 #endif
 #if PPPOE_SUPPORT
         /* PPPoE packet? */
@@ -268,9 +311,9 @@ ethernetif_input(int iface, struct pbuf *p)
         break;
 
     case ETHTYPE_EAPOL:
-	 	ke_l2_packet_tx(p->payload, p->len, iface);
-		pbuf_free(p);
-		p = NULL;
+         ke_l2_packet_tx(p->payload, p->len, iface);
+        pbuf_free(p);
+        p = NULL;
         break;
 
     default:
@@ -305,8 +348,8 @@ wlanif_init(struct netif *netif)
      */
     NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 10000000);
 
-    netif->name[0] = IFNAME0;
-    netif->name[1] = IFNAME1;
+    //netif->name[0] = IFNAME0;
+    //netif->name[1] = IFNAME1;
     /* We directly use etharp_output() here to save a function call.
      * You can instead declare your own function an call etharp_output()
      * from it if you have to do some checks before sending (e.g. if link
@@ -337,50 +380,50 @@ wlanif_init(struct netif *netif)
  */
 err_t lwip_netif_init(struct netif *netif)
 {
-	LWIP_ASSERT("netif != NULL", (netif != NULL));
+    LWIP_ASSERT("netif != NULL", (netif != NULL));
 
-	/*
-	 * Initialize the snmp variables and counters inside the struct netif.
-	 * The last argument should be replaced with your link speed, in units
-	 * of bits per second.
-	 */
-	NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 10000000);
+    /*
+     * Initialize the snmp variables and counters inside the struct netif.
+     * The last argument should be replaced with your link speed, in units
+     * of bits per second.
+     */
+    NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 10000000);
 
-	netif->name[0] = IFNAME0;
-	netif->name[1] = IFNAME1;
-	/* We directly use etharp_output() here to save a function call.
-	 * You can instead declare your own function an call etharp_output()
-	 * from it if you have to do some checks before sending (e.g. if link
-	 * is available...) */
-	netif->output = etharp_output;
-	netif->linkoutput = low_level_output;
+    netif->name[0] = IFNAME0;
+    netif->name[1] = IFNAME1;
+    /* We directly use etharp_output() here to save a function call.
+     * You can instead declare your own function an call etharp_output()
+     * from it if you have to do some checks before sending (e.g. if link
+     * is available...) */
+    netif->output = etharp_output;
+    netif->linkoutput = low_level_output;
 #ifdef CONFIG_IPV6
-	netif->output_ip6 = ethip6_output;
+    netif->output_ip6 = ethip6_output;
 #endif
 
-	/* initialize the hardware */
-	low_level_init(netif);
-	return ERR_OK;
+    /* initialize the hardware */
+    low_level_init(netif);
+    return ERR_OK;
 }
 
 err_t lwip_netif_uap_init(struct netif *netif)
 {
-	LWIP_ASSERT("netif != NULL", (netif != NULL));
+    LWIP_ASSERT("netif != NULL", (netif != NULL));
 
-	//netif->state = NULL;
-	netif->name[0] = 'u';
-	netif->name[1] = 'a';
-	/* We directly use etharp_output() here to save a function call.
-	 * You can instead declare your own function an call etharp_output()
-	 * from it if you have to do some checks before sending (e.g. if link
-	 * is available...) */
-	netif->output = etharp_output;
-	netif->linkoutput = low_level_output;
+    //netif->state = NULL;
+    netif->name[0] = 'u';
+    netif->name[1] = 'a';
+    /* We directly use etharp_output() here to save a function call.
+     * You can instead declare your own function an call etharp_output()
+     * from it if you have to do some checks before sending (e.g. if link
+     * is available...) */
+    netif->output = etharp_output;
+    netif->linkoutput = low_level_output;
 
-	/* initialize the hardware */
-	low_level_init(netif);
+    /* initialize the hardware */
+    low_level_init(netif);
 
-	return ERR_OK;
+    return ERR_OK;
 }
 
 // eof

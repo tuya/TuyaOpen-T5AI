@@ -327,6 +327,26 @@ void media_cli_test_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
 				device.fmt = PIXEL_FMT_H264;
 			}
 
+			if (CMD_CONTAIN("rotate"))
+			{
+				if (CMD_CONTAIN("90"))
+				{
+					device.rot_angle = ROTATE_90;
+				}
+				else if (CMD_CONTAIN("180"))
+				{
+					device.rot_angle = ROTATE_180;
+				}
+				else if (CMD_CONTAIN("270"))
+				{
+					device.rot_angle = ROTATE_270;
+				}
+				else
+				{
+					device.rot_angle = ROTATE_NONE;
+				}
+			}
+
 			if (os_strcmp(argv[2], "open") == 0)
 			{
 				ret = media_app_camera_open(&device);

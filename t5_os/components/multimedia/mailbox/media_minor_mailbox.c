@@ -377,6 +377,13 @@ void media_minor_mailbox_msg_handle(media_mailbox_msg_t *msg)
 					jpeg_dec_task_send_msg(msg->event, (uint32_t)msg);
 				}
 				break;
+
+				case EVENT_YUV_ROTATE_NOTIFY:
+				{
+					yuv_frame_rotate_handle((uint32_t)msg);
+				}
+				break;
+
 				default:
 					break;
 			}

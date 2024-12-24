@@ -940,7 +940,7 @@ static int wpa_set_ssids_from_scan_req(struct wpa_supplicant *wpa_s,
 }
 
 
-static void wpa_supplicant_scan(void *eloop_ctx, void *timeout_ctx)
+void wpa_supplicant_scan(void *eloop_ctx, void *timeout_ctx)
 {
 	struct wpa_supplicant *wpa_s = eloop_ctx;
 	struct wpa_ssid *ssid;
@@ -2192,6 +2192,30 @@ int wpa_scan_result_compar(const void *a, const void *b)
 	struct wpa_scan_res *wb = *_wb;
 	int wpa_a, wpa_b;
 	int snr_a, snr_b, snr_a_full, snr_b_full;
+	#if BK_SUPPLICANT
+	/* support bridge vendor ie */
+	int is_relay_a = 0, is_relay_b = 0;
+	/* Check if AP is a relay */
+	is_relay_a = wpa_scan_get_vendor_ie(wa, TYBRIDGE_VENDOR_TYPE) != NULL;
+	is_relay_b = wpa_scan_get_vendor_ie(wb, TYBRIDGE_VENDOR_TYPE) != NULL;
+
+	/* If both router's RSSI and relay are above -70, prefer relay */
+	if (wa->level > -70 && wb->level > -70) {
+		/* Both RSSI values are above -70 */
+		if (is_relay_a && !is_relay_b) {
+			return -1; // Prefer relay if RSSI is above -70
+		} else if (!is_relay_a && is_relay_b) {
+			return 1; // Prefer relay if RSSI is above -70
+		}
+	}
+
+	/* If router's RSSI is 20 dBm better than relay, prefer router */
+	if (is_relay_a && !is_relay_b && (wb->level - wa->level >= 20)) {
+		return 1; // Prefer router if its RSSI is 20 dBm better
+	} else if (!is_relay_a && is_relay_b && (wa->level - wb->level >= 20)) {
+		return -1; // Prefer router if its RSSI is 20 dBm better
+	}
+	#endif
 
 	/* WPA/WPA2 support preferred */
 	wpa_a = wpa_scan_get_vendor_ie(wa, WPA_IE_VENDOR_TYPE) != NULL ||

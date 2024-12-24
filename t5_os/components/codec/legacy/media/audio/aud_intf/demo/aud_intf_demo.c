@@ -76,7 +76,7 @@ static aud_intf_voc_setup_t aud_intf_voc_setup = DEFAULT_AUD_INTF_VOC_SETUP_CONF
 static aud_intf_work_mode_t aud_work_mode = AUD_INTF_WORK_MODE_NULL;
 
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 static void cli_aud_intf_help(void)
 {

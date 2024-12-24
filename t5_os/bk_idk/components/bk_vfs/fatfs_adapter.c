@@ -64,7 +64,9 @@ static int _bk_fatfs_mount(struct bk_filesystem *fs, unsigned long mount_flags, 
 	ret = f_mount(ffs, bk_ffs->vol_str, 1);
 	if (ret) {
 		free(bk_ffs);
+		// Modified by TUYA Start
 		return ret;
+		// Modified by TUYA End
 	}
 
 	fs->fs_data = bk_ffs;

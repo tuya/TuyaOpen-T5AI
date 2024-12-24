@@ -23,21 +23,25 @@
 
 void NMI_Handler(void)
 {
+	aon_pmu_hal_set_bl2_reset_reason(RESET_SOURCE_BOOTLOADER_NMI_WDT, true);
 	BK_LOGE(TAG, "CPU Fault: NMI!\r\n");
 }
 
 void HardFault_Handler(void)
 {
+	aon_pmu_hal_set_bl2_reset_reason(RESET_SOURCE_BOOTLOADER_HARD_FAULT, true);
 	BK_LOGE(TAG, "CPU Fault: HardFault!\r\n");
 }
 
 void MemManage_Handler(void)
 {
+	aon_pmu_hal_set_bl2_reset_reason(RESET_SOURCE_BOOTLOADER_MPU_FAULT, true);
 	BK_LOGE(TAG, "CPU Fault: MemManage!\r\n");
 }
 
 void BusFault_Handler(void)
 {
+	aon_pmu_hal_set_bl2_reset_reason(RESET_SOURCE_BOOTLOADER_BUS_FAULT, true);
 	BK_LOGE(TAG, "CPU Fault: BusFault!\r\n");
 }
 

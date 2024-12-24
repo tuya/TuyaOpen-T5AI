@@ -536,7 +536,9 @@ int usbh_enumerate(struct usbh_hubport *hport)
 
     // Modified by TUYA Start
     if (usbh_enum_cb) {
-        usbh_enum_cb((void *)ep0_request_buffer);
+        usbh_enum_cb(((struct usb_device_descriptor *)ep0_request_buffer)->idVendor,
+                    ((struct usb_device_descriptor *)ep0_request_buffer)->idProduct,
+                    ((struct usb_device_descriptor *)ep0_request_buffer)->bcdDevice);
     }
     // Modified by TUYA End
 
@@ -672,6 +674,14 @@ int usbh_enumerate(struct usbh_hubport *hport)
             hport->config.intf[i].class_driver = class_driver;
             USB_LOG_DBG("Loading %s class driver\r\n", class_driver->driver_name);
         }
+
+        // Modified by TUYA Start
+        if (hport->config.intf[0].class_driver == NULL) {
+            bk_printf("--- hport->config.intf[0].class_driver is NULL\r\n");
+            goto errout;
+        }
+        // Modified by TUYA End
+
         ret = CLASS_CONNECT(hport, 0);
         if (ret < 0) {
             ret = CLASS_DISCONNECT(hport, 0);

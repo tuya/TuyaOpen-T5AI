@@ -1,4 +1,3 @@
-
 #include "tuya_error_code.h"
 #include "sys_driver.h"
 #include "aud_driver.h"
@@ -7,10 +6,11 @@
 #include "aud_intf_private.h"
 #include "aud_tras_drv.h"
 
-
 static aud_intf_drv_setup_t aud_intf_drv_setup = DEFAULT_AUD_INTF_DRV_SETUP_CONFIG();
 static aud_intf_mic_setup_t aud_intf_mic_setup = DEFAULT_AUD_INTF_MIC_SETUP_CONFIG();
 static aud_intf_work_mode_t aud_work_mode = AUD_INTF_WORK_MODE_NULL;
+
+extern void bk_printf(const char *fmt, ...);
 
 static int aud_handle_mic_data(uint8_t *data, unsigned int len)
 {

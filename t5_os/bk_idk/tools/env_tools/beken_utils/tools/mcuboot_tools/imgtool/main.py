@@ -36,6 +36,18 @@ if sys.version_info < MIN_PYTHON_VERSION:
              % MIN_PYTHON_VERSION)
 
 
+def set_debug(debug):
+    if debug:
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.DEBUG)
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setLevel(logging.DEBUG)
+    else:
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.INFO)
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setLevel(logging.INFO)
+
 def gen_rsa2048(keyfile, passwd):
     keys.RSA.generate().export_private(path=keyfile, passwd=passwd)
 
@@ -310,6 +322,7 @@ class BasedIntParamType(click.ParamType):
 @click.option('--signature', type=str)
 @click.option('--pubkeyfile', type=str)
 @click.option('--hash_outfile', type=str)
+@click.option('--debug', is_flag=True, help='Enable debug')
 @click.command(help='''Create a signed or unsigned image\n
                INFILE and OUTFILE are parsed as Intel HEX if the params have
                .hex extension, otherwise binary format is used''')
@@ -318,8 +331,9 @@ def sign(key, public_key_format, align, version, pad_sig, header_size,
          endian, encrypt_keylen, encrypt, infile, outfile, dependencies,
          load_addr, hex_addr, erased_val, save_enctlv, security_counter,
          boot_record, custom_tlv, rom_fixed, max_align, clear,
-         action_type, signature, pubkeyfile, hash_outfile):
+         action_type, signature, pubkeyfile, hash_outfile, debug):
 
+    set_debug(debug)    
     if confirm:
         # Confirmed but non-padded images don't make much sense, because
         # otherwise there's no trailer area for writing the confirmed status.

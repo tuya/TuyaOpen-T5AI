@@ -42,7 +42,7 @@
 		} while(0)
 
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 bk_err_t bk_aud_dmic_init(aud_dmic_config_t *dmic_config)
 {
@@ -119,7 +119,7 @@ bk_err_t bk_aud_dmic_set_samp_rate(uint32_t samp_rate)
 		}
 		sys_drv_apll_config_set(0xC2A0AE86);
 		sys_drv_apll_spi_trigger_set(1);
-		delay(10);
+		bk_delay(10);
 		sys_drv_apll_spi_trigger_set(0);
 	}
 

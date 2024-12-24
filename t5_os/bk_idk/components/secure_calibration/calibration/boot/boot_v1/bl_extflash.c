@@ -605,7 +605,7 @@ void test_flash(void)
 	uint16_t i;
 	ad_printf("test_flash\r\n");
 	ext_flash_erase_section(0X1000,0x1000);
-	delay(10000);
+	bk_delay(10000);
 	ad_printf("ext_flash_wr_data 0\r\n");
 //	ext_flash_rd_data(00,buf,32);
 	for( i = 0 ; i < 256 ; i ++)

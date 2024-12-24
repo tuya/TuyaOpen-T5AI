@@ -126,7 +126,7 @@ static inline void systick_gated_update(TickType_t xExpectedIdleTime, uint32_t u
 {
 #if CONFIG_AON_RTC
 	TickType_t slept_ticks = rtos_get_time_diff();
-
+    // BK_LOGI(TAG, "slept_ticks=%x\r\n", slept_ticks);
 	/* Restart SysTick so it runs from portNVIC_SYSTICK_LOAD_REG
 	* again, then set portNVIC_SYSTICK_LOAD_REG back to its standard
 	* value. */
@@ -251,11 +251,10 @@ void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
 		ulReloadValue -= ulStoppedTimerCompensation;
 	}
 
-	/* Enter a critical section but don't use the taskENTER_CRITICAL()
-	 * method as that will mask interrupts that should exit sleep mode. */
-	__asm volatile ( "cpsid i" ::: "memory" );
-	__asm volatile ( "dsb" );
-	__asm volatile ( "isb" );
+    /* we can use taskENTER_CRITICAL() to enter a critical section, because
+       in critical section also use primask to mask interrupts,this will not
+       destory the existing logic.  */
+    taskENTER_CRITICAL();
 
 	/* If a context switch is pending or a task is waiting for the scheduler
 	 * to be un-suspended then abandon the low power entry. */
@@ -273,7 +272,9 @@ void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
 		//portNVIC_SYSTICK_CTRL_REG |= portNVIC_SYSTICK_INT_BIT;
 		/* Re-enable interrupts - see comments above the cpsid instruction()
 		* above. */
-		__asm volatile ( "cpsie i" ::: "memory" );
+		// __asm volatile ( "cpsie i" ::: "memory" );
+        taskEXIT_CRITICAL();
+        
 	} else {
 		/* Set the new reload value. */
 		portNVIC_SYSTICK_LOAD_REG = ulReloadValue;
@@ -327,8 +328,10 @@ void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
 #endif
 /* Restart SysTick. */
 		portNVIC_SYSTICK_CTRL_REG |= portNVIC_SYSTICK_ENABLE_BIT;
-		/* Exit with interrupts enabled. */
-		__asm volatile ( "cpsie i" ::: "memory" );
+
+		/* Exit with interrupts enabled. we used the critical to block interruption,
+        so should also be used accordingly here*/
+        taskEXIT_CRITICAL();
 	}
 }
 #endif

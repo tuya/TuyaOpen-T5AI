@@ -35,6 +35,7 @@ else()
     message(FATAL_ERROR "${CMAKE_C_COMPILER_ID} does not have CMSIS RTX static libraries set up")
 endif()
 
+if (CONFIG_BUILD_TFM)
 target_link_libraries(CMSIS_5_RTX_V8MMN
     INTERFACE
         tfm_s_veneers
@@ -49,4 +50,5 @@ target_link_libraries(CMSIS_5_RTX_V8MBN
     INTERFACE
         tfm_s_veneers
 )
+endif()
 

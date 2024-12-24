@@ -41,7 +41,6 @@
 #endif
 
 #include "soc/soc.h"
-#include "mb_ipc_cmd.h"
 
 static beken_thread_function_t s_user_app_entry = NULL;
 beken_semaphore_t user_app_sema = NULL;
@@ -415,12 +414,6 @@ void entry_main(void)
 	save_mtime_point(CPU_MAIN_ENTRY_TIME);
 #endif
 
-    // Modified by TUYA Start
-#if (CONFIG_SYS_CPU0)
-    bk_set_printf_sync(true);
-#endif
-    // Modified by TUYA End
-
 	rtos_init();
 
 #if CONFIG_GCOV
@@ -440,10 +433,6 @@ void entry_main(void)
 	uint32_t trace_size = uiTraceGetTraceBufferSize();
 
 	rtos_regist_plat_dump_hook(trace_addr, trace_size);
-#endif
-
-#if CONFIG_MAILBOX
-	ipc_init();
 #endif
 
 #if CONFIG_SAVE_BOOT_TIME_POINT

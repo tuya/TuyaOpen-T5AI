@@ -58,6 +58,10 @@ void tfm_internal_fwu_request_reboot(void);
  */
 psa_status_t tfm_internal_fwu_accept(psa_image_id_t image_id);
 
+#if CONFIG_OTA_CONFIRM_UPDATE
+void tfm_internal_fwu_confirm(uint8_t is_confirm);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

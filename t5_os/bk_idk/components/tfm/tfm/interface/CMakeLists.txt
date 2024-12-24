@@ -9,6 +9,7 @@ cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0076 NEW)
 cmake_policy(SET CMP0079 NEW)
 
+if (CONFIG_BUILD_TFM)
 # Generate framework feature
 set(PSA_FRAMEWORK_ISOLATION_LEVEL   ${TFM_ISOLATION_LEVEL})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/psa/framework_feature.h.in
@@ -69,4 +70,5 @@ if (TFM_MULTI_CORE_TOPOLOGY OR FORWARD_PROT_MSG)
                    ${CMAKE_BINARY_DIR}/generated/interface/include/tfm_mailbox_config.h
                    NEWLINE_STYLE UNIX
     )
+endif()
 endif()

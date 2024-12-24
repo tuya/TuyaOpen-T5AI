@@ -1,11 +1,19 @@
-menu "Lvgl_source"
-	config LVGL_SRAM_MAPPING
-		bool "Enable Lvgl Sram Mapping"
-		default n
-
+menu "Lvgl"
 	config LVGL
+		depends on LCD
 		bool "Enable Lvgl"
 		default n
+
+	choice LVGL_VERSION
+		depends on LVGL
+		prompt "Select LVGL Version"
+		default LVGL_V8
+
+		config LVGL_V8
+			bool "LVGL V8"
+		config LVGL_V9
+			bool "LVGL V9"
+	endchoice
 
 	config LV_COLOR_DEPTH
 		depends on LVGL
@@ -15,7 +23,17 @@ menu "Lvgl_source"
 			1 - 1 byte per pixel
 			8 - RGB332
 			16 - RGB565
+			24 - RGB888(Just for V9)
 			32 - ARGB888
+
+	config LV_DRAW_THREAD_STACK_SIZE
+		depends on LVGL_V9
+		int "Set the stack size of the drawing threads"
+		default 8192
+
+	config LVGL_SRAM_MAPPING
+		bool "Enable Lvgl Sram Mapping"
+		default n
 
 	config LV_COLOR_SCREEN_TRANSP
 		bool "Enable Lv Color Screen Transp"
@@ -33,10 +51,6 @@ menu "Lvgl_source"
 
 	config LV_FONT_MONTSERRAT_12
 		bool "Enable Lv Font Montserrat 12"
-		default n
-
-	config LV_FONT_MONTSERRAT_14
-		bool "Enable Lv Font Montserrat 14"
 		default n
 
 	config LV_FONT_MONTSERRAT_18
@@ -116,7 +130,7 @@ menu "Lvgl_source"
 			Enable PSRAM draw buffer
 
 	config LVGL_USE_DIRECT_MODE
-		depends on LVGL
+		depends on LVGL_V8
 		bool "Enable Lvgl Use Direct Mode"
 		default y
 		help
@@ -132,6 +146,7 @@ menu "Lvgl_source"
 		default 4
 
 	config LVGL_TASK_SLEEP_TIME_CUSTOMIZE
+		depends on LVGL
 		bool "Enable lvgl task sleep time custimize"
 		default n
 
@@ -141,13 +156,14 @@ menu "Lvgl_source"
 		default 10
 
 	config LV_COLOR_16_SWAP
+		depends on LVGL_V8
 		bool "Enable Swap the 2 bytes of RGB565 color"
 		default n
 
 	config LV_ATTRIBUTE_FAST_MEM_L2
 		bool "Enable Lv Attribute Fast Mem L2"
 		default n
-		
+
 	config LV_CODE_LOAD_PSRAM
 		bool "Enable Lv Code load psram"
 		default n

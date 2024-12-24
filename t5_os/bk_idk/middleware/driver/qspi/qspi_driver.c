@@ -69,8 +69,17 @@ static qspi_callback_t s_qspi_rx_isr = {NULL};
 	gpio_dev_map(QSPI##id##_LL_IO1_PIN, GPIO_DEV_QSPI##id##_IO1);\
 	gpio_dev_map(QSPI##id##_LL_IO2_PIN, GPIO_DEV_QSPI##id##_IO2);\
 	gpio_dev_map(QSPI##id##_LL_IO3_PIN, GPIO_DEV_QSPI##id##_IO3);\
+	bk_gpio_pull_up(QSPI##id##_LL_CSN_PIN);\
+	bk_gpio_pull_up(QSPI##id##_LL_IO0_PIN);\
+	bk_gpio_pull_up(QSPI##id##_LL_IO1_PIN);\
+	bk_gpio_pull_up(QSPI##id##_LL_IO2_PIN);\
+	bk_gpio_pull_up(QSPI##id##_LL_IO3_PIN);\
 	bk_gpio_set_capacity(QSPI##id##_LL_CSN_PIN, 3);\
 	bk_gpio_set_capacity(QSPI##id##_LL_CLK_PIN, 3);\
+	bk_gpio_set_capacity(QSPI##id##_LL_IO0_PIN, 3);\
+	bk_gpio_set_capacity(QSPI##id##_LL_IO1_PIN, 3);\
+	bk_gpio_set_capacity(QSPI##id##_LL_IO2_PIN, 3);\
+	bk_gpio_set_capacity(QSPI##id##_LL_IO3_PIN, 3);\
 } while(0)
 
 

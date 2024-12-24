@@ -93,6 +93,11 @@ static inline uint32_t flash_area_get_size(const struct flash_area *fa)
     return fa->fa_size;
 }
 
+static inline uint32_t flash_area_get_erase_size(const struct flash_area *fa)
+{
+    return fa->fa_phy_size;
+}
+
 static inline uint32_t flash_sector_get_off(const struct flash_sector *fs)
 {
     return fs->fs_off;

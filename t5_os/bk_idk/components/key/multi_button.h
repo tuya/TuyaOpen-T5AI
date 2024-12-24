@@ -55,7 +55,7 @@ void button_attach(BUTTON_S *handle, PRESS_EVT event, btn_callback cb);
 PRESS_EVT button_get_event(BUTTON_S *handle);
 int  button_start(BUTTON_S *handle);
 void button_stop(BUTTON_S *handle);
-void button_ticks(void *param);
+void button_ticks(void *param1, void *param2);
 BUTTON_S *button_find_with_user_data(void *user_data);
 
 #ifdef __cplusplus

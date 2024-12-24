@@ -357,7 +357,7 @@ bk_err_t bk_video_camera_packet_list_init(mem_location_t locate, uint16_t MaxPac
     			return BK_ERR_NO_MEM;
     		}
 
-    		LOGI("camera_packet_list_dual[%d]->data_buffer:%p\r\n", i, camera_packet_list_dual[i]->data_buffer);
+			LOGD("camera_packet_list_dual[%d]->data_buffer:%p\r\n", i, camera_packet_list_dual[i]->data_buffer);
 
     		camera_packet_list_dual[i]->num_packets = max_packet_cnt;
 
@@ -797,6 +797,9 @@ bk_err_t bk_video_dvp_mclk_disable(void)
 #if (AUXS_CLK_CIS_ENABLE)
 	sys_drv_set_cis_auxs_clk_en(0); // ausx_clk disable
 #endif
+
+	bk_pm_module_vote_power_ctrl(PM_POWER_SUB_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_OFF);
+
 	return BK_OK;
 }
 

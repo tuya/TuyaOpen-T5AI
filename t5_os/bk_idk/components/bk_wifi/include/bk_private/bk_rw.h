@@ -189,6 +189,7 @@ struct add_sta_st {
 	void *sta_addr;
 	u8 tx_supp_rates;
 	u8 ap_vif_idx;
+	u8 qos_info;
 	u32 flags;
 } ;
 
@@ -384,6 +385,9 @@ void rwm_msdu_twt_ps_change_ind_handler(void *msg);
 void rwm_get_mac_trx_status(bool reset_status);
 void rwm_test_hw_diag(void);
 void rwm_set_hw_diag_cfg(uint8_t diag_type, uint16_t diag_no);
+
+int rw_msg_send_get_td_para_req(void *cfm);
+int rw_msg_send_set_td_para_req(uint8_t reset, uint8_t def_td_intv, uint8_t dtim10_td_intv, uint8_t td_reduce_intv);
 
 __INLINE void *rwm_mgmt_is_vif_first_used(void)
 {

@@ -461,8 +461,10 @@ static int usbh_video_ctrl_intf_disconnect(struct usbh_hubport *hport, uint8_t i
         for(uint8_t format_index = 0; format_index < USBH_VIDEO_FORMAT_MAX_NUM; format_index++)
         {
             for(uint8_t frame_index = 0; frame_index < USBH_VIDEO_FRAME_MAX_NUM; frame_index++)
-                if(video_class->format[format_index].frame[frame_index].fps)
+                if(video_class->format[format_index].frame[frame_index].fps) {
                     usb_free(video_class->format[format_index].frame[frame_index].fps);
+                    video_class->format[format_index].frame[frame_index].fps = NULL;
+                }
         }
 
         usbh_video_devno_free(video_class);
@@ -477,6 +479,7 @@ static int usbh_video_ctrl_intf_disconnect(struct usbh_hubport *hport, uint8_t i
 
         memset(video_class, 0, sizeof(struct usbh_video));
         usb_free(video_class);
+        video_class = NULL;
 
         if (hport->config.intf[intf].devname[0] != '\0')
             USB_LOG_INFO("Unregister Video Class:%s\r\n", hport->config.intf[intf].devname);
@@ -727,4 +730,5 @@ CLASS_INFO_DEFINE const struct usbh_class_info video_data_intf_class_info = {
     .vid = 0x00,
     .pid = 0x00,
     .class_driver = &video_class_data_intf_driver
-};#endif
+};
+#endif

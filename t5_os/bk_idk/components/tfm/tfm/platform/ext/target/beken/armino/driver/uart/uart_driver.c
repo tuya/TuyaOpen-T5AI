@@ -192,7 +192,7 @@ static void uart_init_gpio(uart_id_t id)
 			gpio_dev_map(uart_hal_get_rx_pin(id), GPIO_DEV_UART1_RXD);
 			bk_gpio_pull_up(uart_hal_get_tx_pin(id));
 			bk_gpio_pull_up(uart_hal_get_rx_pin(id));
-#if CONFIG_UART1_FLOW_CTRL
+#if CONFIG_UART0_FLOW_CTRL
 			//NOTICE:BEKEN ASIC CTS PIN really function is RTS.
 			gpio_dev_map(uart_hal_get_cts_pin(id), GPIO_DEV_UART1_CTS);
 			bk_gpio_enable_output(uart_hal_get_cts_pin(id));

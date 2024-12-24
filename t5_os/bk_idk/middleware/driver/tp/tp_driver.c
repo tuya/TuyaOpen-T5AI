@@ -184,7 +184,7 @@ int tp_i2c_write_uint8(uint8_t addr, uint8_t reg, uint8_t *buff, uint16_t len)
 		LOGE("%s, len is 0!\r\n", __func__);
 		return BK_FAIL;
 	}
-	
+
 	i2c_mem_param_t mem_param = {0};
 
 	mem_param.dev_addr = addr;
@@ -244,7 +244,7 @@ int tp_i2c_write_uint16(uint8_t addr, uint16_t reg, uint8_t *buff, uint16_t len)
 		LOGE("%s, len is 0!\r\n", __func__);
 		return BK_FAIL;
 	}
-	
+
 	i2c_mem_param_t mem_param = {0};
 
 	mem_param.dev_addr = addr;
@@ -317,14 +317,14 @@ bk_err_t bk_tp_gpio_init(const tp_config_t *config)
 	mode.io_mode = GPIO_OUTPUT_ENABLE;
 	mode.pull_mode = GPIO_PULL_DISABLE;
 	BK_LOG_ON_ERR(bk_gpio_set_config(int_id, &mode));
-	BK_LOG_ON_ERR(bk_gpio_set_output_high(int_id));	
+	BK_LOG_ON_ERR(bk_gpio_set_output_high(int_id));
 
 	// RESET GPIO - output low
 	BK_LOG_ON_ERR(gpio_dev_unmap(rst_id));
 	mode.io_mode = GPIO_OUTPUT_ENABLE;
 	mode.pull_mode = GPIO_PULL_DISABLE;
 	BK_LOG_ON_ERR(bk_gpio_set_config(rst_id, &mode));
-	BK_LOG_ON_ERR(bk_gpio_set_output_low(rst_id));	
+	BK_LOG_ON_ERR(bk_gpio_set_output_low(rst_id));
 
 	// this delay time maybe can optimization.
 	#if CONFIG_TP_HY4633
@@ -334,9 +334,9 @@ bk_err_t bk_tp_gpio_init(const tp_config_t *config)
 	#else
 		rtos_delay_milliseconds(2);
 	#endif
-	
+
     BK_LOG_ON_ERR(bk_gpio_set_output_high(rst_id));
-	
+
 	return BK_OK;
 }
 
@@ -443,11 +443,11 @@ bk_err_t bk_tp_int_init(const tp_config_t *config)
 	else if (TP_INT_TYPE_LOW_LEVEL == config->int_type)
 	{
 		int_type = GPIO_INT_TYPE_LOW_LEVEL;
-	}	
+	}
 	else if (TP_INT_TYPE_HIGH_LEVEL == config->int_type)
 	{
 		int_type = GPIO_INT_TYPE_HIGH_LEVEL;
-	}	
+	}
     BK_LOG_ON_ERR(bk_gpio_register_isr(int_id, tp_int_gpio_isr));
     BK_LOG_ON_ERR(bk_gpio_set_interrupt_type(int_id, int_type));
     BK_LOG_ON_ERR(bk_gpio_enable_interrupt(int_id));
@@ -497,7 +497,7 @@ void tp_process_task(beken_thread_arg_t arg)
 				{
 					if ((TP_EVENT_TYPE_DOWN == tp_data[i].event) || (TP_EVENT_TYPE_UP == tp_data[i].event) || (TP_EVENT_TYPE_MOVE == tp_data[i].event))
 					{
-						LOGD("event=%d, track_id=%d, x=%d, y=%d, s=%d, timestamp=%u.\r\n", 
+						LOGD("event=%d, track_id=%d, x=%d, y=%d, s=%d, timestamp=%u.\r\n",
 									tp_data[i].event,
 									tp_data[i].track_id,
 									tp_data[i].x_coordinate,
@@ -575,7 +575,7 @@ bk_err_t bk_tp_driver_init(tp_config_t *config)
 		return ret;
 	}
 
-	ret = rtos_create_thread(&tp_thread_handle, TP_THREAD_PRIORITY, "tp", (beken_thread_function_t)tp_process_task, TP_THREAD_STACK_SIZE, (beken_thread_arg_t)0); 	
+	ret = rtos_create_thread(&tp_thread_handle, TP_THREAD_PRIORITY, "tp", (beken_thread_function_t)tp_process_task, TP_THREAD_STACK_SIZE, (beken_thread_arg_t)0);
 	if(kNoErr != ret)
 	{
 		LOGE("%s create thread fail!\r\n", __func__);

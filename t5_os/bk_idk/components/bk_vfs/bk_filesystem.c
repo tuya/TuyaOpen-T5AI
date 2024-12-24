@@ -102,7 +102,9 @@ int bk_vfs_mount(const char *source, const char *target,
 	if (ret) {
 		free(fs->mount_point);
 		fs->mount_point = NULL;
+		// Modified by TUYA Start
 		return ret;
+		// Modified by TUYA End
 	} else {
 		return 0;
 	}

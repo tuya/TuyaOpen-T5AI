@@ -1520,7 +1520,6 @@ static int lfs_dir_commitcrc(lfs_t *lfs, struct lfs_commit *commit) {
                 NULL, &lfs->rcache, sizeof(tag),
                 commit->block, noff, &tag, sizeof(tag));
         if (err && err != LFS_ERR_CORRUPT) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
@@ -1537,7 +1536,6 @@ static int lfs_dir_commitcrc(lfs_t *lfs, struct lfs_commit *commit) {
                 &lfs->pcache, &lfs->rcache, false,
                 commit->block, commit->off, &footer, sizeof(footer));
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
@@ -1555,7 +1553,6 @@ static int lfs_dir_commitcrc(lfs_t *lfs, struct lfs_commit *commit) {
     // flush buffers
     int err = lfs_bd_sync(lfs, &lfs->pcache, &lfs->rcache, false);
     if (err) {
-        bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
         return err;
     }
 
@@ -1568,7 +1565,6 @@ static int lfs_dir_commitcrc(lfs_t *lfs, struct lfs_commit *commit) {
             // check against written crc, may catch blocks that
             // become readonly and match our commit size exactly
             if (i == off1 && crc != crc1) {
-                bk_printf("---- trace %s %d %d %d %x %x\r\n", __func__, __LINE__, i, off1, crc, crc1);
                 return LFS_ERR_CORRUPT;
             }
 
@@ -1578,7 +1574,6 @@ static int lfs_dir_commitcrc(lfs_t *lfs, struct lfs_commit *commit) {
                     NULL, &lfs->rcache, noff+sizeof(uint32_t)-i,
                     commit->block, i, &dat, 1);
             if (err) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -1587,7 +1582,6 @@ static int lfs_dir_commitcrc(lfs_t *lfs, struct lfs_commit *commit) {
 
         // detected write error?
         if (crc != 0) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return LFS_ERR_CORRUPT;
         }
 
@@ -1751,7 +1745,6 @@ static int lfs_dir_compact(lfs_t *lfs,
     // increment revision count
     dir->rev += 1;
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     // do not proactively relocate blocks during migrations, this
     // can cause a number of failure states such: clobbering the
     // v1 superblock if we relocate root, and invalidating directory
@@ -1788,10 +1781,8 @@ static int lfs_dir_compact(lfs_t *lfs,
             int err = lfs_bd_erase(lfs, dir->pair[1]);
             if (err) {
                 if (err == LFS_ERR_CORRUPT) {
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     goto relocate;
                 }
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -1802,10 +1793,8 @@ static int lfs_dir_compact(lfs_t *lfs,
             dir->rev = lfs_fromle32(dir->rev);
             if (err) {
                 if (err == LFS_ERR_CORRUPT) {
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     goto relocate;
                 }
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -1819,10 +1808,8 @@ static int lfs_dir_compact(lfs_t *lfs,
                         lfs, &commit});
             if (err) {
                 if (err == LFS_ERR_CORRUPT) {
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     goto relocate;
                 }
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -1835,10 +1822,8 @@ static int lfs_dir_compact(lfs_t *lfs,
                 lfs_pair_fromle32(dir->tail);
                 if (err) {
                     if (err == LFS_ERR_CORRUPT) {
-                        bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                         goto relocate;
                     }
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     return err;
                 }
             }
@@ -1854,7 +1839,6 @@ static int lfs_dir_compact(lfs_t *lfs,
 
             err = lfs_dir_getgstate(lfs, dir, &delta);
             if (err) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -1865,10 +1849,8 @@ static int lfs_dir_compact(lfs_t *lfs,
                             sizeof(delta)), &delta);
                 if (err) {
                     if (err == LFS_ERR_CORRUPT) {
-                        bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                         goto relocate;
                     }
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     return err;
                 }
             }
@@ -1877,10 +1859,8 @@ static int lfs_dir_compact(lfs_t *lfs,
             err = lfs_dir_commitcrc(lfs, &commit);
             if (err) {
                 if (err == LFS_ERR_CORRUPT) {
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     goto relocate;
                 }
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -1903,7 +1883,6 @@ relocate:
         relocated = true;
         lfs_cache_drop(lfs, &lfs->pcache);
         if (!tired) {
-            bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
             LFS_DEBUG("Bad block at 0x%"PRIx32, dir->pair[1]);
         }
 
@@ -1911,15 +1890,12 @@ relocate:
         if (lfs_pair_cmp(dir->pair, (const lfs_block_t[2]){0, 1}) == 0) {
             LFS_WARN("Superblock 0x%"PRIx32" has become unwritable",
                     dir->pair[1]);
-            bk_printf("---- trace %s %d %d %d\r\n", __func__, __LINE__, dir->pair[0], dir->pair[1]);
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, LFS_ERR_NOSPC);
             return LFS_ERR_NOSPC;
         }
 
         // relocate half of pair
         int err = lfs_alloc(lfs, &dir->pair[1]);
         if (err && (err != LFS_ERR_NOSPC || !tired)) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
@@ -1952,7 +1928,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
                     split, end, -split,
                     lfs_dir_commit_size, &size);
             if (err) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -1966,7 +1941,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
                                 ? lfs->cfg->metadata_max
                                 : lfs->cfg->block_size)/2,
                             lfs->cfg->prog_size))) {
-                bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
                 break;
             }
 
@@ -1975,7 +1949,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
 
         if (split == begin) {
             // no split needed
-            bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
             break;
         }
 
@@ -1983,7 +1956,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
         int err = lfs_dir_split(lfs, dir, attrs, attrcount,
                 source, split, end);
         if (err && err != LFS_ERR_NOSPC) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
@@ -1992,7 +1964,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
             // performance
             LFS_WARN("Unable to split {0x%"PRIx32", 0x%"PRIx32"}",
                     dir->pair[0], dir->pair[1]);
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             break;
         } else {
             end = split;
@@ -2005,7 +1976,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
         // should we expand?
         lfs_ssize_t size = lfs_fs_rawsize(lfs);
         if (size < 0) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, size);
             return size;
         }
 
@@ -2016,7 +1986,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
             int err = lfs_dir_split(lfs, dir, attrs, attrcount,
                     source, begin, end);
             if (err && err != LFS_ERR_NOSPC) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -2030,7 +1999,6 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
         }
     }
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     return lfs_dir_compact(lfs, dir, attrs, attrcount, source, begin, end);
 }
 #endif
@@ -2042,7 +2010,6 @@ static int lfs_dir_relocatingcommit(lfs_t *lfs, lfs_mdir_t *dir,
         lfs_mdir_t *pdir) {
     int state = 0;
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     // calculate changes to the directory
     bool hasdelete = false;
     for (int i = 0; i < attrcount; i++) {
@@ -2060,24 +2027,20 @@ static int lfs_dir_relocatingcommit(lfs_t *lfs, lfs_mdir_t *dir,
         }
     }
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     // should we actually drop the directory block?
     if (hasdelete && dir->count == 0) {
         LFS_ASSERT(pdir);
         int err = lfs_fs_pred(lfs, dir->pair, pdir);
         if (err && err != LFS_ERR_NOENT) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
         if (err != LFS_ERR_NOENT && pdir->split) {
             state = LFS_OK_DROPPED;
-            bk_printf("---- trace %s %d %d %d\r\n", __func__, __LINE__, err, state);
             goto fixmlist;
         }
     }
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     if (dir->erased) {
         // try to commit
         struct lfs_commit commit = {
@@ -2091,7 +2054,6 @@ static int lfs_dir_relocatingcommit(lfs_t *lfs, lfs_mdir_t *dir,
                 lfs->cfg->metadata_max : lfs->cfg->block_size) - 8,
         };
 
-        bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
         // traverse attrs that need to be written out
         lfs_pair_tole32(dir->tail);
         int err = lfs_dir_traverse(lfs,
@@ -2104,11 +2066,9 @@ static int lfs_dir_relocatingcommit(lfs_t *lfs, lfs_mdir_t *dir,
             if (err == LFS_ERR_NOSPC || err == LFS_ERR_CORRUPT) {
                 goto compact;
             }
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
-        bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
         // commit any global diffs if we have any
         lfs_gstate_t delta = {0};
         lfs_gstate_xor(&delta, &lfs->gstate);
@@ -2118,7 +2078,6 @@ static int lfs_dir_relocatingcommit(lfs_t *lfs, lfs_mdir_t *dir,
         if (!lfs_gstate_iszero(&delta)) {
             err = lfs_dir_getgstate(lfs, dir, &delta);
             if (err) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -2130,19 +2089,16 @@ static int lfs_dir_relocatingcommit(lfs_t *lfs, lfs_mdir_t *dir,
                 if (err == LFS_ERR_NOSPC || err == LFS_ERR_CORRUPT) {
                     goto compact;
                 }
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
         }
 
-        bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
         // finalize commit with the crc
         err = lfs_dir_commitcrc(lfs, &commit);
         if (err) {
             if (err == LFS_ERR_NOSPC || err == LFS_ERR_CORRUPT) {
                 goto compact;
             }
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
@@ -2157,20 +2113,16 @@ static int lfs_dir_relocatingcommit(lfs_t *lfs, lfs_mdir_t *dir,
         goto fixmlist;
     }
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
 compact:
     // fall back to compaction
     lfs_cache_drop(lfs, &lfs->pcache);
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     state = lfs_dir_splittingcompact(lfs, dir, attrs, attrcount,
             dir, 0, dir->count);
     if (state < 0) {
-        bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, state);
         return state;
     }
 
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     goto fixmlist;
 
 fixmlist:;
@@ -2181,7 +2133,6 @@ fixmlist:;
     // lfs_dir_commit could also be in this list, and even then
     // we need to copy the pair so they don't get clobbered if we refetch
     // our mdir.
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     lfs_block_t oldpair[2] = {pair[0], pair[1]};
     for (struct lfs_mlist *d = lfs->mlist; d; d = d->next) {
         if (lfs_pair_cmp(d->m.pair, oldpair) == 0) {
@@ -2213,7 +2164,6 @@ fixmlist:;
                 d->id -= d->m.count;
                 int err = lfs_dir_fetch(lfs, &d->m, d->m.tail);
                 if (err) {
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     return err;
                 }
             }
@@ -2235,13 +2185,11 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
                 f->ctz.size > lfs->cfg->cache_size) {
             int err = lfs_file_outline(lfs, f);
             if (err) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
             err = lfs_file_flush(lfs, f);
             if (err) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
         }
@@ -2253,7 +2201,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
     int state = lfs_dir_relocatingcommit(lfs, &ldir, dir->pair,
             attrs, attrcount, &pdir);
     if (state < 0) {
-        bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, state);
         return state;
     }
 
@@ -2272,7 +2219,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
         // steal state
         int err = lfs_dir_getgstate(lfs, dir, &lfs->gdelta);
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
@@ -2286,7 +2232,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
                 NULL);
         lfs_pair_fromle32(dir->tail);
         if (state < 0) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, state);
             return state;
         }
 
@@ -2324,7 +2269,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
         // find parent
         lfs_stag_t tag = lfs_fs_parent(lfs, lpair, &pdir);
         if (tag < 0 && tag != LFS_ERR_NOENT) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, tag);
             return tag;
         }
 
@@ -2334,7 +2278,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
             // always create an orphan
             int err = lfs_fs_preporphans(lfs, +1);
             if (err) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                 return err;
             }
 
@@ -2361,7 +2304,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
                     NULL);
             lfs_pair_fromle32(ldir.pair);
             if (state < 0) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, state);
                 return state;
             }
 
@@ -2377,7 +2319,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
         // find pred
         int err = lfs_fs_pred(lfs, lpair, &pdir);
         if (err && err != LFS_ERR_NOENT) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
         LFS_ASSERT(!(hasparent && err == LFS_ERR_NOENT));
@@ -2388,7 +2329,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
                 // next step, clean up orphans
                 err = lfs_fs_preporphans(lfs, -hasparent);
                 if (err) {
-                    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
                     return err;
                 }
             }
@@ -2416,7 +2356,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
                     NULL);
             lfs_pair_fromle32(ldir.pair);
             if (state < 0) {
-                bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, state);
                 return state;
             }
 
@@ -2424,7 +2363,6 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
         }
     }
 
-    bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, orphans);
     return orphans ? LFS_OK_ORPHANED : 0;
 }
 #endif
@@ -2432,10 +2370,8 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
 #ifndef LFS_READONLY
 static int lfs_dir_commit(lfs_t *lfs, lfs_mdir_t *dir,
         const struct lfs_mattr *attrs, int attrcount) {
-    bk_printf("---- trace %s %d\r\n", __func__, __LINE__);
     int orphans = lfs_dir_orphaningcommit(lfs, dir, attrs, attrcount);
     if (orphans < 0) {
-        bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, orphans);
         return orphans;
     }
 
@@ -2445,7 +2381,6 @@ static int lfs_dir_commit(lfs_t *lfs, lfs_mdir_t *dir,
         // created some
         int err = lfs_fs_deorphan(lfs, false);
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
     }
@@ -2671,7 +2606,6 @@ static int lfs_dir_rawseek(lfs_t *lfs, lfs_dir_t *dir, lfs_off_t off) {
 
         if (dir->id == dir->m.count) {
             if (!dir->m.split) {
-                bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
                 return LFS_ERR_INVAL;
             }
 
@@ -3528,7 +3462,6 @@ static lfs_soff_t lfs_file_rawseek(lfs_t *lfs, lfs_file_t *file,
         npos = off;
     } else if (whence == LFS_SEEK_CUR) {
         if ((lfs_soff_t)file->pos + off < 0) {
-            bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
             return LFS_ERR_INVAL;
         } else {
             npos = file->pos + off;
@@ -3536,7 +3469,6 @@ static lfs_soff_t lfs_file_rawseek(lfs_t *lfs, lfs_file_t *file,
     } else if (whence == LFS_SEEK_END) {
         lfs_soff_t res = lfs_file_rawsize(lfs, file) + off;
         if (res < 0) {
-            bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
             return LFS_ERR_INVAL;
         } else {
             npos = res;
@@ -3545,7 +3477,6 @@ static lfs_soff_t lfs_file_rawseek(lfs_t *lfs, lfs_file_t *file,
 
     if (npos > lfs->file_max) {
         // file position out of range
-        bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
         return LFS_ERR_INVAL;
     }
 
@@ -3591,7 +3522,6 @@ static int lfs_file_rawtruncate(lfs_t *lfs, lfs_file_t *file, lfs_off_t size) {
     LFS_ASSERT((file->flags & LFS_O_WRONLY) == LFS_O_WRONLY);
 
     if (size > LFS_FILE_MAX) {
-        bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
         return LFS_ERR_INVAL;
     }
 
@@ -3693,7 +3623,6 @@ static int lfs_rawremove(lfs_t *lfs, const char *path) {
     lfs_mdir_t cwd;
     lfs_stag_t tag = lfs_dir_find(lfs, &cwd, &path, NULL);
     if (tag < 0 || lfs_tag_id(tag) == 0x3ff) {
-        bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
         return (tag < 0) ? (int)tag : LFS_ERR_INVAL;
     }
 
@@ -3774,7 +3703,6 @@ static int lfs_rawrename(lfs_t *lfs, const char *oldpath, const char *newpath) {
     lfs_mdir_t oldcwd;
     lfs_stag_t oldtag = lfs_dir_find(lfs, &oldcwd, &oldpath, NULL);
     if (oldtag < 0 || lfs_tag_id(oldtag) == 0x3ff) {
-        bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
         return (oldtag < 0) ? (int)oldtag : LFS_ERR_INVAL;
     }
 
@@ -3784,7 +3712,6 @@ static int lfs_rawrename(lfs_t *lfs, const char *oldpath, const char *newpath) {
     lfs_stag_t prevtag = lfs_dir_find(lfs, &newcwd, &newpath, &newid);
     if ((prevtag < 0 || lfs_tag_id(prevtag) == 0x3ff) &&
             !(prevtag == LFS_ERR_NOENT && newid != 0x3ff)) {
-        bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
         return (prevtag < 0) ? (int)prevtag : LFS_ERR_INVAL;
     }
 
@@ -4108,7 +4035,6 @@ static int lfs_rawformat(lfs_t *lfs, const struct lfs_config *cfg) {
     {
         err = lfs_init(lfs, cfg);
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             return err;
         }
 
@@ -4124,7 +4050,6 @@ static int lfs_rawformat(lfs_t *lfs, const struct lfs_config *cfg) {
         lfs_mdir_t root;
         err = lfs_dir_alloc(lfs, &root);
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             goto cleanup;
         }
 
@@ -4145,7 +4070,6 @@ static int lfs_rawformat(lfs_t *lfs, const struct lfs_config *cfg) {
                 {LFS_MKTAG(LFS_TYPE_INLINESTRUCT, 0, sizeof(superblock)),
                     &superblock}));
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             goto cleanup;
         }
 
@@ -4154,14 +4078,12 @@ static int lfs_rawformat(lfs_t *lfs, const struct lfs_config *cfg) {
         root.erased = false;
         err = lfs_dir_commit(lfs, &root, NULL, 0);
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             goto cleanup;
         }
 
         // sanity check that fetch works
         err = lfs_dir_fetch(lfs, &root, (const lfs_block_t[2]){0, 1});
         if (err) {
-            bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, err);
             goto cleanup;
         }
     }
@@ -4226,7 +4148,6 @@ static int lfs_rawmount(lfs_t *lfs, const struct lfs_config *cfg) {
                  minor_version > LFS_DISK_VERSION_MINOR)) {
                 LFS_ERROR("Invalid version v%"PRIu16".%"PRIu16,
                         major_version, minor_version);
-                bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
                 err = LFS_ERR_INVAL;
                 goto cleanup;
             }
@@ -4236,7 +4157,6 @@ static int lfs_rawmount(lfs_t *lfs, const struct lfs_config *cfg) {
                 if (superblock.name_max > lfs->name_max) {
                     LFS_ERROR("Unsupported name_max (%"PRIu32" > %"PRIu32")",
                             superblock.name_max, lfs->name_max);
-                    bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
                     err = LFS_ERR_INVAL;
                     goto cleanup;
                 }
@@ -4248,7 +4168,6 @@ static int lfs_rawmount(lfs_t *lfs, const struct lfs_config *cfg) {
                 if (superblock.file_max > lfs->file_max) {
                     LFS_ERROR("Unsupported file_max (%"PRIu32" > %"PRIu32")",
                             superblock.file_max, lfs->file_max);
-                    bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
                     err = LFS_ERR_INVAL;
                     goto cleanup;
                 }
@@ -4260,7 +4179,6 @@ static int lfs_rawmount(lfs_t *lfs, const struct lfs_config *cfg) {
                 if (superblock.attr_max > lfs->attr_max) {
                     LFS_ERROR("Unsupported attr_max (%"PRIu32" > %"PRIu32")",
                             superblock.attr_max, lfs->attr_max);
-                    bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
                     err = LFS_ERR_INVAL;
                     goto cleanup;
                 }
@@ -4271,7 +4189,6 @@ static int lfs_rawmount(lfs_t *lfs, const struct lfs_config *cfg) {
             if (superblock.block_count != lfs->cfg->block_count) {
                 LFS_ERROR("Invalid block count (%"PRIu32" != %"PRIu32")",
                         superblock.block_count, lfs->cfg->block_count);
-                bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
                 err = LFS_ERR_INVAL;
                 goto cleanup;
             }
@@ -4279,7 +4196,6 @@ static int lfs_rawmount(lfs_t *lfs, const struct lfs_config *cfg) {
             if (superblock.block_size != lfs->cfg->block_size) {
                 LFS_ERROR("Invalid block size (%"PRIu32" != %"PRIu32")",
                         superblock.block_count, lfs->cfg->block_count);
-                bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
                 err = LFS_ERR_INVAL;
                 goto cleanup;
             }
@@ -4294,7 +4210,6 @@ static int lfs_rawmount(lfs_t *lfs, const struct lfs_config *cfg) {
 
     // found superblock?
     if (lfs_pair_isnull(lfs->root)) {
-        bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
         err = LFS_ERR_INVAL;
         goto cleanup;
     }
@@ -5127,7 +5042,6 @@ static int lfs1_mount(lfs_t *lfs, struct lfs1 *lfs1,
         if ((major_version != LFS1_DISK_VERSION_MAJOR ||
              minor_version > LFS1_DISK_VERSION_MINOR)) {
             LFS_ERROR("Invalid version v%d.%d", major_version, minor_version);
-            bk_printf("err inval: %s %d\r\n", __func__, __LINE__);
             err = LFS_ERR_INVAL;
             goto cleanup;
         }
@@ -5391,8 +5305,7 @@ int lfs_format(lfs_t *lfs, const struct lfs_config *cfg) {
     if (err) {
         return err;
     }
-    //LFS_TRACE("lfs_format(%p, %p {.context=%p, "
-    bk_printf("lfs_format(%p, %p {.context=%p, "
+    LFS_TRACE("lfs_format(%p, %p {.context=%p, "
                 ".read=%p, .prog=%p, .erase=%p, .sync=%p, "
                 ".read_size=%"PRIu32", .prog_size=%"PRIu32", "
                 ".block_size=%"PRIu32", .block_count=%"PRIu32", "
@@ -5400,7 +5313,7 @@ int lfs_format(lfs_t *lfs, const struct lfs_config *cfg) {
                 ".lookahead_size=%"PRIu32", .read_buffer=%p, "
                 ".prog_buffer=%p, .lookahead_buffer=%p, "
                 ".name_max=%"PRIu32", .file_max=%"PRIu32", "
-                ".attr_max=%"PRIu32"})\r\n",
+                ".attr_max=%"PRIu32"})",
             (void*)lfs, (void*)cfg, cfg->context,
             (void*)(uintptr_t)cfg->read, (void*)(uintptr_t)cfg->prog,
             (void*)(uintptr_t)cfg->erase, (void*)(uintptr_t)cfg->sync,

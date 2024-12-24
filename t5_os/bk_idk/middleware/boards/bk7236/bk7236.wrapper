@@ -39,7 +39,7 @@ if os.path.exists(secure_config_path):
     config_dict = {}
 
     for line in config_lines:
-        if '=' not in line:
+        if ('=' not in line) or ('#' in line):
             continue
         key, value = line.split('=')
         config_dict[key.strip()] = value.strip()

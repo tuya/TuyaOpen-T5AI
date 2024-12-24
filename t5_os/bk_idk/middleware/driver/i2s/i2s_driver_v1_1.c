@@ -64,7 +64,7 @@ static i2s_drv_info_t *i2s2_drv_info = NULL;
 static dma_id_t i2s_dma_idx = 0;
 
 static void i2s_isr(void);
-extern void delay(int num);//TODO fix me
+extern void bk_delay(int num);//TODO fix me
 
 bk_err_t bk_i2s_set_samp_rate(i2s_samp_rate_t samp_rate);
 bk_err_t bk_i2s_chl_deinit(i2s_channel_id_t chl, i2s_txrx_type_t type);
@@ -148,7 +148,7 @@ bk_err_t bk_i2s_driver_init(void)
 	sys_drv_apll_cal_val_set(0x8973CA6F);
 	sys_drv_apll_config_set(0xC2A0AE86);
 	sys_drv_apll_spi_trigger_set(1);
-	delay(10);
+	bk_delay(10);
 	sys_drv_apll_spi_trigger_set(0);
 
 	return BK_OK;
@@ -922,7 +922,7 @@ bk_err_t bk_i2s_set_samp_rate(i2s_samp_rate_t samp_rate)
 	sys_drv_apll_config_set(0xC2A0AE86);
 	sys_drv_i2s0_ckdiv_set(3);
 	sys_drv_apll_spi_trigger_set(1);
-	delay(10);
+	bk_delay(10);
 	sys_drv_apll_spi_trigger_set(0);
 
 	if (smp_ratio > 0x1F) {

@@ -19,7 +19,6 @@
 #include <os/mem.h>
 #include "aon_pmu_driver.h"
 #include <components/system.h>
-#include "bk_fake_clock.h"
 #include <driver/uart.h>
 #include "uart_statis.h"
 #include "bk_uart.h"
@@ -66,8 +65,8 @@
 #define PM_SLEEP_TIME_COMPENSATION_ENABLE               (0x0)
 #define SWITCH_32K_WAIT                                 (5000) // 5s
 #define SWITCH_32K_DELAY                                (1000) // 1s
-#define PM_DEBUG_SYS_REG_BASE                           (0x44010000)
-#define PM_DEBUG_PMU_REG_BASE                           (0x44000000)
+#define PM_DEBUG_SYS_REG_BASE                           (SOC_SYSTEM_REG_BASE)
+#define PM_DEBUG_PMU_REG_BASE                           (SOC_AON_PMU_REG_BASE)
 #define PM_SEND_CMD_CP0_RESPONSE_TIME_OUT               (100)  //100ms
 
 /*=====================DEFINE SECTION END=====================*/
@@ -508,7 +507,7 @@ bk_err_t bk_pm_module_vote_power_ctrl(pm_power_module_name_e module, pm_power_mo
 	}
 
 	if (s_debug_en & 0x2)
-		os_printf("cpu1 vote power \r\n");
+		os_printf("cpu1 vote power\r\n");
 #endif
 	return BK_OK;
 #elif CONFIG_SYS_CPU2
@@ -908,8 +907,8 @@ static bk_err_t pm_psram_malloc_state_and_power_ctrl()
 	{
 		if(s_pm_cp1_psram_malloc_count_state > 0)
 		{
-			os_printf("Attention the CPU1 psram malloc count[%d] > 0\r\n",cp1_psram_malloc_count);
-			os_printf("The power consumption will get higher, please free them\r\n");
+			os_printf("CP1 psram malloc count[%d] > 0\r\n",cp1_psram_malloc_count);
+			os_printf("Power consumption will get higher,free them\r\n");
 
 			bk_pm_dump_cp1_psram_malloc_info();
 		}
@@ -921,8 +920,8 @@ static bk_err_t pm_psram_malloc_state_and_power_ctrl()
 	{
 		if(cp0_psram_malloc_count > 0)
 		{
-			os_printf("Attention the CPU0 psram malloc count[%d] > 0\r\n",cp0_psram_malloc_count);
-			os_printf("The power consumption will get higher, please free them\r\n");
+			os_printf("CP0 psram malloc count[%d] > 0\r\n",cp0_psram_malloc_count);
+			os_printf("Power consumption will get higher,free them\r\n");
 
 			bk_psram_heap_get_used_state();
 		}
@@ -1710,7 +1709,7 @@ static void pm_super_deep_sleep_process()
 	uint64_t skip_io = 0;
 
 #if CONFIG_GPIO_RETENTION_SUPPORT
-	gpio_retention_sync();
+	gpio_retention_sync(false);
 	skip_io = gpio_retention_map_get();
 #endif
 
@@ -2083,7 +2082,7 @@ bk_err_t bk_pm_module_vote_cpu_freq(pm_dev_id_e module, pm_cpu_freq_e cpu_freq)
 
 	previous_tick = pm_cp1_aon_rtc_counter_get();
 	current_tick = previous_tick;
-	os_printf("cp1 vote freq begin [%lld]\r\n",previous_tick);
+	os_printf("cp1 vote freq_B[%lld]\r\n",previous_tick);
 	while((current_tick - previous_tick) < (PM_SEND_CMD_CP0_RESPONSE_TIME_OUT*PM_AON_RTC_DEFAULT_TICK_COUNT))
 	{
 	    if (bk_pm_cp1_cpu_freq_ctrl_state_get()) // wait the cp0 response
@@ -2095,12 +2094,12 @@ bk_err_t bk_pm_module_vote_cpu_freq(pm_dev_id_e module, pm_cpu_freq_e cpu_freq)
 
 	if(!bk_pm_cp1_cpu_freq_ctrl_state_get())
 	{
-	    os_printf("cp1 vote freq[%d] time out\r\n",module);
+	    os_printf("cp1 vote freq[%d]time out\r\n",module);
 	}
-	os_printf("cp1 vote freq end [%lld]\r\n",current_tick);
+	os_printf("cp1 vote freq_E[%lld]\r\n",current_tick);
 
 	if(s_debug_en&0x2)
-		os_printf("cpu1 vote cpu freq \r\n");
+		os_printf("cpu1 vote cpu freq\r\n");
 #endif
 	return BK_OK;
 #else
@@ -2365,21 +2364,21 @@ bk_err_t pm_debug_module_state()
 #if CONFIG_SYS_CPU0
 	if(s_pm_video_pm_state > 0)
 	{
-		os_printf("Attention the video not power down[modulue:0x%x]\r\n",s_pm_video_pm_state);
+		os_printf("Video not PD[modulue:0x%x]\r\n",s_pm_video_pm_state);
 	}
 	if(s_pm_audio_pm_state > 0)
 	{
-		os_printf("Attention the audio not power down[modulue:0x%x]\r\n",s_pm_audio_pm_state);
+		os_printf("Audio not PD[modulue:0x%x]\r\n",s_pm_audio_pm_state);
 	}
 
 	if(!bk_pm_module_power_state_get(PM_POWER_MODULE_NAME_CPU1))
 	{
-		os_printf("Attention the cpu1 not power down[state:0x%x]\r\n",bk_pm_module_power_state_get(PM_POWER_MODULE_NAME_CPU1));
+		os_printf("Cp1 not PD[state:0x%x]\r\n",bk_pm_module_power_state_get(PM_POWER_MODULE_NAME_CPU1));
 	}
 
 	if(!(REG_READ(PM_DEBUG_SYS_REG_BASE+0x6*4)&0x2))
 	{
-		os_printf("Attention the cpu2 not power down[state:0x%x]\r\n",REG_READ(PM_DEBUG_SYS_REG_BASE+0x6*4));
+		os_printf("Cp2 not PD[state:0x%x]\r\n",REG_READ(PM_DEBUG_SYS_REG_BASE+0x6*4));
 	}
 
 	#if CONFIG_PSRAM_AS_SYS_MEMORY
@@ -2389,8 +2388,8 @@ bk_err_t pm_debug_module_state()
 	uint32_t cp1_psram_malloc_count = s_pm_cp1_psram_malloc_count_state;
 	if(cp1_psram_malloc_count > 0)
 	{
-		os_printf("Attention the CPU1 psram malloc count[%d] > 0\r\n",cp1_psram_malloc_count);
-		os_printf("The power consumption will get higher, please free them\r\n");
+		os_printf("CP1 psram malloc count[%d] > 0\r\n",cp1_psram_malloc_count);
+		os_printf("Power consumption will get higher, please free them\r\n");
 		bk_pm_dump_cp1_psram_malloc_info();
 	}
 	#endif
@@ -2398,8 +2397,8 @@ bk_err_t pm_debug_module_state()
 	cp0_psram_malloc_count = bk_psram_heap_get_used_count();
 	if(cp0_psram_malloc_count > 0)
 	{
-		os_printf("Attention the CPU0 psram malloc count[%d] > 0\r\n",cp0_psram_malloc_count);
-		os_printf("The power consumption will get higher, please free them\r\n");
+		os_printf("CP0 psram malloc count[%d] > 0\r\n",cp0_psram_malloc_count);
+		os_printf("power consumption will get higher,free them\r\n");
 		bk_psram_heap_get_used_state();
 	}
 	#endif
@@ -2412,19 +2411,19 @@ void pm_debug_ctrl(uint32_t debug_en)
 #if CONFIG_SYS_CPU0
 	if(debug_en == PM_DEBUG_CTRL_STATE)
 	{
-		os_printf("pm video and audio state:0x%x 0x%x\r\n",s_pm_video_pm_state,s_pm_audio_pm_state);
-		os_printf("pm ahpb and bakp state:0x%x 0x%x\r\n",s_pm_ahpb_pm_state,s_pm_bakp_pm_state);
+		os_printf("pm video&&audio:0x%x 0x%x \r\n",s_pm_video_pm_state,s_pm_audio_pm_state);
+		os_printf("pm ahpb&&bakp:0x%x 0x%x\r\n",s_pm_ahpb_pm_state,s_pm_bakp_pm_state);
 		os_printf("pm low vol[module:0x%llx] [need module:0x%llx]\r\n",s_pm_sleeped_modules,s_pm_enter_low_vol_modules);
 		os_printf("pm deepsleep[module:0x%x][need module:0x%x]\r\n",s_pm_off_modules,s_pm_enter_deep_sleep_modules);
-		os_printf("pm power and pmu state[0x%x][0x%x]\r\n",REG_READ(PM_DEBUG_SYS_REG_BASE+0x10*4),REG_READ(PM_DEBUG_PMU_REG_BASE+0x41*4));
+		os_printf("pm power&&pmu[0x%x][0x%x]\r\n",REG_READ(PM_DEBUG_SYS_REG_BASE+0x10*4),REG_READ(PM_DEBUG_PMU_REG_BASE+0x41*4));
 
 		if(s_pm_ahpb_pm_state > 0)
 		{
-			os_printf("Attention the ahbp not power down[modulue:0x%x]\r\n",s_pm_ahpb_pm_state);
+			os_printf("Ahbp not PD[module:0x%x]\r\n",s_pm_ahpb_pm_state);
 		}
 		if(s_pm_bakp_pm_state > 0)
 		{
-			os_printf("Attention the bakp not power down[modulue:0x%x]\r\n",s_pm_bakp_pm_state);
+			os_printf("Bakp not PD[module:0x%x]\r\n",s_pm_bakp_pm_state);
 		}
 		pm_cp1_psram_malloc_state_get();
 		pm_debug_module_state();

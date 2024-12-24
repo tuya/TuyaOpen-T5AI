@@ -849,6 +849,7 @@ uint32_t rtos_before_sleep(void);
 void rtos_after_sleep(uint32_t int_level);
 bool rtos_is_in_interrupt_context(void);
 bool rtos_local_irq_disabled(void);
+bool rtos_is_scheduler_suspended(void);
 void rtos_wait_for_interrupt(void);
 void rtos_shutdown(void);
 

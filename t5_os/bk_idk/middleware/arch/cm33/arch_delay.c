@@ -52,5 +52,11 @@ void arch_delay_cnt(volatile uint32_t cnt)
 
 void arch_delay_us(uint32_t us)
 {
-	//TODO
+	volatile INT32 i, j;
+
+	for(i = 0; i < us; i ++)
+	{
+		for(j = 0; j < 10; j ++)
+			;
+	}
 }

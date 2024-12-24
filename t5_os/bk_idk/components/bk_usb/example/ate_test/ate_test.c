@@ -51,7 +51,7 @@ void bk_set_ate_self_test(void)
 bk_err_t bk_usb_ate_bist_test(uint32_t state)
 {
 	uint32_t reg = 0;
-	extern void delay(INT32 num);
+	extern void bk_delay(INT32 num);
 	if(state == 1) {
 	gpio_dev_unprotect_unmap(12);
 	gpio_dev_unprotect_unmap(13);
@@ -63,13 +63,13 @@ bk_err_t bk_usb_ate_bist_test(uint32_t state)
 	reg &= ~(1<<5);
 	*((volatile unsigned long *) (0x44010000+0x10*4)) = reg;//0.9v
 	
-	delay(1000);
+	bk_delay(1000);
 	*((volatile unsigned long *) (0x44010000+0x4d*4)) |= (1<<31);//buckpa enable
-	delay(1000);
+	bk_delay(1000);
 	*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<12);//1.8v
-	delay(1000);
+	bk_delay(1000);
 	*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<13);//3.3v
-	delay(1000);
+	bk_delay(1000);
 
 	/* Input REFCLK into IP with frequency of 12MHz set REFCLK_MODE to high*/
 	//sys_drv_usb_clock_ctrl(true, NULL);
@@ -92,7 +92,7 @@ bk_err_t bk_usb_ate_bist_test(uint32_t state)
 			if(waitready_count > 20) return BK_FAIL;
 			USB_ATE_LOGI("70c_reg:0x%x\r\n", reg);
 			waitready_count++;
-			delay(10000);
+			bk_delay(10000);
 		}
 	}
 	NANENG_REG_USB_PHY_00 &= ~0x08;	   
@@ -103,17 +103,17 @@ bk_err_t bk_usb_ate_bist_test(uint32_t state)
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= (1<<13);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//3.3v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= ~(1<<12);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//1.8v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4d*4));
 		reg &= ~(1<<31);
 		*((volatile unsigned long *) (0x44010000+0x4d*4)) = reg;//buckpa enable
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x10*4));
 		reg &= ~(0<<5);
@@ -127,7 +127,7 @@ bk_err_t bk_usb_ate_bist_test(uint32_t state)
 bk_err_t bk_usb_ate_voh_vol_test(uint32_t state)
 {
 	uint32_t reg = 0;
-	extern void delay(INT32 num);
+	extern void bk_delay(INT32 num);
 
 	if(state == 1) {
 		gpio_dev_unprotect_unmap(12);
@@ -143,13 +143,13 @@ bk_err_t bk_usb_ate_voh_vol_test(uint32_t state)
 		reg &= ~(1<<5);
 		*((volatile unsigned long *) (0x44010000+0x10*4)) = reg;//0.9v
 		
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4d*4)) |= (1<<31);//buckpa enable
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<12);//1.8v
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<13);//3.3v
-		delay(1000);
+		bk_delay(1000);
 		bk_set_ate_self_test();
 		//Configure the register pin "cfg_test_mode" to high, enable the CP test
 		//NANENG_REG_USB_PHY_0D |= (0x1 << 3);
@@ -158,17 +158,17 @@ bk_err_t bk_usb_ate_voh_vol_test(uint32_t state)
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= (1<<13);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//3.3v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= ~(1<<12);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//1.8v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4d*4));
 		reg &= ~(1<<31);
 		*((volatile unsigned long *) (0x44010000+0x4d*4)) = reg;//buckpa enable
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x10*4));
 		reg &= ~(0<<5);
@@ -191,7 +191,7 @@ bk_err_t bk_usb_ate_voh_vol_test(uint32_t state)
 bk_err_t bk_usb_ate_rterm_test(uint32_t state)
 {
 	uint32_t reg = 0;
-	extern void delay(INT32 num);
+	extern void bk_delay(INT32 num);
 
 	if(state == 1) {
 		gpio_dev_unprotect_unmap(12);
@@ -206,13 +206,13 @@ bk_err_t bk_usb_ate_rterm_test(uint32_t state)
 		reg &= ~(1<<5);
 		*((volatile unsigned long *) (0x44010000+0x10*4)) = reg;//0.9v
 		
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4d*4)) |= (1<<31);//buckpa enable
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<12);//1.8v
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<13);//3.3v
-		delay(1000);
+		bk_delay(1000);
 		bk_set_ate_self_test();
 		//Configure the register pin "cfg_test_mode" to high, enable the CP test
 		//NANENG_REG_USB_PHY_0D |= (0x1 << 3);
@@ -221,17 +221,17 @@ bk_err_t bk_usb_ate_rterm_test(uint32_t state)
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= (1<<13);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//3.3v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= ~(1<<12);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//1.8v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4d*4));
 		reg &= ~(1<<31);
 		*((volatile unsigned long *) (0x44010000+0x4d*4)) = reg;//buckpa enable
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x10*4));
 		reg &= ~(0<<5);
@@ -253,7 +253,7 @@ bk_err_t bk_usb_ate_rterm_test(uint32_t state)
 bk_err_t bk_usb_ate_rx_dc_input_test(uint32_t state)
 {
 	uint32_t reg = 0;
-	extern void delay(INT32 num);
+	extern void bk_delay(INT32 num);
 
 	if(state == 1) {
 		gpio_dev_unprotect_unmap(12);
@@ -269,13 +269,13 @@ bk_err_t bk_usb_ate_rx_dc_input_test(uint32_t state)
 		reg &= ~(1<<5);
 		*((volatile unsigned long *) (0x44010000+0x10*4)) = reg;//0.9v
 		
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4d*4)) |= (1<<31);//buckpa enable
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<12);//1.8v
-		delay(1000);
+		bk_delay(1000);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) |= (1<<13);//3.3v
-		delay(1000);
+		bk_delay(1000);
 		bk_set_ate_self_test();
 		//Configure the register pin "cfg_test_mode" to high, enable the RX DC test
 		//NANENG_REG_USB_PHY_0D |= (0x1 << 3);
@@ -284,17 +284,17 @@ bk_err_t bk_usb_ate_rx_dc_input_test(uint32_t state)
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= (1<<13);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//3.3v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4a*4));
 		reg &= ~(1<<12);
 		*((volatile unsigned long *) (0x44010000+0x4a*4)) = reg;//1.8v
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x4d*4));
 		reg &= ~(1<<31);
 		*((volatile unsigned long *) (0x44010000+0x4d*4)) = reg;//buckpa enable
-		delay(10000);
+		bk_delay(10000);
 
 		reg = *((volatile unsigned long *) (0x44010000+0x10*4));
 		reg &= ~(0<<5);
@@ -302,7 +302,7 @@ bk_err_t bk_usb_ate_rx_dc_input_test(uint32_t state)
 	}else if(state == 2) {
 		//Configure the register pin "cfg_hsrx_test" to high, enable RX blocks, wait about 200us for RX blocks finish the set-up
 		NANENG_REG_USB_PHY_0F |= (0x1 << 4);
-		delay(250);
+		bk_delay(250);
 	}else if(state == 3) {
 		//Input a voltage source Vinrx between DP and DM, the initial voltage of Vinrx is 0V
 		//Increase or decrease the voltage of Vinrx at 5mV/us speed until "hsrx_test_o" is stable to 0/1
@@ -317,7 +317,7 @@ bk_err_t bk_usb_ate_rx_dc_input_test(uint32_t state)
 				if(waitready_count > 20) return BK_FAIL;
 				USB_ATE_LOGI("70c_reg:0x%x\r\n", reg);
 				waitready_count++;
-				delay(10000);
+				bk_delay(10000);
 			}
 		}
 	}

@@ -1,7 +1,11 @@
 Field,Value
 secureboot_en,FALSE
 flash_aes_type,NONE
+single_bin,FALSE
 flash_aes_key,
 root_key_type,ec256
 root_pubkey,bl2_root_rsa3072.pem
 root_privkey,bl2_root_rsa3072.pem
+new_pubkey,
+new_privkey,
+update_key,FALSE

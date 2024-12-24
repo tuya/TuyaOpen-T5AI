@@ -25,8 +25,10 @@
 
 #define BK7236_PMU_BASE_ADDR         0x44000000
 #define DEEP_SLEEP_RESTART_BIT		(0x1 << 1)
+#define OTA_FINISH_RESTART_BIT		(0x1 << 2)
 #define BK7236_PMU_RESET_REASON_GET (*((volatile unsigned int *)(BK7236_PMU_BASE_ADDR + 0x0*4)))
 #define RUNNING_IS_FROM_DEEP_SLEEP      ((BK7236_PMU_RESET_REASON_GET & DEEP_SLEEP_RESTART_BIT ) != 0)
+#define RUNNING_IS_FROM_OTA              ((BK7236_PMU_RESET_REASON_GET & OTA_FINISH_RESTART_BIT ) != 0)
 
 #define EFUSE_REG2_MODULE        *((volatile unsigned long *) (0x44880000 + 0x2*4))
 #define EFUSE_REG4_CTRL          *((volatile unsigned long *) (0x44880000 + 0x4*4))
@@ -77,6 +79,10 @@ uint32_t sys_is_running_from_deep_sleep(void)
     return (RUNNING_IS_FROM_DEEP_SLEEP);
 }
 
+uint32_t sys_is_running_from_ota(void)
+{
+	return (RUNNING_IS_FROM_OTA);
+}
 /* System initialization function */
 void SystemInit (void)
 {
@@ -134,18 +140,16 @@ void SystemInit (void)
 #endif
 
 #if defined(__FPU_USED) && (__FPU_USED == 1U)
-        /* Enable Secure privileged and unprivilged access to the FP Extension */
-        SCB->CPACR |= (3U << 10U*2U)     /* enable CP10 full access */
-                      | (3U << 11U*2U);  /* enable CP11 full access */
+	/* Enable Secure privileged and unprivilged access to the FP Extension */
+	SCB->CPACR |= (3U << 10U*2U)     /* enable CP10 full access */
+			| (3U << 11U*2U);  /* enable CP11 full access */
 
 #if defined(__ARM_ARCH_8_1M_MAIN__) || defined(__ARM_ARCH_8M_MAIN__)
-        /* If the SPE will ever use the floating-point registers for sensitive data,
-         * then FPCCR.TS, FPCCR.CLRONRET and FPCCR.CLRONRETS must be set at
-         * initialisation and not changed again afterwards.
-         */
-        FPU->FPCCR |= FPU_FPCCR_TS_Msk
-                      | FPU_FPCCR_CLRONRET_Msk
-                      | FPU_FPCCR_CLRONRETS_Msk;
+	/* If the SPE will ever use the floating-point registers for sensitive data,
+	* then FPCCR.TS, FPCCR.CLRONRET and FPCCR.CLRONRETS must be set at
+	* initialisation and not changed again afterwards.
+	*/
+	FPU->FPCCR |= FPU_FPCCR_TS_Msk | FPU_FPCCR_CLRONRET_Msk | FPU_FPCCR_CLRONRETS_Msk;
 #endif
 #endif
 

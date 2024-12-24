@@ -18,9 +18,5 @@ menu "FLASH"
 	config FLASH_MB
 		bool "Enable flash mailbox channel"
 		default n
-
-	config FLASH_BYPASS_OTP_OPERATION
-		bool "Bypass flash to operate otp in flash"
-		default n
 endmenu
 

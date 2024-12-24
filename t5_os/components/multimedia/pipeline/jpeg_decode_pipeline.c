@@ -1362,11 +1362,11 @@ static void jpeg_decode_main(beken_thread_arg_t data)
 					{
 						jpeg_decode_start_handle((frame_buffer_t *)msg.param, msg.param1);
 					}
-                    else
-                    {
-                        frame_buffer_fb_free((frame_buffer_t *)msg.param, MODULE_DECODER);
-                        LOGI("free jpeg frame \n");
-                    }
+					else
+					{
+						frame_buffer_fb_free((frame_buffer_t *)msg.param, MODULE_DECODER);
+						LOGI("free jpeg frame \n");
+					}
 					break;
 
 				case JPEGDEC_LINE_DONE:

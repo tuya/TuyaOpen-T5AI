@@ -1389,9 +1389,27 @@ bk_err_t lcd_open_handle(media_mailbox_msg_t *msg)
 		return ret;
 	}
 
-	//os_memcpy(&lcd_info.lcd_device, lcd_config.lcd_device, sizeof(lcd_device_t));
-	lcd_open_t *lcd_open = (lcd_open_t *)msg->param;
-	os_memcpy(&lcd_config.lcd_open, lcd_open, sizeof(lcd_open_t));
+    bk_printf("%s %x\n", __func__, (uint32_t *)msg->param);
+    // Modified by TUYA Start
+#ifdef CONFIG_TUYA_GPIO_MAP
+    uint32_t *tmp = (uint32_t *)msg->param;
+    if (tmp[0] == 0x54555941) {
+        // update config
+        tkl_disp_update_ll_config((void *)msg->param);
+
+        lcd_config.lcd_open.device_ppi = tkl_disp_get_ppi();
+        char *device_name = tkl_disp_get_lcd_name();
+        lcd_config.lcd_open.device_name = device_name;
+
+        tuya_lcd_update_config((void *)msg->param);
+    } else
+#endif // CONFIG_TUYA_GPIO_MAP
+    {
+        //os_memcpy(&lcd_info.lcd_device, lcd_config.lcd_device, sizeof(lcd_device_t));
+        lcd_open_t *lcd_open = (lcd_open_t *)msg->param;
+        os_memcpy(&lcd_config.lcd_open, lcd_open, sizeof(lcd_open_t));
+    }
+    // Modified by TUYA End
 
 	if (lcd_config.lcd_open.device_name != NULL)
 		lcd_info.lcd_device = get_lcd_device_by_name(lcd_config.lcd_open.device_name);
@@ -1804,6 +1822,19 @@ bk_err_t lcd_rotate_handle(media_mailbox_msg_t *msg)
 	return ret;
 }
 
+//Modified by TUYA Start
+static uint32_t usb_device_status = 0;
+static void usbh_device_info(uint32_t vid, uint32_t pid, uint32_t bcd)
+{
+    bk_printf("vid: %04x, pid: %04x, bcd: %04x\r\n", vid, pid, bcd);
+    if ((vid != 0) && (pid != 0) && (bcd != 0)) {
+        usb_device_status = 1;
+    } else {
+        usb_device_status = 0;
+    }
+}
+//Modified by TUYA End
+
 void lcd_event_handle(media_mailbox_msg_t *msg)
 {
 	bk_err_t ret = BK_OK;
@@ -1903,6 +1934,30 @@ void lcd_event_handle(media_mailbox_msg_t *msg)
 			msg->param =(uint32_t)(camera_status);
 			break;
 		}
+        // Modified by TUYA Start
+		case EVENT_GET_USB_STATUS_IND:
+		{
+            extern uint8_t is_usb_opened;
+            uint8_t usb_need_open_close = 0;
+
+            usbh_enumerate_register_cb(usbh_device_info);
+
+            if (!is_usb_opened)
+                usb_need_open_close = 1;
+
+            if (usb_need_open_close)
+                bk_usb_open(0);
+
+            extern bk_err_t rtos_delay_milliseconds(uint32_t num_ms);
+            rtos_delay_milliseconds(1000);
+	        //bk_usb_device_set_using_status(1, USB_UVC_DEVICE);
+			msg->param = (uint32_t)(usb_device_status);
+
+            if (usb_need_open_close)
+                bk_usb_close();
+			break;
+		}
+        // Modified by TUYA End
 		default:
 			break;
 	}

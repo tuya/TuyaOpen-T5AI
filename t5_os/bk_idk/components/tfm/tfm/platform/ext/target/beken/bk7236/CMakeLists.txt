@@ -20,6 +20,7 @@ target_include_directories(platform_region_defs
 
 #========================= Platform common defs ===============================#
 # Specify the location of platform specific build dependencies.
+if (CONFIG_BUILD_TFM)
 target_sources(tfm_s
 	PRIVATE
 	$<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/startup_cmsdk_bk7236_s.S>
@@ -31,6 +32,7 @@ target_add_scatter_file(tfm_s
 	$<$<AND:$<VERSION_LESS:${TFM_ISOLATION_LEVEL},3>,$<C_COMPILER_ID:GNU>>:${CMAKE_SOURCE_DIR}/platform/ext/common/gcc/tfm_common_s.ld>
 	$<$<AND:$<VERSION_EQUAL:${TFM_ISOLATION_LEVEL},3>,$<C_COMPILER_ID:GNU>>:${CMAKE_BINARY_DIR}/generated/platform/ext/common/gcc/tfm_isolation_l3.ld>
 )
+endif()
 
 if(NS)
 	target_sources(tfm_ns
@@ -48,24 +50,43 @@ if(NS)
 		__EN_ICACHE
 		__EN_DCACHE
 	)
-	
+
 	target_link_libraries(CMSIS_5_tfm_ns
 		INTERFACE
 			CMSIS_5_RTX_V8MBN
 	)
 endif()
 
-if(BL2)
-	target_sources(bl2
+if(JUMP)
+	target_sources(jump
 		PRIVATE
-			$<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/startup_cmsdk_bk7236_bl2.c>
+			$<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/startup_cmsdk_bk7236_jump.c>
+			cmsis_core/system_cmsdk_bk7236_jump.c
 	)
+	target_add_scatter_file(jump
+			$<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/bk7236_jump.ld>
+	)
+
+endif()
+
+if(BL2)
+	set(SOURCE_GCC
+		$<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/startup_cmsdk_bk7236_bl2.c>
+	)
+	target_sources(bl2 PRIVATE ${SOURCE_GCC})
 	target_add_scatter_file(bl2
 			$<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/bk7236_bl2.ld>
 	)
+	if (CONFIG_RANDOM_AES_UPGRADE_BL2 STREQUAL "y")
+		target_sources(bl2_B PRIVATE ${SOURCE_GCC})
+		target_add_scatter_file(bl2_B
+				$<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/bk7236_bl2_B.ld>
+		)
+	endif()
 endif()
 
 #========================= Platform Secure ====================================#
+if (CONFIG_BUILD_TFM)
 set(platform_s_inc
 		.
 		${TFM_BEKEN}/
@@ -116,12 +137,14 @@ target_compile_definitions(platform_s
 	__EN_DCACHE=1
 )
 
+if (CONFIG_BUILD_TFM)
 target_sources(tfm_sprt
 	PRIVATE
 		# SLIH test Partition and FLIH test Partition access the timer as ARoT Partitions.
 		# Put the driver to SPRT so that both SLIH and FLIH tests can access it.
 		$<$<OR:$<BOOL:${TEST_NS_SLIH_IRQ}>,$<BOOL:${TEST_NS_FLIH_IRQ}>>:${CMAKE_CURRENT_SOURCE_DIR}/../native_drivers/timer_cmsdk/timer_cmsdk.c>
 )
+endif()
 
 target_compile_options(platform_s
 	PUBLIC
@@ -156,6 +179,7 @@ target_include_directories(platform_ns
 		${TFM_BEKEN}/native_drivers
 		${TFM_BEKEN}/native_drivers/timer_cmsdk
 )
+endif()
 
 #========================= Platform BL2 =======================================#
 if(BL2)
@@ -163,6 +187,7 @@ set(platform_bl2_src
 		PRIVATE
 			cmsis_core/system_cmsdk_bk7236.c
 			cmsis_core/mpu.c
+			cmsis_core/sleep.c
 			cmsis_core/cache.c
 			${TFM_BEKEN}/cmsis_drivers/Driver_Flash.c
 			${TFM_BEKEN}/native_drivers/arm_uart_drv.c
@@ -267,7 +292,8 @@ endif()
 
 	if(MCUBOOT_UPGRADE_STRATEGY STREQUAL OVERWRITE_ONLY)
 		list(APPEND platform_bl2_src
-			${TFM_BEKEN}/bl2/decompress_bl2
+			${TFM_BEKEN}/bl2/decompress_bl2.c
+			${TFM_BEKEN}/bl2/decompress_bl2_reset_test.c
 			${ARMINO_SDK_PATH}/components/compress/decompress.c
 			${ARMINO_SDK_PATH}/components/compress/lzma.c
 			${ARMINO_SDK_PATH}/components/compress/lzma1900/LzmaDec.c
@@ -295,6 +321,19 @@ endif()
     target_compile_definitions(bootutil PUBLIC CONFIG_STARTUP_PERFORMANCE)
     endif()
 
+	if(CONFIG_OTA_CONFIRM_UPDATE)
+		target_compile_definitions(platform_bl2
+			PUBLIC
+				CONFIG_OTA_CONFIRM_UPDATE
+		)
+	endif()
+
+	if(CONFIG_DECOMPRESS_RESUME)
+		target_compile_definitions(platform_bl2
+			PUBLIC
+				CONFIG_DECOMPRESS_RESUME
+		)
+	endif()
 
 	target_include_directories(platform_bl2 PUBLIC ${platform_bl2_inc})
 	target_sources(platform_bl2 PRIVATE ${platform_bl2_src})

@@ -49,12 +49,11 @@ extern "C"
 // macros must not have side-effects as the macros can be removed for a smaller
 // code footprint
 
-extern void bk_printf(const char *fmt, ...);
 // Logging functions
 #ifndef LFS_TRACE
 #ifdef LFS_YES_TRACE
 #define LFS_TRACE_(fmt, ...) \
-    bk_printf("%s:%d:trace: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
+    printf("%s:%d:trace: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
 #define LFS_TRACE(...) LFS_TRACE_(__VA_ARGS__, "")
 #else
 #define LFS_TRACE(...)
@@ -64,7 +63,7 @@ extern void bk_printf(const char *fmt, ...);
 #ifndef LFS_DEBUG
 #ifndef LFS_NO_DEBUG
 #define LFS_DEBUG_(fmt, ...) \
-    bk_printf("%s:%d:debug: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
+    printf("%s:%d:debug: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
 #define LFS_DEBUG(...) LFS_DEBUG_(__VA_ARGS__, "")
 #else
 #define LFS_DEBUG(...)
@@ -74,23 +73,22 @@ extern void bk_printf(const char *fmt, ...);
 #ifndef LFS_WARN
 #ifndef LFS_NO_WARN
 #define LFS_WARN_(fmt, ...) \
-    bk_printf("%s:%d:warn: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
+    printf("%s:%d:warn: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
 #define LFS_WARN(...) LFS_WARN_(__VA_ARGS__, "")
 #else
 #define LFS_WARN(...)
 #endif
 #endif
 
-// #ifndef LFS_ERROR
-// #ifndef LFS_NO_ERROR
-// #define LFS_ERROR_(fmt, ...) \
-//     bk_printf("%s:%d:error: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
-// #define LFS_ERROR(...) LFS_ERROR_(__VA_ARGS__, "")
-// #else
-// #define LFS_ERROR(...)
-// #endif
-// #endif
-#define LFS_ERROR bk_printf
+#ifndef LFS_ERROR
+#ifndef LFS_NO_ERROR
+#define LFS_ERROR_(fmt, ...) \
+    printf("%s:%d:error: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
+#define LFS_ERROR(...) LFS_ERROR_(__VA_ARGS__, "")
+#else
+#define LFS_ERROR(...)
+#endif
+#endif
 
 // Runtime assertions
 #ifndef LFS_ASSERT

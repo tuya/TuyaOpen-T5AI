@@ -8,13 +8,37 @@ cmake_minimum_required(VERSION 3.15)
 
 project("Bootloader" VERSION 0.1.0 LANGUAGES C ASM)
 
-add_executable(bl2
+
+set(SOURCES_BL2
     src/flash_map.c
     $<$<BOOL:${DEFAULT_MCUBOOT_SECURITY_COUNTERS}>:src/security_cnt.c>
     $<$<BOOL:${DEFAULT_MCUBOOT_FLASH_MAP}>:src/default_flash_map.c>
     $<$<BOOL:${MCUBOOT_DATA_SHARING}>:src/shared_data.c>
     $<$<BOOL:${PLATFORM_DEFAULT_PROVISIONING}>:src/provisioning.c>
 )
+
+set(INCLUDE_BL2
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${MCUBOOT_PATH}/boot/bootutil/src>
+)
+
+set(MACRO_BL2
+    $<$<BOOL:${DEFAULT_MCUBOOT_FLASH_MAP}>:DEFAULT_MCUBOOT_FLASH_MAP>
+    $<$<BOOL:${PLATFORM_PSA_ADAC_SECURE_DEBUG}>:PLATFORM_PSA_ADAC_SECURE_DEBUG>
+    $<$<BOOL:${TEST_BL2}>:TEST_BL2>
+    -DCONFIG_ENABLE_MCUBOOT_BL2=1
+)
+
+set(LINK_LIB_BL2
+    tfm_boot_status
+    $<$<BOOL:${TEST_BL2}>:mcuboot_tests>
+)
+
+add_executable(bl2 ${SOURCES_BL2})
+
+if (CONFIG_RANDOM_AES_UPGRADE_BL2 STREQUAL "y")
+    add_executable(bl2_B ${SOURCES_BL2})
+endif()
 
 add_subdirectory(ext/mcuboot)
 
@@ -24,22 +48,13 @@ set_target_properties(bl2
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-target_include_directories(bl2
-    PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${MCUBOOT_PATH}/boot/bootutil/src>
-)
+target_include_directories(bl2 PRIVATE ${INCLUDE_BL2})
 
-target_link_libraries(bl2
-    PRIVATE
-        tfm_boot_status
-        $<$<BOOL:${TEST_BL2}>:mcuboot_tests>
-)
+if (CONFIG_BUILD_TFM)
+    target_link_libraries(bl2 PRIVATE ${LINK_LIB_BL2})
+endif()
 
-target_compile_options(bl2
-    PRIVATE
-        ${BL2_COMPILER_CP_FLAG}
-)
+target_compile_options(bl2 PRIVATE ${BL2_COMPILER_CP_FLAG})
 
 target_link_options(bl2
     PRIVATE
@@ -48,15 +63,36 @@ target_link_options(bl2
         $<$<C_COMPILER_ID:IAR>:--map\;${CMAKE_BINARY_DIR}/bin/bl2.map>
 )
 
-target_compile_definitions(bl2
-    PRIVATE
-        $<$<BOOL:${DEFAULT_MCUBOOT_FLASH_MAP}>:DEFAULT_MCUBOOT_FLASH_MAP>
-        $<$<BOOL:${PLATFORM_PSA_ADAC_SECURE_DEBUG}>:PLATFORM_PSA_ADAC_SECURE_DEBUG>
-        $<$<BOOL:${TEST_BL2}>:TEST_BL2>
-        -DCONFIG_ENABLE_MCUBOOT_BL2=1
-)
+target_compile_definitions(bl2 PRIVATE ${MACRO_BL2})
 
 add_convert_to_bin_target(bl2)
+
+if (CONFIG_RANDOM_AES_UPGRADE_BL2 STREQUAL "y")
+    set_target_properties(bl2_B
+        PROPERTIES
+            SUFFIX ".axf"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+
+    target_include_directories(bl2_B PRIVATE ${INCLUDE_BL2})
+
+    if (CONFIG_BUILD_TFM)
+        target_link_libraries(bl2 PRIVATE ${LINK_LIB_BL2})
+    endif()
+
+    target_compile_options(bl2_B PRIVATE ${BL2_COMPILER_CP_FLAG})
+
+    target_link_options(bl2_B
+        PRIVATE
+            $<$<C_COMPILER_ID:GNU>:-Wl,-Map=${CMAKE_BINARY_DIR}/bin/bl2_B.map>
+            $<$<C_COMPILER_ID:ARMClang>:--map>
+            $<$<C_COMPILER_ID:IAR>:--map\;${CMAKE_BINARY_DIR}/bin/bl2_B.map>
+    )
+
+    target_compile_definitions(bl2_B PRIVATE ${MACRO_BL2})
+
+    add_convert_to_bin_target(bl2_B)
+endif()
 
 ############################### BOOT HAL # #####################################
 
@@ -136,6 +172,9 @@ target_compile_options(bl2_mbedx509
 
 if (TFM_CODE_SHARING)
     target_share_symbols(bl2 ${CMAKE_CURRENT_SOURCE_DIR}/bl2_shared_symbols.txt)
+    if (CONFIG_RANDOM_AES_UPGRADE_BL2 STREQUAL "y")
+        target_share_symbols(bl2_B ${CMAKE_CURRENT_SOURCE_DIR}/bl2_B_shared_symbols.txt)
+    endif()
 
     if (NOT EXISTS ${MBEDCRYPTO_PATH}/library/code_share.c)
         message(FATAL_ERROR "File ${MBEDCRYPTO_PATH}/library/code_share.c does not exist.

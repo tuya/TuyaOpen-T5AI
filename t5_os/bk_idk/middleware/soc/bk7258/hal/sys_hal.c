@@ -545,7 +545,7 @@ bk_err_t sys_hal_switch_cpu_bus_freq_high_to_low(pm_cpu_freq_e cpu_bus_freq)
 		case PM_CPU_FRQ_240M://cpu0:240m;cpu1:240m;;cpu2:240m;bus:240m
 			ret = sys_hal_core_bus_clock_ctrl(0x3,0x1,0x0,0x1,0x1);
 			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0 v
-			sys_hal_ctrl_vdddig_h_vol(0xC);//0.9V
+			sys_hal_ctrl_vdddig_h_vol(0xD);//0.925V
 
 			break;
 		case PM_CPU_FRQ_120M://cpu0:120m;cpu1:120m;cpu2:120m;bus:120m
@@ -558,7 +558,7 @@ bk_err_t sys_hal_switch_cpu_bus_freq_high_to_low(pm_cpu_freq_e cpu_bus_freq)
 			#if CONFIG_ATE_TEST
 			sys_hal_ctrl_vdddig_h_vol(0x7);//0.775V
 			#else
-			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+			sys_hal_ctrl_vdddig_h_vol(0xC);//0.9V
 			#endif
 
 			break;
@@ -615,7 +615,7 @@ bk_err_t sys_hal_switch_cpu_bus_freq_low_to_high(pm_cpu_freq_e cpu_bus_freq)
 			break;
 		case PM_CPU_FRQ_240M://cpu0:240m;cpu1:240m;;cpu2:240m;bus:240m
 			sys_hal_ctrl_vddd_h_vol(0x6);// 1.0v
-			sys_hal_ctrl_vdddig_h_vol(0xC);//0.9V
+			sys_hal_ctrl_vdddig_h_vol(0xD);//0.925V
 			ret = sys_hal_core_bus_clock_ctrl(0x3,0x1,0x0,0x1,0x1);
 			break;
 		case PM_CPU_FRQ_120M://cpu0:120m;cpu1:120m;cpu2:120m;bus:120m
@@ -623,7 +623,7 @@ bk_err_t sys_hal_switch_cpu_bus_freq_low_to_high(pm_cpu_freq_e cpu_bus_freq)
 			#if CONFIG_ATE_TEST
 			sys_hal_ctrl_vdddig_h_vol(0x7);//0.775V
 			#else
-			sys_hal_ctrl_vdddig_h_vol(0xB);//0.875V
+			sys_hal_ctrl_vdddig_h_vol(0xC);//0.9V
 			#endif
 #if CONFIG_DCO_CLK_ENABLE
 			ret = sys_hal_core_bus_clock_ctrl(0x1,0x1,0x0,0x1,0x1);
@@ -2546,6 +2546,13 @@ void sys_hal_set_ana_cb_cal_manu(uint32_t value)
 {
     sys_ll_set_ana_reg5_bcal_en(value);
 }
+
+// Modified by TUYA Start
+void sys_hal_set_ana_adc_div(uint32_t value)
+{
+    sys_ll_set_ana_reg5_adc_div(value);
+}
+// Modified by TUYA End
 
 void sys_hal_set_ana_cb_cal_trig(uint32_t value)
 {

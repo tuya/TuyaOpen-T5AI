@@ -47,7 +47,7 @@
     defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
 int main(void)
 {
-    mbedtls_printf("MBEDTLS_PSA_CRYPTO_C and/or "
+    printf("MBEDTLS_PSA_CRYPTO_C and/or "
            "MBEDTLS_AES_C and/or MBEDTLS_GCM_C and/or "
            "MBEDTLS_CHACHAPOLY_C not defined, and/or "
            "MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER defined\r\n");
@@ -84,11 +84,11 @@ const unsigned char key_bytes[32] = { 0x2a };
 /* Print the contents of a buffer in hex */
 void print_buf(const char *title, uint8_t *buf, size_t len)
 {
-    mbedtls_printf("%s:", title);
+    printf("%s:", title);
     for (size_t i = 0; i < len; i++) {
-        mbedtls_printf(" %02x", buf[i]);
+        printf(" %02x", buf[i]);
     }
-    mbedtls_printf("\n");
+    printf("\n");
 }
 
 /* Run a PSA function and bail out if it fails.
@@ -181,7 +181,7 @@ static void aead_info(psa_key_id_t key, psa_algorithm_t alg)
                          : base_alg == PSA_ALG_CHACHA20_POLY1305 ? "ChachaPoly"
                          : "???";
 
-    mbedtls_printf("%s, %u, %s, %u\n",
+    printf("%s, %u, %s, %u\n",
            type_str, (unsigned) key_bits, base_str, (unsigned) tag_len);
 }
 

@@ -39,4 +39,24 @@ menu "Ota"
 		default n
 		help
 			enable ota position independent update
+
+	config OTA_TEST
+		bool "Enable ota test"
+		default y
+
+	config SECURITY_OTA
+		bool "Enable Seucirty Ota API"
+		default n
+
+	config VALIDATE_BEFORE_REBOOT
+		bool "mcuboot validate before reboot"
+		default n
+
+	config OTA_UPDATE_PUBKEY
+		bool "use public key in flash"
+		default n
+
+	config OTA_CONFIRM_UPDATE
+		bool "confirm update after ota download"
+		default n
 endmenu

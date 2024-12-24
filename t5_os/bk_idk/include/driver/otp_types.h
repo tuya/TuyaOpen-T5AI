@@ -66,8 +66,11 @@ typedef enum{
     OTP_DEVICE_ID,
     OTP_MEMORY_CHECK_VDDDIG,
     OTP_GADC_TEMPERATURE,
+    OTP_RESERVED,
+    OTP_CHIP_RESERVED,
     OTP_APB_TEST,
 
+    OTP_APB_MAX,
 } otp_id_t;
 
 typedef enum{

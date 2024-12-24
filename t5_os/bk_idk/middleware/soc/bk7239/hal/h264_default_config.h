@@ -25,10 +25,9 @@ const h264_config_t h264_commom_config =
 	.iframe_igain = 0x30,
 	.iframe_pgain = 0x50,
 	.iframe_dgain = 0xA,
-	.iframe_min_qp = 0x0,
+	.iframe_min_qp = 0xA,
 	.iframe_max_qp = 0x33,
 
-	
 	.pframe_igain = 0x1E,
 	.pframe_pgain = 0x1E,
 	.pframe_dgain = 0xA,

@@ -500,6 +500,23 @@ static psa_status_t tfm_fwu_abort_ipc(void)
     }
 }
 
+#if CONFIG_OTA_CONFIRM_UPDATE
+static psa_status_t tfm_fwu_confirm_ipc(void)
+{
+    uint8_t is_confirm;
+    size_t num;
+    if (msg.in_size[0] != sizeof(is_confirm)) {
+        return PSA_ERROR_PROGRAMMER_ERROR;
+    }
+    num = psa_read(msg.handle, 0, &is_confirm, sizeof(is_confirm));
+    if (num != sizeof(is_confirm)) {
+        return PSA_ERROR_PROGRAMMER_ERROR;
+    }
+    tfm_internal_fwu_confirm(is_confirm);
+    return PSA_SUCCESS;
+}
+#endif
+
 static void fwu_signal_handle(psa_signal_t signal, fwu_func_t pfn)
 {
     psa_status_t status;
@@ -550,6 +567,10 @@ psa_status_t tfm_fwu_init(void)
                               tfm_fwu_request_reboot_ipc);
         } else if (signals & TFM_FWU_ACCEPT_SIGNAL) {
             fwu_signal_handle(TFM_FWU_ACCEPT_SIGNAL, tfm_fwu_accept_ipc);
+#if CONFIG_OTA_CONFIRM_UPDATE
+        } else if (signals & TFM_FWU_CONFIRM_SIGNAL) {
+            fwu_signal_handle(TFM_FWU_CONFIRM_SIGNAL, tfm_fwu_confirm_ipc);
+#endif
         } else {
             psa_panic();
         }

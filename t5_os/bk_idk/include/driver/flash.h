@@ -144,6 +144,16 @@ uint16_t bk_flash_read_status_reg(void);
 bk_err_t bk_flash_write_status_reg(uint16_t status_reg_data);
 
 /**
+ * @brief     Get flash CRC err num
+ *
+ * @param NA
+ *
+ * @return
+ *    - How many CRC err acount
+ */
+uint32_t bk_flash_get_crc_err_num(void);
+
+/**
  * @brief     Erase a sector of flash, use flash command 0x20
  *
  * @param address flash address

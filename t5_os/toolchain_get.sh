@@ -114,8 +114,7 @@ echo "FILE_EXTENSION: ${FILE_EXTENSION}"
 if [ $FILE_EXTENSION = "bz2" ]; then
     tar -xvf $TOOLCHAIN_FILE -C $TOOLCHAIN_PATH
 elif [ $FILE_EXTENSION = "zip" ]; then
-    mkdir -p $TOOLCHAIN_NAME
-    unzip $TOOLCHAIN_FILE -d $TOOLCHAIN_NAME
+    unzip $TOOLCHAIN_FILE
 else
     echo "File not support"
     exit 1

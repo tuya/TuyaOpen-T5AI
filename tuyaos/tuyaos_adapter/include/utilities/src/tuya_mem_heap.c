@@ -90,7 +90,7 @@ typedef struct
 #define MEM_DOG_ADDR(block)  (( unsigned char* )block + block->size - 1 )
 #define MEM_LEAK_DBG_ADDR(block) ( MEM_DbgLeak_t* ) ( ( unsigned long )(intptr_t)block + block->size - sizeof(MEM_DbgLeak_t) - MEM_ALIGN_NUM)
 
-static MEM_Heap_t mem_heap_list[MEM_HEAP_LIST_NUM] = {{0}};
+static MEM_Heap_t mem_heap_list[MEM_HEAP_LIST_NUM] = {{0},{0},{0},{0}};
 static unsigned long s_heap_free_size = 0;
 static unsigned long s_heap_free_size_watermark = 0; // minimum free size ever
 static heap_context_t s_heap_ctx;

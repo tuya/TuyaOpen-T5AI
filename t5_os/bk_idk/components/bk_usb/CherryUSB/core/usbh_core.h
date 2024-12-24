@@ -165,7 +165,7 @@ struct usbh_hub {
 };
 
 // Modified by TUYA Start
-typedef void (*usbh_enum_cb_t)(void *);
+typedef void (*usbh_enum_cb_t)(uint32_t vid, uint32_t pid, uint32_t bcd);
 void usbh_enumerate_register_cb(usbh_enum_cb_t cb);
 // Modified by TUYA End
 

@@ -1,0 +1,9 @@
+cbor==1.0.0
+cbor2==5.6.4
+click==7.1.2
+click_option_group==0.5.6
+devicetree==0.0.2
+intelhex==2.3.0
+pycryptodome==3.17
+setuptools==52.0.0
+cryptography==43.0.0

@@ -1112,12 +1112,17 @@ int usbh_kill_urb(struct usbh_urb *urb)
 {
     struct musb_pipe *pipe;
 
-    pipe = urb->pipe;
-    pipe->urb = NULL;
-
-    if (!urb || !pipe) {
+    if (!urb) {
         return -EINVAL;
     }
+
+    pipe = urb->pipe;
+
+    if (!pipe) {
+        return -EINVAL;
+    }
+
+    pipe->urb = NULL;
 
     if (pipe->waiter) {
         pipe->waiter = false;
@@ -1281,28 +1286,36 @@ void handle_ep0(void)
     GLOBAL_INT_RESTORE();
 }
 
+void usbh_musb_connect_set_status()
+{
+    g_musb_hcd.port_csc = 1;
+    g_musb_hcd.port_pec = 1;
+    g_musb_hcd.port_pe = 1;
+}
+
+void usbh_musb_disconnect_set_status()
+{
+    g_musb_hcd.port_csc = 1;
+    g_musb_hcd.port_pec = 1;
+    g_musb_hcd.port_pe = 0;
+    g_musb_hcd.ep_local_index_record = 0;
+    g_musb_hcd.fifo_size_offset = 128;
+    for (uint8_t index = 0; index < CONFIG_USBHOST_PIPE_NUM; index++) {
+        for (uint8_t j = 0; j < 2; j++) {
+            struct musb_pipe *pipe = &g_musb_hcd.pipe_pool[index][j];
+            struct usbh_urb *urb = pipe->urb;
+            if (pipe->waiter) {
+                pipe->waiter = false;
+                urb->errorcode = -ESHUTDOWN;
+                usb_osal_sem_give(pipe->waitsem);
+            }
+        }
+    }
+}
+
 void usbh_musb_trigger_disconnect_by_sw()
 {
-	USB_LOG_DBG("[+]%s\r\n", __func__);
-
-	g_musb_hcd.port_csc = 1;
-	g_musb_hcd.port_pec = 1;
-	g_musb_hcd.port_pe = 0;
-	g_musb_hcd.ep_local_index_record = 0;
-	g_musb_hcd.fifo_size_offset = 128;
-	for (uint8_t index = 0; index < CONFIG_USBHOST_PIPE_NUM; index++) {
-		for (uint8_t j = 0; j < 2; j++) {
-			struct musb_pipe *pipe = &g_musb_hcd.pipe_pool[index][j];
-			struct usbh_urb *urb = pipe->urb;
-			if (pipe->waiter) {
-				pipe->waiter = false;
-				urb->errorcode = -ESHUTDOWN;
-				usb_osal_sem_give(pipe->waitsem);
-			}
-		}
-	}
-	usbh_roothub_thread_wakeup(1);
-	USB_LOG_DBG("[-]%s\r\n", __func__);
+    usbh_roothub_thread_send_queue(1, (void *)usbh_musb_disconnect_set_status);
 }
 
 uint8_t s_stall_count = 0;
@@ -1555,30 +1568,11 @@ void USBH_IRQHandler(void)
     USB_LOG_DBG("%s is: 0x%x txis: 0x%x rxis:0x%x dmais:0x%x\r\n", __func__, is, txis, rxis, dmais);
 
     if ((is & USB_IS_DISCON) || (is & USB_IS_BABBLE)) {
-        g_musb_hcd.port_csc = 1;
-        g_musb_hcd.port_pec = 1;
-        g_musb_hcd.port_pe = 0;
-        g_musb_hcd.ep_local_index_record = 0;
-        g_musb_hcd.fifo_size_offset = 128;
-        for (uint8_t index = 0; index < CONFIG_USBHOST_PIPE_NUM; index++) {
-            for (uint8_t j = 0; j < 2; j++) {
-                struct musb_pipe *pipe = &g_musb_hcd.pipe_pool[index][j];
-                struct usbh_urb *urb = pipe->urb;
-                if (pipe->waiter) {
-                    pipe->waiter = false;
-                    urb->errorcode = -ESHUTDOWN;
-                    usb_osal_sem_give(pipe->waitsem);
-                }
-            }
-        }
-        usbh_roothub_thread_wakeup(1);
+        usbh_roothub_thread_send_queue(1, (void *)usbh_musb_disconnect_set_status);
         musb_set_active_ep(old_ep_idx);
         return;
     } else if (is & USB_IS_CONN) {
-        g_musb_hcd.port_csc = 1;
-        g_musb_hcd.port_pec = 1;
-        g_musb_hcd.port_pe = 1;
-        usbh_roothub_thread_wakeup(1);
+        usbh_roothub_thread_send_queue(1, (void *)usbh_musb_connect_set_status);
         musb_set_active_ep(old_ep_idx);
         return;
     }

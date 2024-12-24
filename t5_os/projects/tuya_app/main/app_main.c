@@ -11,9 +11,13 @@
 extern void tuya_app_main(void);
 extern void user_reg_usbenum_cb(void);
 extern void rtos_set_user_app_entry(beken_thread_function_t entry);
+extern void tkl_system_sleep(uint32_t num_ms);
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "tkl_system.h"
+#include "tkl_watchdog.h"
+#include "driver/wdt.h"
 TaskHandle_t __wdg_handle;
 static void __feed_wdg(void *arg)
 {
@@ -21,13 +25,14 @@ static void __feed_wdg(void *arg)
     TUYA_WDOG_BASE_CFG_T cfg = {.interval_ms = WDT_TIME};
     tkl_watchdog_init(&cfg);
     while (1) {
-        bk_wdt_feed();
+        tkl_watchdog_refresh();
         tkl_system_sleep(WDT_TIME / 2);
     }
 }
 
 #if (CONFIG_SYS_CPU0)
 
+#if 0
 #define OTP_FLASH_DATA_SIZE        1024
 #define OTP_FLASH_RFDATA_SIZE       512
 #define PARTITION_SIZE         (1 << 12) /* 4KB */
@@ -180,6 +185,8 @@ static int user_recovery_rfcali_data(void)
 
     return 0;
 }
+#endif
+
 static beken_semaphore_t g_wait_cpu0_media_init_done_sem;
 void user_app_main(void)
 {
@@ -192,7 +199,7 @@ void user_app_main(void)
     user_reg_usbenum_cb();
 #endif // CONFIG_USB
 
-    user_recovery_rfcali_data();
+    // user_recovery_rfcali_data();
 
     extern void tuya_app_main(void);
     tuya_app_main();
@@ -238,6 +245,12 @@ int main(void)
 	bk_init();
     media_service_init();
 
+#if (CONFIG_SYS_CPU1 && CONFIG_TUYA_LOG_OPTIMIZATION)
+    bk_set_printf_enable(1);
+#endif
+
+extern OPERATE_RET tuya_ipc_init(void);
+    tuya_ipc_init();
 #if (CONFIG_SYS_CPU1)
     bk_set_printf_enable(1);
 #endif
@@ -246,9 +259,6 @@ int main(void)
     if(g_wait_cpu0_media_init_done_sem) {
         rtos_set_semaphore(&g_wait_cpu0_media_init_done_sem);
     }
-//#if CONFIG_VFS
-//    fs_initial();
-//#endif
 #endif
 
     return 0;

@@ -1,0 +1,26 @@
+BK7286
+===================
+
+:link_to_translation:`zh_CN:[中文]`
+
+Introduction to Development Board
+------------------------------------------------------------------------
+
+ - BK7286 supports dual Cortex M33 core
+ - BK7286 supports FreeRTOS V10.4
+
+
+.. figure:: ../../_static/demo_board_7286.png
+    :align: center
+    :alt: BK7286 Demo Board
+    :figclass: align-center
+
+    BK7286 Demo Board
+
+
+.. figure:: ../../_static/demo_board_7286_02.png
+    :align: center
+    :alt: BK7286 Demo Board Back Side
+    :figclass: align-center
+
+    BK7286 Demo Board Back Side

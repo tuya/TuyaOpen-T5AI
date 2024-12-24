@@ -1,0 +1,20 @@
+{
+    "name": "eez-framework",
+    "description": "Library for eez-flow and eez-gui",
+    "keywords": "eez-framework eez-flow eez-gui",
+    "authors": {
+        "name": "Envox d.o.o.",
+        "url": "https://www.envox.eu/"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/eez-open/eez-framework.git"
+    },
+    "version": "0.0.1",
+    "framework": "*",
+    "platforms": "*",
+    "headers": "eez-framework.h",
+    "dependencies": {
+        "lvgl/lvgl": "8.3.0"
+    }
+}

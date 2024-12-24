@@ -616,98 +616,6 @@ static void flash_command_test(char *pcWriteBuffer, int xWriteBufferLen, int arg
 	os_memcpy(pcWriteBuffer, msg, os_strlen(msg));
 }
 
-#if CONFIG_FLASH_BYPASS_OTP_OPERATION
-static void flash_bypass_command_test(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
-{
-	char     *msg   = CLI_CMD_RSP_SUCCEED;
-	char     cmd    = 0;
-	int      ret    = 0;
-	uint8_t  idx    = 0;
-	uint32_t offset = 0;
-	uint32_t length = 0;
-	uint32_t buf;
-	flash_bypass_otp_ctrl_t otp_op = {0};
-
-	if ((argc >= 6) && (os_strcmp(argv[1], "otp") == 0)) {
-		cmd     = argv[2][0];
-		idx     = os_strtoul(argv[3], NULL, 16);
-		offset  = os_strtoul(argv[4], NULL, 16);
-		length  = os_strtoul(argv[5], NULL, 16);
-		if (argc == 7) {
-			buf = os_strtoul(argv[6], NULL, 16);
-		}
-
-		otp_op.otp_idx     = idx;
-		otp_op.addr_offset = offset;
-		otp_op.read_len    = length;
-		otp_op.read_buf    = (uint8_t *)os_malloc(otp_op.read_len);
-		if (otp_op.read_buf == NULL) {
-			BK_DUMP_OUT("%s malloc err\r\n", __func__);
-			msg = CLI_CMD_RSP_ERROR;
-			goto flash_bypass_exit;
-		}
-		otp_op.write_len    = length;
-		otp_op.write_buf    = (uint8_t *)(&buf);
-
-		switch (cmd) {
-		// flash_bypass_test otp E 1 0 0
-		case 'E':
-			ret = flash_bypass_otp_operation(FLASH_BYPASS_OTP_EARSE, &otp_op);
-			if (ret != BK_OK) {
-				BK_DUMP_OUT("%s fail\r\n", __func__);
-				msg = CLI_CMD_RSP_ERROR;
-				goto flash_bypass_exit;
-			}
-			break;
-
-		// flash_bypass_test otp R 1 0 10
-		case 'R':
-			ret = flash_bypass_otp_operation(FLASH_BYPASS_OTP_READ, &otp_op);
-			if (ret != BK_OK) {
-				BK_DUMP_OUT("%s fail\r\n", __func__);
-				msg = CLI_CMD_RSP_ERROR;
-				goto flash_bypass_exit;
-			}
-			break;
-
-		// flash_bypass_test otp W 1 0 4 11111111
-		case 'W':
-			ret = flash_bypass_otp_operation(FLASH_BYPASS_OTP_WRITE, &otp_op);
-			if (ret != BK_OK) {
-				BK_DUMP_OUT("%s fail\r\n", __func__);
-				msg = CLI_CMD_RSP_ERROR;
-				goto flash_bypass_exit;
-			}
-			break;
-
-		// flash_bypass_test otp L 2 0 0
-		case 'L':
-			ret = flash_bypass_otp_operation(FLASH_BYPASS_OTP_LOCK, &otp_op);
-			if (ret != BK_OK) {
-				BK_DUMP_OUT("%s fail\r\n", __func__);
-				msg = CLI_CMD_RSP_ERROR;
-				goto flash_bypass_exit;
-			}
-			break;
-
-		default:
-			BK_DUMP_OUT("%d flash_bypass_test otp read/write/earse/lock\r\n", __LINE__);
-			msg = CLI_CMD_RSP_ERROR;
-			break;
-		}
-	} else {
-		BK_DUMP_OUT("flash_bypass_test otp read/write/earse/lock\r\n");
-		msg = CLI_CMD_RSP_ERROR;
-	}
-
-flash_bypass_exit:
-	if (otp_op.read_buf != NULL) {
-		os_free(otp_op.read_buf);
-	}
-	os_memcpy(pcWriteBuffer, msg, os_strlen(msg));
-}
-#endif
-
 static void partShow_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
 	bk_partition_t i;
@@ -729,9 +637,6 @@ static void partShow_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 static const struct cli_command s_flash_commands[] = {
 	{"fmap_test",    "flash_test memory map",      partShow_Command},
 	{"flash_test",   "flash_test <cmd(R/W/E/N)>", flash_command_test},
-#if CONFIG_FLASH_BYPASS_OTP_OPERATION
-	{"flash_bypass_test",   "flash_bypass_test otp R/W/E/L", flash_bypass_command_test},
-#endif
 };
 
 int cli_flash_test_init(void)

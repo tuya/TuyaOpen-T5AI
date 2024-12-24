@@ -300,6 +300,8 @@ bk_err_t bk_flash_cpu_write_enable(void);
 bk_err_t bk_flash_cpu_write_disable(void);
 
 int bk_flash_set_dbus_security_region(uint32_t id, uint32_t start, uint32_t end, bool secure);
+bk_err_t bk_flash_read_bytes(uint32_t address, uint8_t *user_buf, uint32_t size);
+void bk_flash_read_cbus(uint32_t address, void *user_buf, uint32_t size);
 
 #ifdef __cplusplus
 }

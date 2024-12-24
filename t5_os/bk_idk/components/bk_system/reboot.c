@@ -47,6 +47,8 @@ void bk_reboot_ex(uint32_t reset_reason)
 	static uint32_t entry_cnt = 0;
 	if(entry_cnt == 0)	//first time come here, or force reboot:avoid these codes cause system abnormal.
 	{
+		entry_cnt++;
+
 		if (reset_reason < RESET_SOURCE_UNKNOWN) {
 			bk_misc_set_reset_reason(reset_reason);
 		}
@@ -72,8 +74,6 @@ void bk_reboot_ex(uint32_t reset_reason)
 		if (reset_reason < RESET_SOURCE_UNKNOWN) {
 			bk_misc_set_reset_reason(reset_reason);
 		}
-
-		entry_cnt++;
 	}
 
 	bk_wdt_force_reboot();

@@ -17,10 +17,12 @@ typedef struct
 
 	shell_ipc_rx_t		rx_callback;
 
+	shell_ipc_tx_complete_t   tx_cmpl_callback;
+
 } shell_ipc_ext_t;
 
 static bool_t     shell_ipc_init(shell_dev_ipc_t * dev_ipc);
-static bool_t     shell_ipc_open(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callback);
+static bool_t     shell_ipc_open(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callback, shell_ipc_tx_complete_t tx_complete);
 static u16        shell_ipc_read(shell_dev_ipc_t * dev_ipc, u8 * pBuf, u16 BufLen);
 static u16        shell_ipc_write_cmd(shell_dev_ipc_t * dev_ipc, mb_chnl_cmd_t * cmd_buf);
 static bool_t     shell_ipc_ctrl(shell_dev_ipc_t * dev_ipc, u8 cmd, void *param);
@@ -117,6 +119,13 @@ static void shell_ipc_rx_isr(shell_ipc_ext_t *ipc_ext, mb_chnl_cmd_t *cmd_buf)
 	return;
 }
 
+static void shell_ipc_tx_cmpl_isr(shell_ipc_ext_t *ipc_ext, mb_chnl_ack_t *ack_buf)
+{
+	if (ipc_ext->tx_cmpl_callback != NULL) {
+		ipc_ext->tx_cmpl_callback(ack_buf->hdr.cmd);
+	}
+}
+
 /* ===============================  shell ipc driver APIs  =========================== */
 
 static bool_t shell_ipc_init(shell_dev_ipc_t * dev_ipc)
@@ -138,7 +147,7 @@ static bool_t shell_ipc_init(shell_dev_ipc_t * dev_ipc)
 	return bTRUE;
 }
 
-static bool_t shell_ipc_open(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callback)
+static bool_t shell_ipc_open(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callback, shell_ipc_tx_complete_t tx_complete)
 {
 	shell_ipc_ext_t *ipc_ext;
 
@@ -148,6 +157,7 @@ static bool_t shell_ipc_open(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callba
 	ipc_ext = (shell_ipc_ext_t *)dev_ipc->dev_ext;
 
 	ipc_ext->rx_callback = rx_callback;
+	ipc_ext->tx_cmpl_callback = tx_complete;
 
 	bk_err_t	ret_code = mb_chnl_open(ipc_ext->chnl_id, ipc_ext);
 
@@ -156,7 +166,7 @@ static bool_t shell_ipc_open(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callba
 	
 	// call chnl driver to register isr callback;
 	mb_chnl_ctrl(ipc_ext->chnl_id, MB_CHNL_SET_RX_ISR, (void *)shell_ipc_rx_isr);
-
+	mb_chnl_ctrl(ipc_ext->chnl_id, MB_CHNL_SET_TX_CMPL_ISR, (void *)shell_ipc_tx_cmpl_isr);
 	return bTRUE;
 }
 

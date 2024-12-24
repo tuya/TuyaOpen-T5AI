@@ -27,6 +27,7 @@
 #include "sys_driver.h"
 #include "bk_pm_model.h"
 #include "bk_private/bk_init.h"
+#include "bk_misc.h"
 #if CONFIG_SOC_BK7256XX
 #include "BK7256_RegList.h"
 #endif
@@ -55,6 +56,9 @@
 #endif
 #if (CONFIG_OTP)
 #include <driver/otp.h>
+#endif
+#if (CONFIG_PM_NSC)
+#include "tfm_pm_nsc.h"
 #endif
 
 #define TAG "init"
@@ -170,13 +174,45 @@ int memory_debug_todo(void)
 	return BK_OK;
 }
 
-__attribute__((unused)) static int pm_init_todo(void)
+#if CONFIG_PM_NSC
+static int psa_pm_secure_world_sleep(uint64_t sleep_time, void *args)
+{
+	psa_pm_secure_world_backup(sleep_time, args);
+	return 0;
+}
+
+static int psa_pm_secure_world_wake(uint64_t sleep_time, void *args)
+{
+        uint32_t int_level = rtos_disable_int();
+
+        if (sys_ll_get_cpu_power_sleep_wakeup_pwd_encp() != 0) {
+                sys_ll_set_cpu_power_sleep_wakeup_pwd_encp(0);
+                delay_us(100);
+        }
+
+	psa_pm_secure_world_restore(sleep_time, args);
+	rtos_enable_int(int_level);
+	return 0;
+}
+#endif
+
+__attribute__((unused)) static int pm_init(void)
 {
 #if CONFIG_SOC_BK7256XX
 
 #else
 #if CONFIG_DEEP_PS
 	bk_init_deep_wakeup_gpio_status();
+#endif
+#if CONFIG_PM_NSC
+	pm_cb_conf_t enter_config;
+	pm_cb_conf_t exit_config;
+
+	enter_config.cb = (pm_cb)psa_pm_secure_world_sleep;
+	exit_config.cb = (pm_cb)psa_pm_secure_world_wake;
+
+	//Use PM_DEV_ID_SHANHAI to indicate all security backup/restore for simplicity
+	bk_pm_sleep_register_cb(PM_MODE_LOW_VOLTAGE, PM_DEV_ID_SECURE_WORLD, &enter_config, &exit_config);
 #endif
 #endif
 
@@ -316,7 +352,7 @@ int components_init(void)
 	bk_sensor_init();
 #endif
 
-	pm_init_todo();
+	pm_init();
 
 	show_init_info();
 	bandgap_init();

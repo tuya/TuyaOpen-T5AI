@@ -9,12 +9,13 @@
  */
 
 #include "tkl_mutex.h"
-
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
+
+extern void bk_printf(const char *fmt, ...);
 /**
 * @brief Create mutex
 *

@@ -41,7 +41,7 @@ extern "C" {
 	{GPIO_31, GPIO_DEV_JPEG_VSYNC},\
 }
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 static inline void h264_ll_init(h264_hw_t *hw)
 {

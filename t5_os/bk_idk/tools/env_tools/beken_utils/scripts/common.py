@@ -133,3 +133,81 @@ def get_script_dir():
     script_dir = os.path.abspath(__file__)
     script_dir = os.path.dirname(script_dir)
     return script_dir
+
+def get_tools_dir():
+    script_dir = get_script_dir()
+    if is_win():
+        return f'{script_dir}\\..\\tools'
+    else:
+        return f'{script_dir}/../tools'
+ 
+def is_win():
+    return os.name == 'nt'
+
+def is_pi():
+    if os.path.exists('/proc/cpuinfo'):
+        with open('/proc/cpuinfo', 'r') as f:
+            cpuinfo = f.read()
+            if 'Raspberry Pi' in cpuinfo:
+                return True
+        return False
+    elif os.path.exists('/etc/os-release'):
+        with open('/etc/os-release', 'r') as f:
+            os_info = f.read().lower()
+            if 'raspbian' in os_info or 'raspberry' in os_info:
+                return True
+            else:
+                return False
+    else:
+        return False
+
+def is_centos():
+    return True
+
+def get_flash_aes_tool():
+    tools_dir = get_tools_dir()
+    if os.name == 'nt':
+        return f'{tools_dir}\\packager_tools\\win\\beken_aes.exe'
+
+    if is_pi():
+        return f'{tools_dir}/packager_tools/pi/beken_aes'
+
+    return f'{tools_dir}/packager_tools/centos7/beken_aes'
+
+def get_crc_tool():
+    tools_dir = get_tools_dir()
+    if os.name == 'nt':
+        return f'{tools_dir}\\packager_tools\\win\\cmake_encrypt_crc.exe'
+
+    if is_pi():
+        return f'{tools_dir}/packager_tools/pi/cmake_encrypt_crc'
+
+    return f'{tools_dir}/packager_tools/centos7/cmake_encrypt_crc'
+
+def calc_crc16(raw,dst):
+    crc_tool = get_crc_tool()
+    cmd = f'{crc_tool} -enc {raw} 0 0 0 0 -crc'
+    run_cmd_not_check_ret(cmd)
+    aes_crc_bin_name = raw.replace(".bin","_crc.bin")
+    os.rename(aes_crc_bin_name,dst)
+
+def get_nvs_tool():
+    tools_dir = get_tools_dir()
+    if os.name == 'nt':
+        return f'{tools_dir}\\packager_tools\\win\\mbedtls_aes_xts.exe'
+
+    if is_pi():
+        return f'{tools_dir}/packager_tools/pi/mbedtls_aes_xts'
+
+    return f'{tools_dir}/packager_tools/centos7/mbedtls_aes_xts'
+
+def get_lzma_tool():
+    tools_dir = get_tools_dir()
+    if os.name == 'nt':
+        return f'{tools_dir}\\packager_tools\\win\\lzma.exe'
+
+    if is_pi():
+        return f'{tools_dir}/packager_tools/pi/lzma'
+        return "TODO"
+
+    return f'{tools_dir}/packager_tools/centos7/lzma'

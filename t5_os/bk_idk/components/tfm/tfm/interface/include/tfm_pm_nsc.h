@@ -22,14 +22,8 @@
 extern "C" {
 #endif
 
-int psa_pm_otp_ahb_backup(uint64_t sleep_time, void *args);
-int psa_pm_otp_ahb_restore(uint64_t sleep_time, void *args);
-int psa_pm_otp_apb_backup(uint64_t sleep_time, void *args);
-int psa_pm_otp_apb_restore(uint64_t sleep_time, void *args);
-int psa_pm_shanhai_backup(uint64_t sleep_time, void *args);
-int psa_pm_shanhai_restore(uint64_t sleep_time, void *args);
-int psa_pm_uart1_backup(uint64_t sleep_time, void *args);
-int psa_pm_uart1_restore(uint64_t sleep_time, void *args);
+int psa_pm_secure_world_backup(uint64_t sleep_time, void *args);
+int psa_pm_secure_world_restore(uint64_t sleep_time, void *args);
 
 #ifdef __cplusplus
 }

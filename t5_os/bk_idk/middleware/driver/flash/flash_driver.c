@@ -60,64 +60,35 @@ typedef struct {
 	}\
 } while(0)
 
+#define FLASH_CPU_MASTER		0
+#define FLASH_CPU_SLAVE1		1
+
 static const flash_config_t flash_config[] = {
 	/* flash_id, status_reg_size, flash_size,    line_mode,           cmp_post, protect_post, protect_mask, protect_all, protect_none, protect_half, unprotect_last_block. quad_en_post, quad_en_val, coutinuous_read_mode_bits_val, mode_sel*/
-	{0x1C7016,   1,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x1F,        0x00,         0x16,         0x01B,                0,            0,           0xA5,                          0x01}, //en_25qh32b
-	{0x1C7015,   1,               FLASH_SIZE_2M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x1F,        0x00,         0x0d,         0x0d,                 0,            0,           0xA5,                          0x01}, //en_25qh16b
-	{0x0B4014,   2,               FLASH_SIZE_1M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0C,         0x101,                9,            1,           0xA0,                          0x01}, //xtx_25f08b
-	{0x0B4015,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x01}, //xtx_25f16b
-#if CONFIG_FLASH_QUAD_ENABLE
+	{0x1C7016,   1,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 0,        2,            0x1F,         0x1F,        0x00,         0x16,         0x01B,                9,            1,           0xA5,                          0x02}, //en_25qh32b
+	{0x1C7015,   1,               FLASH_SIZE_2M, FLASH_LINE_MODE_FOUR, 0,        2,            0x1F,         0x1F,        0x00,         0x0d,         0x0d,                 9,            1,           0xA5,                          0x02}, //en_25qh16b
+	{0x0B4014,   2,               FLASH_SIZE_1M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0C,         0x101,                9,            1,           0xA0,                          0x02}, //xtx_25f08b
+	{0x0B4015,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x02}, //xtx_25f16b
 	{0x0B4016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,      2,            0x1F,         0x1F,        0x00,         0x0E,         0x101,                9,           1,            0xA0,                          0x02}, //xtx_25f32b
-#else
-	{0x0B4016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0E,         0x101,                9,            1,           0xA0,                          0x01}, //xtx_25f32b
-#endif
-	{0x0B4017,   2,               FLASH_SIZE_8M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x05,        0x00,         0x0E,         0x109,                9,            1,           0xA0,                          0x01}, //xtx_25f64b
-#if CONFIG_FLASH_QUAD_ENABLE
+	{0x0B4017,   2,               FLASH_SIZE_8M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x05,        0x00,         0x0E,         0x109,                9,            1,           0xA0,                          0x02}, //xtx_25f64b
 	{0x0B6017,   2,               FLASH_SIZE_8M, FLASH_LINE_MODE_FOUR,  0,	    2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                9,            1,           0xA0,                          0x02}, //xt_25q64d
-#else
-	{0x0B6017,   1,               FLASH_SIZE_8M, FLASH_LINE_MODE_TWO,   0,      2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                0,            0,           0xA0,                          0x01}, //xt_25q64d
-#endif
-#if CONFIG_FLASH_QUAD_ENABLE
 	{0x0B6018,   2,               FLASH_SIZE_16M, FLASH_LINE_MODE_FOUR,  0,	    2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                9,            1,           0xA0,                          0x02}, //xt_25q128d
-#else
-	{0x0B6018,   1,               FLASH_SIZE_16M, FLASH_LINE_MODE_TWO,   0,     2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                0,            0,           0xA0,                          0x01}, //xt_25q128d
-#endif
-	{0x0E4016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0E,         0x101,                9,            1,           0xA0,                          0x01}, //xtx_FT25H32
-	{0x1C4116,   1,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                0,            0,           0xA0,                          0x01}, //en_25qe32a(not support 4 line)
-	{0x5E5018,   1,               FLASH_SIZE_16M, FLASH_LINE_MODE_TWO, 0, 	    2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                0,            0,           0xA0,                          0x01}, //zb_25lq128c
-	{0xC84015,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x01}, //gd_25q16c
-	{0xC84017,   1,               FLASH_SIZE_8M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x01}, //gd_25q16c
-#if CONFIG_FLASH_QUAD_ENABLE
+	{0x0E4016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0E,         0x101,                9,            1,           0xA0,                          0x02}, //xtx_FT25H32
+	{0x1C4116,   1,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 0,        2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                9,            1,           0xA0,                          0x02}, //en_25qe32a(not support 4 line)
+	{0x5E5018,   1,               FLASH_SIZE_16M, FLASH_LINE_MODE_FOUR, 0, 	    2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                9,            1,           0xA0,                          0x02}, //zb_25lq128c
+	{0xC84015,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x02}, //gd_25q16c
+	{0xC84017,   1,               FLASH_SIZE_8M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x02}, //gd_25q16c
 	{0xC84016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,      2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                9,            1,           0xA0,                          0x02}, //gd_25q32c
-#else
-	{0xC84016,   1,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                0,            0,           0xA0,                          0x01}, //gd_25q32c
-#endif
-#if CONFIG_FLASH_QUAD_ENABLE
 	{0xC86018,   2,               FLASH_SIZE_16M,FLASH_LINE_MODE_FOUR, 0,       2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                9,            1,           0xA0,                          0x02}, //gd_25lq128e
-#else
-	{0xC86018,   1,               FLASH_SIZE_16M,FLASH_LINE_MODE_TWO,  0,       2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                0,            0,           0xA0,                          0x01}, //gd_25lq128e
-#endif
-	{0xC86515,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x01}, //gd_25w16e
-#if CONFIG_FLASH_QUAD_ENABLE
+	{0xC86515,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x02}, //gd_25w16e
 	{0xC86516,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,      2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                9,            1,           0xA0,                          0x02}, //gd_25wq32e
-#else
-	{0xC86516,   1,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                0,            0,           0xA0,                          0x01}, //gd_25wq32e
-#endif
-	{0xEF4016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x00,         0x101,                9,            1,           0xA0,                          0x01}, //w_25q32(bfj)
-#if CONFIG_FLASH_QUAD_ENABLE
+	{0xEF4016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x00,         0x101,                9,            1,           0xA0,                          0x02}, //w_25q32(bfj)
 	{0x204118,	 2, 			  FLASH_SIZE_16M,FLASH_LINE_MODE_FOUR, 0,		2,			  0x0F, 		0x0F,		 0x00,		   0x0A,		 0x00E, 			   9,			 1, 		  0xA0, 						 0x02}, //xm_25qu128c
-#else
-	{0x204118,	 1, 			  FLASH_SIZE_16M,FLASH_LINE_MODE_TWO,  0,		2,			  0x0F, 		0x0F,		 0x00,		   0x0A,		 0x00E, 			   0,			 0, 		  0xA0, 						 0x01}, //xm_25qu128c
-#endif
-	{0x204016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0E,         0x101,                9,            1,           0xA0,                          0x01}, //xmc_25qh32b
-	{0xC22315,   1,               FLASH_SIZE_2M, FLASH_LINE_MODE_TWO, 0,        2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                6,            1,           0xA5,                          0x01}, //mx_25v16b
-	{0xEB6015,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_TWO, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x01}, //zg_th25q16b
-#if CONFIG_FLASH_QUAD_ENABLE
+	{0x204016,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0E,         0x101,                9,            1,           0xA0,                          0x02}, //xmc_25qh32b
+	{0xC22315,   1,               FLASH_SIZE_2M, FLASH_LINE_MODE_FOUR, 0,        2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                6,            1,           0xA5,                          0x02}, //mx_25v16b
+	{0xEB6015,   2,               FLASH_SIZE_2M, FLASH_LINE_MODE_FOUR, 14,       2,            0x1F,         0x1F,        0x00,         0x0D,         0x101,                9,            1,           0xA0,                          0x02}, //zg_th25q16b
 	{0xC86517,	 2, 			  FLASH_SIZE_8M, FLASH_LINE_MODE_FOUR, 14,		2,			  0x1F, 		0x1F,		 0x00,		   0x0E,		 0x00E, 			   9,			 1, 		  0xA0, 						 0x02}, //gd_25Q32E
-#else
-	{0xC86517,	 1, 			  FLASH_SIZE_8M, FLASH_LINE_MODE_TWO, 0,		2,			  0x1F, 		0x1F,		 0x00,		   0x0E,		 0x00E, 			   0,			 0, 		  0xA0, 						 0x01}, //gd_25Q32E
-#endif
-	{0x000000,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x00,        0x00,         0x00,         0x000,                0,            0,           0x00,                          0x01}, //default
+	{0x000000,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x00,        0x00,         0x00,         0x000,                0,            0,           0x00,                          0x02}, //default
 };
 
 static flash_driver_t s_flash = {0};
@@ -223,7 +194,7 @@ static bk_err_t send_flash_op_finish(void)			//CPU0 notify CPU1 after flash oper
 #endif
 
 #if CONFIG_SYS_CPU1
-
+extern void lcd_hal_rgb_int_enable(bool is_sof_en, bool is_eof_en);
 __attribute__((section(".iram"))) static void mb_flash_ipc_rx_isr(void *chn_param, mb_chnl_cmd_t *cmd_buf)
 {
 	volatile uint32_t * stat_addr = (volatile uint32_t *)cmd_buf->param1;
@@ -237,12 +208,18 @@ __attribute__((section(".iram"))) static void mb_flash_ipc_rx_isr(void *chn_para
 	{
 		bk_flash_set_operate_status(FLASH_OP_BUSY);
 		*(stat_addr) = IPC_ERASE_ACK;
+#if CONFIG_LCD
+        lcd_hal_rgb_int_enable(0, 0);
+#endif
 		while(*(stat_addr) != IPC_ERASE_COMPLETE)
 		{
 #if CONFIG_CACHE_ENABLE
 			flush_dcache((void *)stat_addr, 4);
 #endif
 		}
+#if CONFIG_LCD
+        lcd_hal_rgb_int_enable(0, 1);
+#endif
 		bk_flash_set_operate_status(FLASH_OP_IDLE);
 	}
 
@@ -655,7 +632,8 @@ void flash_unlock(void)
 #if defined(CONFIG_SECURITY_OTA) && !defined(CONFIG_TFM_FWU)
 __attribute__((section(".iram")))
 #endif
-bk_err_t bk_flash_set_line_mode(flash_line_mode_t line_mode)
+
+static bk_err_t vote_flash_set_line_mode(flash_line_mode_t line_mode)
 {
 	flash_hal_clear_qwfr(&s_flash.hal);
 #if CONFIG_SOC_BK7236XX
@@ -673,6 +651,46 @@ bk_err_t bk_flash_set_line_mode(flash_line_mode_t line_mode)
 #if CONFIG_SOC_BK7236XX
 	sys_drv_set_sys2flsh_2wire(1);
 #endif
+
+	return BK_OK;
+
+}
+
+bk_err_t bk_flash_set_line_mode(flash_line_mode_t line_mode)
+{
+#if CONFIG_SYS_CPU1 && CONFIG_MAILBOX
+	if (!s_flash_is_init) {
+		return vote_flash_set_line_mode(line_mode);
+	} else {
+
+		FLASH_RETURN_ON_DRIVER_NOT_INIT();
+
+#define FLASH_USER_CPU		FLASH_CPU_SLAVE1
+
+		u32 send_line_mode = ((FLASH_USER_CPU) << 16) + (u32)line_mode;
+
+		uint32_t ret_line_mode = ipc_vote_flash_line_mode(send_line_mode);
+		uint32_t retry = 0;
+		uint32_t ret = BK_OK;
+		while(ret_line_mode != line_mode){
+			if(retry > 3){
+				FLASH_LOGE("%s retry 3 times fail\r\n", __func__);
+				ret = BK_FAIL;
+				break;
+			}
+
+			ret_line_mode = ipc_vote_flash_line_mode(send_line_mode);
+
+			retry++;
+		}
+
+		return ret;
+	}
+#else
+
+	return vote_flash_set_line_mode(line_mode);
+
+#endif
 	return BK_OK;
 }
 
@@ -688,7 +706,16 @@ bk_err_t bk_flash_driver_init(void)
 	if(ret_code != BK_OK)
 		return ret_code;
 #endif
-	
+
+#if (CONFIG_CPU_CNT > 1)
+	extern bk_err_t bk_flash_svr_init(void);
+	int ret_val = bk_flash_svr_init();
+	if(ret_val != BK_OK)
+	{
+		BK_LOGE("Flash", "flash svr create failed %d.\r\n", ret_val);
+	}
+#endif
+
 #if CONFIG_FLASH_QUAD_ENABLE
 #if CONFIG_FLASH_ORIGIN_API
 	if (FLASH_LINE_MODE_FOUR == flash_get_line_mode())
@@ -776,12 +803,10 @@ static bk_err_t flash_erase_block(uint32_t address, int type)
 //CPU0 notfify CPU1 when operate flash, to fix LCD display issue while erasing
 #if CONFIG_FLASH_MB && CONFIG_SYS_CPU0 && (CONFIG_CPU_CNT > 1)
 	ret = send_flash_op_prepare();
-    // Modified by TUYA Start
-	//if(ret != BK_OK)
-	//{
-	//	//FLASH_LOGE("erase req failed, ret = 0x%x\n", ret );
-	//}
-    // Modified by TUYA End
+	if(ret != BK_OK)
+	{
+		FLASH_LOGD("erase req failed, ret = 0x%x\n", ret );
+	}
 #endif
 	uint32_t int_level = flash_enter_critical();
 	flash_hal_erase_block(&s_flash.hal, erase_addr, type);
@@ -1009,9 +1034,34 @@ flash_protect_type_t bk_flash_get_protect_type(void)
 
 bk_err_t bk_flash_set_protect_type(flash_protect_type_t type)
 {
+#if CONFIG_FLASH_MB && CONFIG_SYS_CPU0 && (CONFIG_CPU_CNT > 1)
+    int ret = BK_OK;
+#endif
+
+#if CONFIG_FLASH_MB && CONFIG_SYS_CPU0 && (CONFIG_CPU_CNT > 1)
+    if (type == FLASH_PROTECT_NONE)
+    {
+        ret = send_flash_op_prepare();
+        if(ret != BK_OK)
+        {
+            FLASH_LOGD("erase req failed, ret = 0x%x\n", ret );
+        }
+    }
+#endif
 	flash_ps_suspend(NORMAL_PS);
 	flash_set_protect_type(type);
 	flash_ps_resume(NORMAL_PS);
+
+#if CONFIG_FLASH_MB && CONFIG_SYS_CPU0 && (CONFIG_CPU_CNT > 1)
+    if (type != FLASH_PROTECT_NONE)
+    {
+        ret = send_flash_op_finish();
+        if(ret != BK_OK)
+        {
+            FLASH_LOGD("erase op_finish ret = 0x%x\n", ret );
+        }
+    }
+#endif
 	return BK_OK;
 }
 

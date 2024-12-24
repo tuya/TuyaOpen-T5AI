@@ -2,4 +2,8 @@ menu "RESET_REASON"
 	config RESET_REASON
 		bool "Enable reset reason"
 		default y
+
+	config RESET_REASON_TEST
+		bool "Enable reset reason test"
+		default y
 endmenu

@@ -96,7 +96,7 @@ class Csv:
                     dic[self.active_key_list[key_idx]] = cell
                     key_idx += 1
                 self.dic_list.append(dic)
-            #logging.debug(f'dic_list={self.dic_list}')
+        #logging.debug(f'dic_list={self.dic_list}')
 
     def parse_csv_dic(self):
         with open(self.csv_file, 'r') as f:
@@ -112,7 +112,7 @@ class Csv:
                         exit(1)
                     continue
                 actual_keys.append(row[0])
-                self.dic[row[0]] = row[1]
+                self.dic[row[0]] = None if row[1] == "" else row[1]
    
             self.check_keys(actual_keys, self.active_key_list)
             #logging.debug(f'parse {self.csv_file}: {self.dic}')

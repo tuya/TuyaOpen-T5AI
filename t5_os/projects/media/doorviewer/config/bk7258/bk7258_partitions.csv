@@ -7,6 +7,6 @@ app1,,476k,code,TRUE,FALSE
 app2,,272k,code,TRUE,FALSE
 download,,1428K,data,TRUE,
 usr_config,,68K,data,TRUE,
-easyflash,0x3fc000,8K,data,TRUE,
-rf_firmware,0x3fe000,4k,data,TRUE,
-net_param,0x3ff000,4k,data,TRUE,
+easyflash,0x7fc000,8K,data,TRUE,
+rf_firmware,0x7fe000,4k,data,TRUE,
+net_param,0x7ff000,4k,data,TRUE,

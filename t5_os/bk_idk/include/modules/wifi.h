@@ -929,7 +929,7 @@ bk_err_t bk_wifi_get_tx_raw_timeout(uint16_t *time);
    *	- others: other errors
    */
  bk_err_t bk_wifi_set_min_rsv_mem(uint16_t mem_bytes);
- 
+
  /**
    * @brief Get the minimux heap memory size that Wi-Fi currently creserves
    *
@@ -940,7 +940,7 @@ bk_err_t bk_wifi_get_tx_raw_timeout(uint16_t *time);
    *	- others: other errors
    */
  bk_err_t bk_wifi_get_min_rsv_mem(uint16_t *mem_bytes);
- 
+
  /**
    * @brief Update the maximum MSDU count that Wi-Fi could handle
    *
@@ -951,7 +951,7 @@ bk_err_t bk_wifi_get_tx_raw_timeout(uint16_t *time);
    *	- others: other errors
    */
  bk_err_t bk_wifi_set_tx_max_msdu_cnt(uint16_t max_cnt);
- 
+
  /**
    * @brief Get the maximum MSDU count configuration that Wi-Fi could handle
    *
@@ -1010,9 +1010,9 @@ bk_err_t bk_wifi_get_tx_raw_timeout(uint16_t *time);
  /**
   * @brief Update Wi-Fi capability configuration
   *
-  * This API is used to change some Wi-Fi capability configuration, please refer to 
+  * This API is used to change some Wi-Fi capability configuration, please refer to
   * wifi_capability_t to get the capability that has been supported.
-  * 
+  *
   * @attention 1. Please keep in mind that Wi-Fi behavior may change if the capability
   *               is changed to different value compared with the default value.
   * @attention 2. We strongly suggest not using this API except you are very farmiliar with
@@ -1028,7 +1028,7 @@ bk_err_t bk_wifi_get_tx_raw_timeout(uint16_t *time);
   *    - BK_OK: succeed
   *    - others: other errors
   */
- 
+
 bk_err_t bk_wifi_capa_config(wifi_capability_t capa_id, uint32_t capa_val);
  /**
 
@@ -1228,6 +1228,52 @@ bk_err_t bk_wifi_set_bcn_miss_time(uint8_t bcnmiss_time);
  *
  */
 bk_err_t bk_wifi_set_conn_delay_time(uint8_t conn_delay_time);
+
+
+/**
+ * @brief regist bcn cc rxed callback.
+ *
+ * @param bcn cc the callback function.
+ *
+ * @return
+ * 	-BK_OK: on success
+ * 	-others:real error, used for future.
+ *
+ */
+bk_err_t bk_wifi_bcn_cc_rxed_register_cb(const wifi_beacon_cc_rxed_t cc_cb, void *ctxt);
+
+/**
+ * @brief start scan procedure to find AP's country code
+ *
+ * @return
+ * 	-BK_OK: on success
+ * 	-others:real error, used for future.
+ *
+ */
+int cc_scan_start(void);
+
+/**
+ * @brief stop scan procedure to find AP's country code
+ *
+ * @return
+ *   success
+ *
+ */
+void cc_scan_stop(void);
+
+/**
+ * @brief  Get country code by scan
+ *
+ * @attention Need open CONFIG_WIFI_SCAN_COUNTRY_CODE=y in config
+ *
+ * @param country_code The point of country code buffer
+ *
+ * @return
+ *    - >  0 : succeed, and the length of country code buffer
+ *    - =  0 : not found
+ *    - <= 0 : failures.
+ */
+int bk_scan_country_code(uint8_t *country_code);
 
 /**
  * @brief  set beacon receive window.
@@ -1499,6 +1545,35 @@ bk_err_t bk_wifi_get_tx_power(wifi_standard standard, float *powerdBm);
  *    - otherwise: fail
  */
 bk_err_t bk_wifi_set_tx_power(wifi_standard standard, float powerdBm);
+
+/**
+ * @brief Configure traffic detection interval
+ *
+ * @param reset 0:use input parameters,other:reset to default value
+ * @param def_td_intv td interval used when in DTIM1
+ * @param dtim10_td_intv td interval used when >= DTIM10
+ * @param td_reduce_intv td interval used when dynamic td interval enabled,must be less than def_td_intv and dtim10_td_intv
+ *
+ * @return
+ *    - kNoErr: succeed
+ *    - otherwise: fail
+ */
+bk_err_t bk_wifi_set_td_para(uint8_t reset, uint8_t def_td_intv, uint8_t dtim10_td_intv, uint8_t td_reduce_intv);
+
+/**
+ * @brief Get traffic detection interval
+ *
+ * @param def_td_intv td interval used when in DTIM1
+ * @param dtim10_td_intv td interval used when >= DTIM10
+ * @param td_reduce_intv td interval parameter used when dynamic td interval enabled,must be less than def_td_intv and dtim10_td_intv
+ *
+ * @return
+ *    - kNoErr: succeed
+ *    - otherwise: fail
+ */
+
+bk_err_t bk_wifi_get_td_para(uint8_t *def_td_intv, uint8_t *dtim10_td_intv, uint8_t *td_reduce_intv);
+
 
 /**
  * @}

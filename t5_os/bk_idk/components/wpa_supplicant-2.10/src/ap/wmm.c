@@ -119,6 +119,12 @@ u8 * hostapd_eid_wmm(struct hostapd_data *hapd, u8 *eid)
 	rivieraWaveVendorIE[5] = 0x02;
 	rivieraWaveVendorIE[6] = 0x01;
 	rivieraWaveVendorIE[7] = 0x01;
+	/* AP/STA specific QoS info config*/
+	#if CONFIG_UAPSD
+	if (hapd->conf->wmm_uapsd && (hapd->iface->drv_flags & WPA_DRIVER_FLAGS_AP_UAPSD))
+		rivieraWaveVendorIE[8] = 0x80;
+	else
+	#endif
 	rivieraWaveVendorIE[8] = 0x00;
 	rivieraWaveVendorIE[9] = 0x00;
 	rivieraWaveVendorIE[10] = 0x03;

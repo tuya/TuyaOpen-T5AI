@@ -16,6 +16,10 @@
 #include "reset_reason.h"
 #include <driver/trng.h>
 #include "tkl_memory.h"
+#include <driver/otp.h>
+
+extern void bk_printf(const char *fmt, ...);
+
 /**
 * @brief Get system ticket count
 *

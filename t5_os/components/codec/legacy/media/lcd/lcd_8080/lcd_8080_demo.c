@@ -79,7 +79,7 @@ static  volatile uint8_t jpeg_end_flag = 0;
 
 volatile uint8_t g_disp_frame_done_flag = 0;
 extern u64 riscv_get_mtimer(void);
-extern void delay(INT32 num);
+extern void bk_delay(INT32 num);
 
 
 static void lcd_i8080_isr(void)

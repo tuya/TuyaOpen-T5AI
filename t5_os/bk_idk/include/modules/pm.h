@@ -305,12 +305,11 @@ typedef enum
 	PM_DEV_ID_DECODER, 	// 33
 	PM_DEV_ID_LIN,      // 34
 	PM_DEV_ID_PWM_1,    // 35
-	PM_DEV_ID_OTP_AHB,  // 36
-	PM_DEV_ID_OTP_APB,  // 37
-	PM_DEV_ID_SHANHAI,  // 38
-	PM_DEV_ID_TRNG,     // 39
+	PM_DEV_ID_TRNG,     // 36
+	PM_DEV_ID_SECURE_WORLD,  // 37
+	PM_DEV_ID_UART4,    // 38
 
-	PM_DEV_ID_DEFAULT,  // 40  it is used by pm module set default cpu frequency
+	PM_DEV_ID_DEFAULT,  // 39  it is used by pm module set default cpu frequency
 
 	PM_DEV_ID_MAX
 }pm_dev_id_e;

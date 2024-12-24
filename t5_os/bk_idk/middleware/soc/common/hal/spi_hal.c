@@ -163,7 +163,7 @@ bk_err_t spi_hal_set_baud_rate(spi_hal_t *hal, uint32_t baud_rate)
 		sys_hal_apll_cal_val_set(0x8973CA6F);
 		sys_hal_apll_config_set(0xC2A0AE86);
 		sys_hal_apll_spi_trigger_set(1);
-		delay(10);
+		bk_delay(10);
 		sys_hal_apll_spi_trigger_set(0);
 		src_clk = SPI_APLL_98M;
 #endif

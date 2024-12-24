@@ -1,16 +1,22 @@
-// Copyright 2021-2022 Beken
+// Copyright 2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2023 Beken Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	   http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+/*
+* Change Logs:
+* Date			 Author 	  Notes
+* 2023-05-05	 Beken	  adapter to Beken sdk
+*/
 
 #include <string.h>
 #include <stddef.h>
@@ -129,7 +135,7 @@ static bk_err_t set_pki_context(bk_tls_t *tls, const bk_tls_pki_t *pki)
 		}
 
 		if (pki->privkey_pem_buf != NULL) {
-#if CONFIG_PSA_MBEDTLS
+#if CONFIG_PSA_MBEDTLS && !CONFIG_PSA_MBEDTLS_FORWARD_COMPATIBILITY
 			ret = mbedtls_pk_parse_key(pki->pk_key, pki->privkey_pem_buf, pki->privkey_pem_bytes,
 									   pki->privkey_password, pki->privkey_password_len,
 									   NULL, NULL);
@@ -225,6 +231,7 @@ bk_err_t set_client_config(const char *hostname, size_t hostlen, bk_tls_cfg_t *c
 		BK_LOGD(TAG, "mbedtls_ssl_conf_authmode\r\n");
 		mbedtls_ssl_conf_authmode(&tls->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
 		cfg->crt_bundle_attach(&tls->conf);
+#else
 		BK_LOGE(TAG, "use_crt_bundle configured but not enabled in menuconfig: Please enable MBEDTLS_CERTIFICATE_BUNDLE option\r\n");
 		return -1;
 #endif
@@ -360,7 +367,7 @@ bk_err_t bk_create_mbedtls_handle(const char *hostname, size_t hostlen, const vo
 	mbedtls_entropy_init(&tls->entropy);
 
 	if (tls->role == BK_TLS_CLIENT) {
-		BK_LOGD(TAG, "BK_TLS_CLIENT\r\n");
+		BK_LOGI(TAG, "BK_TLS_CLIENT\r\n");
 		bk_ret = set_client_config(hostname, hostlen, (bk_tls_cfg_t *)cfg, tls);
 		if (bk_ret != BK_OK) {
 			BK_LOGE(TAG, "Failed to set client configurations, returned [0x%04X]\r\n", bk_ret);
@@ -432,7 +439,7 @@ int bk_mbedtls_handshake(bk_tls_t *tls, const bk_tls_cfg_t *cfg)
 	} else {
 		if (ret != BK_TLS_ERR_SSL_WANT_READ && ret != BK_TLS_ERR_SSL_WANT_WRITE) {
 			BK_LOGE(TAG, "mbedtls_ssl_handshake returned -0x%04X\r\n", -ret);
-			if (cfg->cacert_buf != NULL || cfg->use_global_ca_store == true) {
+			if (cfg->crt_bundle_attach != NULL || cfg->cacert_buf != NULL || cfg->use_global_ca_store == true) {
 				/* This is to check whether handshake failed due to invalid certificate*/
 				bk_mbedtls_verify_certificate(tls);
 			}

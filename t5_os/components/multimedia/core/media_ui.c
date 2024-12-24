@@ -126,12 +126,16 @@ static void media_debug_dump(void)
 			fps, media_debug->fps_lcd,
 			lvgl, media_debug->lvgl_draw);
 
-extern size_t xPortGetFreeHeapSize( void );
-	bk_printf("wifi:%d[%d, %dkbps, %dms, num:%d, retry:%d], jpg:%dKB[%dKbps], h264:%dKB[%dKbps], mem: %d\n",
+    extern size_t xPortGetFreeHeapSize( void );
+    extern size_t xPortGetPsramFreeHeapSize( void );
+    extern size_t xPortGetPsramTotalHeapSize( void );
+	bk_printf("wifi:%d[%d, %dkbps, %dms, num:%d, retry:%d], jpg:%dKB[%dKbps], h264:%dKB[%dKbps], mem: %d, psram: %d/%d\n",
 			wifi, media_debug->fps_wifi, wifi_kps, meantimes, count, retry,
 			media_debug->jpeg_length / 1024, jpeg_kps,
 			media_debug->h264_length / 1024, h264_kps,
-            xPortGetFreeHeapSize());
+            xPortGetFreeHeapSize(),
+            xPortGetPsramFreeHeapSize(),
+            xPortGetPsramTotalHeapSize());
     //Modified by TUYA End
 }
 

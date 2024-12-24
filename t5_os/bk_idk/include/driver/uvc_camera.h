@@ -158,6 +158,22 @@ bk_err_t bk_uvc_camera_register_info_callback(uvc_device_info_t cb);
  */
 bk_err_t bk_uvc_camera_set_config(bk_uvc_config_t *config);
 
+/**
+ * @brief     check input frame length
+ *
+ * This API called by user, check frame valied length, check eof(0xffd9), some frame after ffd9 have invailed data
+ *
+ * @param 1. The frame start address
+ * @param 2. the frame total length
+ *
+ * @attation, the check length control by marco CONFIG_JPEG_FRAME_CHECK_LENGTH, default value 1024
+ *
+ * @return
+ *    - length: actual data length
+ *    - others: cannot find 0xffd9, this frame have error
+ */
+
+int bk_uvc_camera_jpeg_frame_check_eof(uint8_t *data, uint32_t length);
 
 #ifdef __cplusplus
 }

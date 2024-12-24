@@ -125,6 +125,45 @@ extern bk_err_t sflash_write(uint32_t addr, const uint8_t *buff, uint32_t size);
 // Modified by TUYA End
 
 //keep sync with spi_flash.c
+#define SPI_ID 1
+#define SPI_BAUD_RATE	15000000
+
+static int spi_inited = 0;
+
+int lfs_spi_flashbd_init(void) {
+	int ret;
+	spi_config_t config = {0};
+
+	if (spi_inited)
+		return 0;
+	spi_inited = 1;
+
+	ret = bk_spi_driver_init();
+	if (ret)
+		return ret;
+
+	config.role = SPI_ROLE_MASTER;
+	config.bit_width = SPI_BIT_WIDTH_8BITS;
+	config.polarity = 0;
+	config.phase = 0;
+	config.wire_mode = SPI_4WIRE_MODE;
+	config.baud_rate = SPI_BAUD_RATE;
+	config.bit_order = SPI_MSB_FIRST;
+#if (CONFIG_SPI_BYTE_INTERVAL)
+	config.byte_interval = 1;
+#endif
+#if CONFIG_SPI_DMA
+	config.dma_mode = 1;
+	config.spi_tx_dma_chan = bk_dma_alloc(DMA_DEV_DTCM);
+	config.spi_rx_dma_chan = bk_dma_alloc(DMA_DEV_DTCM);
+	config.spi_tx_dma_width = DMA_DATA_WIDTH_8BITS;
+	config.spi_rx_dma_width = DMA_DATA_WIDTH_8BITS;
+#endif
+	ret = bk_spi_init(SPI_ID, &config);
+
+	return ret;
+}
+
 int lfs_spi_flashbd_read(const struct lfs_config *cfg, lfs_block_t block,
         lfs_off_t off, void *buffer, lfs_size_t size) {
     LFS_FLASHBD_TRACE("lfs_spi_flashbd_read(%p, "
@@ -192,6 +231,11 @@ int lfs_spi_flashbd_sync(const struct lfs_config *cfg) {
 }
 
 #else
+
+int lfs_spi_flashbd_init(void)
+{
+	return -1;
+}
 
 int lfs_spi_flashbd_read(const struct lfs_config *cfg, lfs_block_t block,
         lfs_off_t off, void *buffer, lfs_size_t size)

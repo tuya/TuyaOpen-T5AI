@@ -342,6 +342,20 @@ def run_cmd(cmd):
         logging.error(f'failed to run "{cmd}"')
         exit(1)
 
+# add 0xff padding to binary file
+def add_padding_to_binary(binary_file):
+    with open(binary_file , 'ab')as f:
+        f.write(bytes([0xff] * 34))  # 34 bytes align
+
+def check_and_padding_binary(app_pack_secs, app_crc_name):
+    last_firmware = app_pack_secs[-1]['firmware']
+    last_firmware_size = os.path.getsize(last_firmware)
+    last_partition_raw_size = parse_int(app_pack_secs[-1]['size'])
+    last_firmware_aligned_size = (((last_firmware_size + 32 - 1) // 32) * 32) # 32 bytes align
+    app_crc_name += '.bin'
+    if last_firmware_aligned_size < last_partition_raw_size:
+        add_padding_to_binary(app_crc_name) # if the last firmware not fill up the partition, add padding value.
+
 #generate all app
 def package_json_rebuild():
     global image_name
@@ -360,6 +374,7 @@ def package_json_rebuild():
     #gen all_app_pack.bin
     app_pack_name = pack_from_config_json(config_json, 'all_app')
     app_crc_name = crc_from_config_json(config_json, app_pack_name)
+    check_and_padding_binary(app_pack_secs, app_crc_name)
     register_file_operation('%s.bin'%(app_pack_name), build_path, 'rm') #delete intermediate file
     
     src = '%s.bin'%(app_crc_name)
@@ -393,6 +408,7 @@ def package_json_ab_rebuild():
     #gen all_app_ab_crc.bin
     app_pack_name = pack_from_config_json(config_json, 'all_app')
     app_crc_name = crc_from_config_json(config_json, app_pack_name)
+    check_and_padding_binary(app_pack_secs, app_crc_name)
     register_file_operation('%s.bin'%(app_pack_name), build_path, 'rm') #delete intermediate file
 
     src = '%s.bin'%(app_crc_name)

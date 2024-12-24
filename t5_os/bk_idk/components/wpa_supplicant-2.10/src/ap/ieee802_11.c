@@ -3593,9 +3593,9 @@ static void handle_auth(struct hostapd_data *hapd,
 	u8 resp_ies[2 + WLAN_AUTH_CHALLENGE_LEN];
 	size_t resp_ies_len = 0;
 	u16 seq_ctrl;
-#ifndef CONFIG_NO_RADIUS
+	#ifdef CONFIG_HOSTAPD_ACL
 	struct radius_sta rad_info;
-#endif
+	#endif
 
 	if (len < IEEE80211_HDRLEN + sizeof(mgmt->u.auth)) {
 		wpa_printf(MSG_INFO, "handle_auth - too short payload (len=%lu)",

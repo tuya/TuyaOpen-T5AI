@@ -37,7 +37,7 @@ beken_timer_t touch_capa_cali_tmr = {0};
 beken_timer_t touch_tmr = {0};
 
 static beken_thread_t touch_digital_tube_disp_thread_hdl = NULL;
-extern void delay(int num);
+extern void bk_delay(int num);
 extern uint32_t s_touch_channel;
 
 static void cli_touch_help(void)
@@ -107,7 +107,7 @@ static void touch_cyclic_calib_timer_isr(timer_id_t chan)
 		}
 		touch_crg[touch_id] = touch_config.detect_range;
 		TOUCH_LOGI("touch[%d] crg = %d, calibration value = %x !\r\n", touch_id, touch_crg[touch_id], cap_out);
-		delay(1000);
+		bk_delay(1000);
 	}
 
 	for (touch_id = 0; touch_id < 16; touch_id++)
@@ -336,7 +336,7 @@ void cli_touch_multi_channel_scan_mode_test_cmd(char *pcWriteBuffer, int xWriteB
 			}
 			touch_crg[touch_id] = touch_config.detect_range;
 			TOUCH_LOGI("touch[%d] crg = %d, calibration value = %x !\r\n", touch_id, touch_crg[touch_id], cap_out);
-			delay(1000);
+			bk_delay(1000);
 		}
 
 		for (touch_id = 0; touch_id < 16; touch_id++)
@@ -436,7 +436,7 @@ void cli_touch_single_channel_multi_calib_test_cmd(char *pcWriteBuffer, int xWri
 			bk_touch_calibration_start();
 			cap_out = bk_touch_get_calib_value();
 			TOUCH_LOGI("cap_out = %x\r\n", cap_out);
-			delay(10000);
+			bk_delay(10000);
 		}
 
 		bk_touch_int_enable(1 << touch_id, 1);
@@ -500,7 +500,7 @@ void cli_touch_multi_channel_cyclic_calib_test_cmd(char *pcWriteBuffer, int xWri
 			}
 			touch_crg[touch_id] = touch_config.detect_range;
 			TOUCH_LOGI("touch[%d] crg = %d, calibration value = %x !\r\n", touch_id, touch_crg[touch_id], cap_out);
-			delay(1000);
+			bk_delay(1000);
 		}
 
 		for (touch_id = 0; touch_id < 16; touch_id++)

@@ -7,11 +7,11 @@
 * Function Implemantation
 *******************************************************************************/
 /*
-	MCLK:26MHz, delay(1): about 25us
-				delay(10):about 125us
-				delay(100):about 850us
+	MCLK:26MHz, bk_delay(1): about 25us
+				bk_delay(10):about 125us
+				bk_delay(100):about 850us
  */
-void delay(INT32 num)
+void bk_delay(INT32 num)
 {
 	volatile INT32 i, j;
 

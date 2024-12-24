@@ -14,6 +14,8 @@
 #include <stdint.h>
 #include <string.h>
 #include "bl_uart.h"
+#include "partitions_gen.h"
+#include "hal/hal_common.h"
 
 #define FLASH_IS_EMPTY_FLAG_ADDR  0x110
 #define READ_RD_STATUS_TIME		0X05
@@ -145,7 +147,7 @@ uint8_t  ext_flash_erase_one_sector(uint32_t address)
 
 		status = ext_flash_wr_enable(1);
 		status = spi_write_read(w_buf,4,NULL ,0,0);
-		status = ext_flash_wr_enable(0);
+		// status = ext_flash_wr_enable(0);
 
 		set_5mstime_cnt(0);
 		status = ext_flash_rd_status();
@@ -194,7 +196,7 @@ uint8_t  ext_flash_erase_sector_or_block_size(uint8 size_cmd,uint32_t address)
 
 		status = ext_flash_wr_enable(1);
 		status = spi_write_read(w_buf,4,NULL ,0,0);
-		status = ext_flash_wr_enable(0);
+		// status = ext_flash_wr_enable(0);
 
 		set_5mstime_cnt(0);
 		status = ext_flash_rd_status();
@@ -244,7 +246,7 @@ uint8_t  ext_flash_erase_64k_block(uint32_t address)
 
 		status = ext_flash_wr_enable(1);
 		status = spi_write_read(w_buf,4,NULL ,0,0);
-		status = ext_flash_wr_enable(0);
+		// status = ext_flash_wr_enable(0);
 
 		set_5mstime_cnt(0);
 		status = ext_flash_rd_status();
@@ -292,6 +294,108 @@ uint32_t ext_flash_erase_section(uint32_t address, uint32_t size)
 	return erase_len;
 }
 
+uint32_t ext_flash_quickly_erase_section(uint32_t address, uint32_t size)
+{
+	uint32_t start = address & (~0xfff);
+	uint32_t end = address + size;
+	uint32_t status = STATUS_OK;
+
+	while(start < end) {
+		// printf("erase start addr=0x%x\n", start);
+		if (!(start & 0xffff) && (start + 0x10000) < end) {
+			status = ext_flash_erase_sector_or_block_size(BLOCK_ERASE_64K_CMD, start);
+			start += 0x10000;
+		} else if (!(start & 0x7fff) && (start + 0x8000) < (end)) {
+			status = ext_flash_erase_sector_or_block_size(BLOCK_ERASE_32K_CMD, start);
+			start += 0x8000;
+		} else {
+			status = ext_flash_erase_sector_or_block_size(SECTOR_ERASE_CMD, start);
+			start += 0x1000;
+		}
+		if (status != STATUS_OK) {
+			break;
+		}
+	}
+
+	return status;
+}
+
+#if CONFIG_RANDOM_AES_UPGRADE_BL2
+static void sec_boot_set_boot_flag(int boot_flag)
+{
+    if (boot_flag == BOOT_FLAG_PRIMARY) {
+        AON_PMU_REG03_SET_BF_PRIMARY;
+    } else {
+        AON_PMU_REG03_CLR_BF_PRIMARY;
+    }
+}
+
+uint8_t hal_write_preferred_boot_flag(const BOOT_FLAG flag)
+{
+	uint8_t ret = HAL_OK;
+	uint8_t data[32] = {0};
+
+	if ((flag != BOOT_FLAG_PRIMARY) && (flag != BOOT_FLAG_SECONDARY)) {
+		printf("Parameter flag is invalid: %d!\n", flag);
+		return HAL_ERR_BAD_PARAM;
+	}
+
+	ret = ext_flash_rd_data(CONFIG_BOOT_FLAG_PHY_PARTITION_OFFSET, (const uint8_t *)(&data[0]), sizeof(data));
+	if (HAL_OK != ret) {
+		printf("hal flash read failed!\n");
+		return HAL_ERR_GENERIC;
+	}
+	// printf("magic=0x%02x%02x%02x%02x,data=0x%02x%02x%02x%02x, flag=0x%08x\r\n", data[3], data[2], data[1], data[0], data[7], data[6], data[5], data[4], flag);
+	bl_memset(&data[4], 0x00, 4);
+	bl_memcpy(&data[4], (uint8_t *)&flag, 1);
+	// printf("magic=0x%02x%02x%02x%02x,data=0x%02x%02x%02x%02x\r\n", data[3], data[2], data[1], data[0], data[7], data[6], data[5], data[4]);
+	ret = ext_flash_erase_one_sector(CONFIG_BOOT_FLAG_PHY_PARTITION_OFFSET);
+	if (HAL_OK != ret) {
+		printf("hal flash erase failed!\n");
+		return HAL_ERR_GENERIC;
+	}
+
+	ret = ext_flash_wr_data(CONFIG_BOOT_FLAG_PHY_PARTITION_OFFSET, (const uint8_t *)(&data[0]), sizeof(data));
+	if (HAL_OK != ret) {
+		printf("hal flash write failed!\n");
+		return HAL_ERR_GENERIC;
+	}
+
+	return ret;
+}
+
+uint8_t hal_read_preferred_boot_flag(BOOT_FLAG *flag)
+{
+	uint8_t ret = HAL_OK;
+	boot_ctrl_data_t data = {0};
+
+	if (!flag) {
+		printf("Parameter flag is NULL!\n");
+		return HAL_ERR_BAD_PARAM;
+	}
+
+	ret = ext_flash_rd_data(CONFIG_BOOT_FLAG_PHY_PARTITION_OFFSET,
+							(uint8_t *)(&data),sizeof(boot_ctrl_data_t));
+	if (HAL_OK != ret) {
+		printf("hal flash read failed!\n");
+		return HAL_ERR_GENERIC;
+	}
+
+	if (data.magic == _CTRL_CTRL_MAGIC) {
+		if ((data.boot_flag == BOOT_FLAG_PRIMARY) ||
+			(data.boot_flag == BOOT_FLAG_SECONDARY)) {
+			*flag = data.boot_flag;
+		} else {
+			*flag = BOOT_FLAG_PRIMARY;
+		}
+	} else {
+		*flag = BOOT_FLAG_PRIMARY;
+	}
+
+	return ret;
+}
+#endif
+
 uint32_t ext_flash_erase_chip(uint8_t time_outs) //CHIP_ERASE_CMD
 {
 
@@ -318,7 +422,7 @@ uint32_t ext_flash_erase_chip(uint8_t time_outs) //CHIP_ERASE_CMD
 //			bl_printf("CNT 0 = %d \r\n",get_5mstime_cnt());
 			status = ext_flash_wr_enable(1);
 			status = spi_write_read(w_buf,1,NULL ,0,0);
-			status = ext_flash_wr_enable(0);
+			// status = ext_flash_wr_enable(0);
 
 			set_5mstime_cnt(0);
 			status = ext_flash_rd_status();
@@ -382,7 +486,7 @@ uint32_t ext_flash_erase_chip(uint8_t time_outs) //CHIP_ERASE_CMD
 
 #endif
 
-		status = ext_flash_wr_enable(0);
+		// status = ext_flash_wr_enable(0);
 
 		set_5mstime_cnt(0);
 		status = ext_flash_rd_status();

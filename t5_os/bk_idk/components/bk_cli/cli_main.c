@@ -1065,9 +1065,10 @@ void cli_log_statist(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **
 	{
 		os_printf("Buffer[%d] run out count: %d.\r\n", i - 2, log_statist[i]);
 	}
+	
+	print_dynamic_log_info();
 
 	return;
-
 }
 
 static void cli_log_disable(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -1783,6 +1784,10 @@ int bk_cli_init(void)
     cli_jpeg_sw_enc_init();
 #endif
 
+#if (CONFIG_RESET_REASON_TEST)
+	cli_reset_reason_init();
+#endif
+
 #if (CONFIG_PSA_MBEDTLS_TEST)
 	cli_psa_crypto_init();
 #endif
@@ -1843,6 +1848,9 @@ int bk_cli_init(void)
 				  ret);
 		goto init_general_err;
 	}
+
+	/* create log handle task */
+	create_log_handle_task();
 
 #if CONFIG_CLI
 

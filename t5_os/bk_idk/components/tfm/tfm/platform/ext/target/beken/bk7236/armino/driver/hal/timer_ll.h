@@ -104,7 +104,6 @@ static inline uint32_t timer_ll_get_chan_enable_status(timer_hw_t *hw, uint32_t 
 {
 	uint32_t status = 0;
     uint32_t group = TIMER_LL_GROUP(chan);
-    uint32_t group_chan = TIMER_LL_CHAN(chan);
 
 	if (chan == TIMER_GROUP_CHAN0)
 		status = hw->group[group].ctrl.timer0_int_en;

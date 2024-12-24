@@ -471,6 +471,7 @@ int cmd_wlan_get_ps_status();
 
 #if CONFIG_BRIDGE
 #define WLAN_ANY_IP         "0.0.0.0"
+int demo_bridge_softap_init(char *ap_ssid, char *ap_key, wifi_security_t security);
 #endif
 
 void demo_scan_app_init(void);
@@ -596,6 +597,10 @@ int wlan_ap_enable(void);
 int wlan_ap_reload(void);
 int wlan_ap_disable(void);
 int wlan_ap_sta_num(int *num);
+int wlan_ap_sta_info(wlan_ap_stas_t *stas);
+int wlan_ap_add_blacklist(wlan_ap_blacklist_t *req);
+int wlan_ap_del_blacklist(wlan_ap_blacklist_t *req);
+int wlan_ap_clear_blacklist(void);
 int wlan_ap_sta_info(wlan_ap_stas_t *stas);
 int wlan_ap_set_beacon_vsie(wlan_ap_vsie_t *vsie);
 int wlan_dhcp_done_ind(u8 vif_idx);

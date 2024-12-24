@@ -29,7 +29,7 @@
 	#include <modules/pm.h>
 #endif
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 typedef struct {
 	touch_isr_t callback;
@@ -226,9 +226,9 @@ bk_err_t bk_touch_calib_enable(uint32_t enable)
 bk_err_t bk_touch_calibration_start(void)
 {
 	bk_touch_calib_enable(0);
-	delay(100);
+	bk_delay(100);
 	bk_touch_calib_enable(1);
-	delay(200);
+	bk_delay(200);
 
 	return BK_OK;
 }
@@ -259,7 +259,7 @@ bk_err_t bk_touch_manul_mode_enable(uint32_t calib_value)
 {
 	sys_drv_touch_manul_mode_calib_value_set(calib_value);
 	sys_drv_touch_manul_mode_enable(1);
-	delay(100);
+	bk_delay(100);
 
 	return BK_OK;
 }

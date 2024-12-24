@@ -67,11 +67,11 @@ typedef enum {
 } qspi_device_t;
 
 typedef enum {
-	QSPI_ADDR_VALID_BIT8 = 0, /**< QSPI 8BIT  ADDR */
+    QSPI_ADDR_INVALID = 0,    /**< QSPI INVALID ADDR */
+	QSPI_ADDR_VALID_BIT8 ,    /**< QSPI 8BIT  ADDR */
 	QSPI_ADDR_VALID_BIT16,    /**< QSPI 16BIT ADDR */
 	QSPI_ADDR_VALID_BIT24,    /**< QSPI 24BIT ADDR */
     QSPI_ADDR_VALID_BIT32,    /**< QSPI 32BIT ADDR */
-    QSPI_ADDR_INVALID,
 } qspi_addr_valid_bit_t;
 
 typedef struct {

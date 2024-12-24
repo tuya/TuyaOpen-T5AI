@@ -53,5 +53,13 @@ menu "PWR_CLK"
 	config ROSC_COMPENSATION
 		 bool "enable rosc compensation for rtc tick"
 		default n
+	config LP_VOL
+		hex "Set Low power voltage value"
+		default 0x6
+		help
+			Set Low power voltage default value 0.6v(0.45+0.025*6)
+	config DIGLDO_LOW_VOLTAGE_ENABLE
+		 bool "enable dig ldo low voltage "
+		default y
 endmenu
 

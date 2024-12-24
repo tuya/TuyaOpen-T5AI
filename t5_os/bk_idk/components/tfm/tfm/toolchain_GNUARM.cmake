@@ -40,6 +40,9 @@ macro(tfm_toolchain_reset_compiler_flags)
         -Wno-format
         -Wno-return-type
         -Wno-unused-but-set-variable
+        -Wno-implicit-function-declaration
+        -Wno-discarded-qualifiers
+        -Wno-unused-function
         -c
         -fdata-sections
         -ffunction-sections
@@ -218,6 +221,13 @@ macro(target_add_scatter_file target)
             -P
             -xc
     )
+
+    if((${target} STREQUAL bl2 OR ${target} STREQUAL bl2_B) AND CONFIG_RANDOM_AES_UPGRADE_BL2)
+        target_compile_definitions(${target}_scatter
+            PUBLIC
+            -DCONFIG_RANDOM_AES_UPGRADE_BL2=1
+        )
+    endif()
 endmacro()
 
 macro(add_convert_to_bin_target target)

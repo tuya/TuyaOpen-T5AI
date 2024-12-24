@@ -60,9 +60,22 @@ else
 fi
 
 if [ x$USER_CMD = "xclean" ];then
+    # save sdkconfig.h
+    mkdir -p .tmp_build/bk7258_cp1/armino_as_lib/bk7258_cp1/config/
+    mkdir -p .tmp_build/bk7258_cp1/config
+    mkdir -p .tmp_build/bk7258/armino_as_lib/bk7258/config
+    mkdir -p .tmp_build/bk7258/config
+
+    cp ./build/bk7258_cp1/armino_as_lib/bk7258_cp1/config/sdkconfig.h .tmp_build/bk7258_cp1/armino_as_lib/bk7258_cp1/config/
+    cp ./build/bk7258_cp1/config/sdkconfig.h .tmp_build/bk7258_cp1/config
+    cp ./build/bk7258/armino_as_lib/bk7258/config/sdkconfig.h .tmp_build/bk7258/armino_as_lib/bk7258/config
+    cp ./build/bk7258/config/sdkconfig.h .tmp_build/bk7258/config
+
 	make clean
 	make clean -C ./bk_idk/
-    git checkout build/*
+    cp -a .tmp_build build
+    rm -rf .tmp_build
+
 	echo "*************************************************************************"
 	echo "************************CLEAN SUCCESS************************************"
 	echo "*************************************************************************"
@@ -108,21 +121,103 @@ if [ -f "${TUYA_PROJECT_DIR}/apps/$APP_BIN_NAME/components.mk" ]; then
 
 fi # components.mk
 
-# export PYTHONPATH=${TUYA_PROJECT_DIR}/vendor/${TARGET_PLATFORM}/toolchain/site-packages:${PYTHONPATH}
-export PYTHONPATH=${TUYA_PROJECT_DIR}/vendor/T5/toolchain/site-packages:${PYTHONPATH}
+# export PYTHONPATH=${TUYA_PROJECT_DIR}/vendor/T5/toolchain/site-packages:${PYTHONPATH}
 
 echo "APP_DIR:"$APP_DIR
 
 echo "check bootloader.bin"
 boot_file=bk_idk/components/bk_libs/bk7258/bootloader/normal_bootloader/bootloader.bin
 check_value=$(md5sum ${boot_file} | awk '{print $1}')
-ori_value=349ed5c2be62376f843cae86dc913713
+ori_value=de1a8f2f2d2a4fa7ea85ce8cd4f59619
 if [ "x${check_value}" != "x${ori_value}" ]; then
     echo -e "\033[1;31m bootloader.bin check failed, the file had been changed, please update md5 value in build.sh \033[0m"
     exit
 else
     echo "bootloader check ok"
 fi
+
+# python 虚拟环境
+PYTHON_CMD="python3"
+PIP_CMD="pip3"
+enable_python_env() {
+    if [ -z $1 ]; then
+        echo "Please input virtual environment name."
+        exit 1
+    fi
+
+    VIRTUAL_NAME=$1
+    SCRIPT_DIR=$PWD/${TUYA_APP_DEMO_PATH}
+    VIRTUAL_ENV=$SCRIPT_DIR/$VIRTUAL_NAME
+
+    echo "SCRIPT_DIR $VIRTUAL_ENV"
+    if command -v python3 &>/dev/null; then
+        PYTHON_CMD=python3
+    elif command -v python &>/dev/null && python --version | grep -q '^Python 3'; then
+        PYTHON_CMD=python
+    else
+        echo "Python 3 is not installed."
+        exit 1
+    fi
+
+    if [ ! -d "${VIRTUAL_ENV}" ]; then
+        echo "Virtual environment not found. Creating one..."
+        $PYTHON_CMD -m venv "${VIRTUAL_ENV}" || { echo "Failed to create virtual environment."; exit 1; }
+        echo "Virtual environment created at ${VIRTUAL_ENV}"
+    else
+        echo "Virtual environment already exists."
+    fi
+
+    ACTIVATE_SCRIPT=${VIRTUAL_ENV}/bin/activate
+    PYTHON_CMD="${VENV_DIR}/bin/python3"
+    if [ -f "$ACTIVATE_SCRIPT" ]; then
+        echo "Activate python virtual environment."
+        . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
+        ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+    else
+        echo "Activate script not found."
+        exit 1
+    fi
+}
+
+disable_python_env() {
+    if [ -z $1 ]; then
+        echo "Please input virtual environment name."
+        exit 1
+    fi
+
+    VIRTUAL_NAME=$1
+    SCRIPT_DIR=$PWD
+    VIRTUAL_ENV=$SCRIPT_DIR/$VIRTUAL_NAME
+
+    echo "SCRIPT_DIR $VIRTUAL_ENV"
+    if [ -n "$VIRTUAL_ENV" ]; then
+        echo "Deactivate python virtual environment."
+        deactivate
+    else
+        echo "No virtual environment is active."
+    fi
+}
+
+if [ -z $CI_PACKAGE_PATH ]; then
+    enable_python_env "tuya_build_env" || { echo "Failed to enable python virtual environment."; exit 1; }
+else
+    export PYTHONPATH=${TUYA_PROJECT_DIR}/vendor/T5/toolchain/site-packages:${PYTHONPATH}
+fi
+
+
+# 业务需求：提前初始化gpio
+echo "111111111111111111111111111"
+default_gpio_file=${TUYA_PROJECT_DIR}/apps/$APP_BIN_NAME/default_gpio_config.json
+out_file_path=${TUYA_PROJECT_DIR}/vendor/T5/t5_os/projects/tuya_app/config/bk7258/
+vendor_config_file=projects/tuya_app/tuya_scripts/tuya_gpio_config.json
+vendor_convert_script=projects/tuya_app/tuya_scripts/default_gpio_config.py
+if [ ! -f ${default_gpio_file} ]; then
+    cp ${vendor_config_file} ${default_gpio_file}
+fi
+python3 ${vendor_convert_script} $default_gpio_file $out_file_path
+echo "python3 ${vendor_convert_script} $default_gpio_file $out_file_path"
+echo "222222222222222222222222222"
+
 
 echo "Start Compile"
 
@@ -181,31 +276,41 @@ if [ -e "./build/${TARGET_PLATFORM}/all-app.bin" ]; then
     set -x
     set -e
 
-    ofs=$(stat -c %s ./build/${TARGET_PLATFORM}/app.bin)
+    app1_ofs=$(stat -c %s ./build/${TARGET_PLATFORM}/app.bin)
     # TODO 1920k = 1966080 bytes
     app0_max_size=1966080
-    if [ $ofs -gt $app0_max_size ]; then
-        echo "app0 file is too big, limit $app0_max_size, act $ofs"
+    if [ $app1_ofs -gt $app0_max_size ]; then
+        echo "app0 file is too big, limit $app0_max_size, act $app1_ofs"
         exit -1
     fi
 
-    pad_bytes_size=$(expr $app0_max_size - $ofs)
-    dd if=/dev/zero bs=1 count=${pad_bytes_size} | tr "\000" "\377" > pad_bin_file
+#    pad_bytes_size=$(expr $app0_max_size - $app1_ofs)
+#    dd if=/dev/zero bs=1 count=${pad_bytes_size} | tr "\000" "\377" > pad_bin_file
+#
+#    cat ./build/${TARGET_PLATFORM}/app.bin pad_bin_file ./build/${TARGET_PLATFORM}/app1.bin > ./build/${TARGET_PLATFORM}/ua_file.bin
+#    total_size=$(stat -c %s ./build/${TARGET_PLATFORM}/ua_file.bin)
+#
+#    echo "app1_ofs: ${app1_ofs}"
+#    echo "pad_bytes_size: ${pad_bytes_size}"
+#    echo "total_size: ${total_size}"
 
-    cat ./build/${TARGET_PLATFORM}/app.bin pad_bin_file ./build/${TARGET_PLATFORM}/app1.bin > ./build/${TARGET_PLATFORM}/ua_file.bin
-    total_size=$(stat -c %s ./build/${TARGET_PLATFORM}/ua_file.bin)
-
-    echo "ofs: ${ofs}"
-    echo "pad_bytes_size: ${pad_bytes_size}"
-    echo "total_size: ${total_size}"
-
+    TUYA_CREATE_UA_FILE_TOOL=${TUYA_APP_DEMO_PATH}/tuya_scripts/create_ua_file.py
     TUYA_FORMAT_BIN_TOOL=${TUYA_APP_DEMO_PATH}/tuya_scripts/format_up_bin.py
     TUYA_DIFF_OTA_BIN_TOOL=${TUYA_APP_DEMO_PATH}/tuya_scripts/diff2ya
 
-    python3 ${TUYA_FORMAT_BIN_TOOL} ./build/${TARGET_PLATFORM}/ua_file.bin ./build/${TARGET_PLATFORM}/app_ug.bin 500000 1000 0 1000 18D0 $app0_max_size -v
+    partiton_file=${TUYA_APP_DEMO_PATH}/config/bk7258/bk7258_partitions.csv
+    cpu0_bin_file=build/bk7258/app.bin
+    cpu1_bin_file=build/bk7258/app1.bin
+    cpu2_bin_file=build/bk7258/app2.bin
+    ua_bin_file=build/${TARGET_PLATFORM}/ua_file.bin
+
+    # python3 ${TUYA_CREATE_UA_FILE_TOOL} ${partiton_file} ${cpu0_bin_file} ${cpu1_bin_file} --cpu2_bin=${cpu2_bin_file} --ua_file=${ua_bin_file}
+    python3 ${TUYA_CREATE_UA_FILE_TOOL} ${partiton_file} ${cpu0_bin_file} ${cpu1_bin_file} --ua_file=${ua_bin_file}
+
+    python3 ${TUYA_FORMAT_BIN_TOOL} ./build/${TARGET_PLATFORM}/ua_file.bin ./build/${TARGET_PLATFORM}/app_ug.bin 5ED000 1000 0 1000 10D0 $app0_max_size -v
     ./${TUYA_DIFF_OTA_BIN_TOOL} ./build/${TARGET_PLATFORM}/app_ug.bin ./build/${TARGET_PLATFORM}/app_ug.bin ./build/${TARGET_PLATFORM}/app_ota_ug.bin 0
 
-    rm pad_bin_file
+    # rm pad_bin_file
 
     cp ./build/${TARGET_PLATFORM}/all-app.bin       $OUTPUT_PATH/$APP_BIN_NAME"_QIO_"$USER_SW_VER.bin
     cp ./build/${TARGET_PLATFORM}/ua_file.bin       $OUTPUT_PATH/$APP_BIN_NAME"_UA_"$USER_SW_VER.bin
@@ -233,5 +338,6 @@ echo "*************************************************************************"
 echo "**********************COMPILE SUCCESS************************************"
 echo "*************************************************************************"
 
+disable_python_env "tuya_build_env"
 # Modified by TUYA End
 

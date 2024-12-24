@@ -47,10 +47,28 @@ void aon_pmu_hal_clear_touch_int(uint32_t value);
 void aon_pmu_hal_reg_set(pmu_reg_e reg, uint32_t value);
 uint32_t aon_pmu_hal_reg_get(pmu_reg_e reg);
 void aon_pmu_hal_wdt_rst_dev_enable(void);
+void aon_pmu_hal_lpo_src_extern32k_enable(void);
 void aon_pmu_hal_lpo_src_set(uint32_t lpo_src);
 uint32_t aon_pmu_hal_lpo_src_get();
 uint32_t aon_pmu_hal_bias_cal_get();
 void aon_pmu_hal_psram_iodrv_set(uint32_t io_drv);
+void aon_pmu_hal_r0_latch_to_r7b(void);
+uint32_t aon_pmu_hal_get_reset_reason(void);
+void aon_pmu_hal_set_reset_reason(uint32_t value, bool write_immediately);
+uint32_t aon_pmu_hal_get_gpio_sleep(void);
+void aon_pmu_hal_set_gpio_sleep(uint32_t value);
+uint32_t aon_pmu_hal_get_gpio_retention_bitmap(bool read_history);
+void aon_pmu_hal_set_gpio_retention_bitmap(uint32_t value);
+uint32_t aon_pmu_hal_rtc_tick_h_get(void);
+uint32_t aon_pmu_hal_rtc_tick_l_get(void);
+uint32_t aon_pmu_hal_get_wakeup_source(void);
+void aon_pmu_hal_gpio_clksel_set(uint32_t value);
+uint32_t aon_pmu_hal_gpio_clksel_get(void);
+
+void aon_pmu_hal_back_and_clear_reset_reason(void);
+void aon_pmu_hal_restore_reset_reason(void);
+uint32_t aon_pmu_hal_get_reset_reason_from_sram(void);
+void aon_pmu_hal_test_all(void);
 
 void aon_pmu_struct_dump(uint32_t start, uint32_t end);
 

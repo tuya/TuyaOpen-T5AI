@@ -219,7 +219,7 @@ void bk_set_sta_status_wrapper(void *info)
 }
 static void delay_wrapper(INT32 num)
 {
-    delay(num);
+    bk_delay(num);
 }
 
 static void delay_us_wrapper(UINT32 us)
@@ -686,6 +686,16 @@ static int bk_feature_ap_statype_limit_enable_wrapper(void)
 static int bk_feature_tcp_protect_enable_wrapper(void)
 {
     return bk_feature_tcp_protect_enable();
+}
+
+static int bk_feature_ap_ps_enable_wrapper(void)
+{
+    return bk_feature_ap_ps_enable();
+}
+
+static int bk_feature_tx_tim_enable_wrapper(void)
+{
+    return bk_feature_tx_tim_enable();
 }
 
 static int bk_feature_ckmn_enable_wrapper(void)
@@ -1316,6 +1326,8 @@ __attribute__((section(".dtcm_sec_data "))) wifi_os_funcs_t g_wifi_os_funcs = {
 	._bk_feature_network_found_event = bk_feature_network_found_event_wrapper,
 	._bk_feature_get_mac_sup_sta_max_num = bk_feature_get_mac_sup_sta_max_num_wrapper,
 	._bk_feature_tcp_protect_enable = bk_feature_tcp_protect_enable_wrapper,
+	._bk_feature_ap_ps_enable = bk_feature_ap_ps_enable_wrapper,
+	._bk_feature_tx_tim_enable = bk_feature_tx_tim_enable_wrapper,
 	._flush_all_dcache = flush_all_dcache_wrapper,
 	._bk_ms_to_ticks = bk_ms_to_ticks_wrapper,
 	._dma_memcpy = dma_memcpy_wrapper,
@@ -1475,10 +1487,12 @@ __attribute__((section(".dtcm_sec_data "))) wifi_os_variable_t g_wifi_os_variabl
 	#else
 	._improve_he_tb_enable = false,
 	#endif
+	._wifi_mac_short_retry = CONFIG_MAC_SHORT_RETRY,
+	._wifi_mac_long_retry = CONFIG_MAC_LONG_RETRY,
 };
 
 Countryregulations country_regulation_table[] = {
-    
+
     {"AE", COUNTRY_AE, PW_LMT_REGU_ETSI     },
     {"AF", COUNTRY_AF, PW_LMT_REGU_ETSI    },
     {"AI", COUNTRY_AI, PW_LMT_REGU_ETSI    },
@@ -1553,7 +1567,7 @@ Countryregulations country_regulation_table[] = {
     {"IT", COUNTRY_IT, PW_LMT_REGU_ETSI    },
     {"JM", COUNTRY_JM, PW_LMT_REGU_ETSI     },
     {"JO", COUNTRY_JO, PW_LMT_REGU_ETSI      },
-    {"JP", COUNTRY_JP, PW_LMT_REGU_MKK      },    ////PW_LMT_REGU_JP  
+    {"JP", COUNTRY_JP, PW_LMT_REGU_MKK      },    ////PW_LMT_REGU_JP
     {"KE", COUNTRY_KE, PW_LMT_REGU_ETSI      },
     {"KH", COUNTRY_KH, PW_LMT_REGU_ETSI    },
     {"KN", COUNTRY_KN, PW_LMT_REGU_ETSI    },
@@ -1638,7 +1652,7 @@ Countryregulations country_regulation_table[] = {
     {"ZA", COUNTRY_ZA, PW_LMT_REGU_ETSI    },
     {"ZW", COUNTRY_ZW, PW_LMT_REGU_ETSI    },
 
-    
+
 };
 
 #define TXPWR_LMT_ENTRY_SIZE   7
@@ -1848,7 +1862,7 @@ int bk_wifi_set_pwr_limit(wifi_tx_pwr_lmt_t *tx_pwr_lmt)
     wifi_ratesection_t ratesection = tx_pwr_lmt->ratesection;
     uint8 channel = tx_pwr_lmt->channel;
     uint8_t value = tx_pwr_lmt->value;
-    
+
     for(i=0; i< arraylen; i+=TXPWR_LMT_ENTRY_SIZE)
     {
         reg = array[i];

@@ -34,7 +34,7 @@
 #include <driver/aud_dac.h>
 #endif
 
-//extern void delay(int num);//TODO fix me
+//extern void bk_delay(int num);//TODO fix me
 static RingBufferContext *ch1_tx_rb;
 static RingBufferContext *ch1_rx_rb;
 static RingBufferContext *ch2_tx_rb;

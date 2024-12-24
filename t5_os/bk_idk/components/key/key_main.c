@@ -15,7 +15,7 @@
 #if CONFIG_BUTTON
 //#include <drivers/pin.h>
 
-beken_timer_t g_key_timer;
+beken2_timer_t g_key_timer;
 beken_mutex_t g_key_mutex;
 static bool s_key_init_status_flag = 0;
 
@@ -30,17 +30,18 @@ void key_configure(void)
 		return;
 	}
 
-	result = rtos_init_timer(&g_key_timer,
-							 KEY_TMR_DURATION,
-							 button_ticks,
-							 (void *)0);
+	result = rtos_init_oneshot_timer(&g_key_timer,
+							 		KEY_TMR_DURATION,
+							 		button_ticks,
+							 		(void *)0,
+							 		(void *)0);
 	if(kNoErr != result)
 	{
 		KEY_PRT("rtos_init_timer fail\r\n");
 		return;
 	}
 
-	result = rtos_start_timer(&g_key_timer);
+	result = rtos_start_oneshot_timer(&g_key_timer);
 	if(kNoErr != result)
 	{
 		KEY_PRT("rtos_start_timer fail\r\n");
@@ -52,9 +53,9 @@ void key_unconfig(void)
 {
 	bk_err_t ret;
 
-	if (rtos_is_timer_init(&g_key_timer)) {
-		if (rtos_is_timer_running(&g_key_timer)) {
-			ret = rtos_stop_timer(&g_key_timer);
+	if (rtos_is_oneshot_timer_init(&g_key_timer)) {
+		if (rtos_is_oneshot_timer_running(&g_key_timer)) {
+			ret = rtos_stop_oneshot_timer(&g_key_timer);
 			if(kNoErr != ret)
 			{
 				KEY_PRT("rtos_stop_timer fail\r\n");
@@ -62,10 +63,10 @@ void key_unconfig(void)
 			}
 		}
 
-		ret = rtos_deinit_timer(&g_key_timer);
+		ret = rtos_deinit_oneshot_timer(&g_key_timer);
 		if(kNoErr != ret)
 		{
-			KEY_PRT("rtos_deinit_timer fail\r\n");
+			KEY_PRT("rtos_deinit_oneshot_timer fail\r\n");
 			return;
 		}
 
@@ -271,6 +272,7 @@ void key_initialization(void)
 	}
 
 	key_configure();
+
 	s_key_init_status_flag = 1;
 }
 
@@ -282,6 +284,7 @@ void key_uninitialization(void)
 	}
 
 	key_unconfig();
+
 	s_key_init_status_flag = 0;
 }
 

@@ -26,7 +26,11 @@ typedef volatile union {
 	struct {
 		uint32_t memchk_bps               :  1; /**<bit[0 : 0] */
 		uint32_t fast_boot                :  1; /**<bit[1 : 1] */
-		uint32_t reserved_bit_2_30        : 29; /**<bit[2 : 30] */
+		uint32_t ota_finish               :  1; /**<bit[2 : 2] */
+		uint32_t bl2_deep_sleep           :  1; /**<bit[3 : 3] */
+		uint32_t reserved_bit_4_15        : 12; /**<bit[4 : 15] */
+		uint32_t gpio_retention_bitmap    :  8; /**<bit[16 : 23] */
+		uint32_t reset_reason             :  7; /**<bit[24 : 30] */
 		uint32_t gpio_sleep               :  1; /**<bit[31 : 31] */
 	};
 	uint32_t v;
@@ -105,8 +109,8 @@ typedef volatile union {
 		uint32_t lpo_config               :  2; /**<bit[0 : 1] */
 		uint32_t flshsck_iocap            :  2; /**<bit[2 : 3] */
 		uint32_t wakeup_ena               :  6; /**<bit[4 : 9] */
-		uint32_t io_drv                   :  2; /**<bit[10 : 11] */
-		uint32_t reserved_bit_12_13       :  2; /**<bit[12 : 13] */
+		uint32_t gpio_clksel              :  1; /**<bit[10 : 10] */
+		uint32_t reserved_bit_11_13       :  3; /**<bit[11 : 13] */
 		uint32_t xtal_sel                 :  1; /**<bit[14 : 14] */
 		uint32_t reserved_bit_15_23       :  9; /**<bit[15 : 23] */
 		uint32_t halt_lpo                 :  1; /**<bit[24 : 24] */

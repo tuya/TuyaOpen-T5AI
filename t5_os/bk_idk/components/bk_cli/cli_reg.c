@@ -126,7 +126,7 @@ static void cli_reg_write_read_cmd_common(char *pcWriteBuffer, int xWriteBufferL
 	os_memset(optr_tab, 0, 9);
 	os_memset(optr_tab, 0x30, 8);
 
-	if (os_strncmp(argv[1], "-r", 2) == 0) {
+	if (argc >= 2 && os_strncmp(argv[1], "-r", 2) == 0) {
 		if (argc != 3) {
 			os_printf("regshow -r addr\r\n");
 			return;
@@ -149,7 +149,7 @@ static void cli_reg_write_read_cmd_common(char *pcWriteBuffer, int xWriteBufferL
 			os_printf("regshow R: addr:0x%08x, value:0x%08x\r\n", reg_addr, psa_reg_read(reg_addr));
 #endif
 		}
-	} else if (os_strncmp(argv[1], "-w", 2) == 0) {
+	} else if (argc >= 2 && os_strncmp(argv[1], "-w", 2) == 0) {
 		if (argc != 4) {
 			os_printf("regshow -w addr value\r\n");
 			return;
@@ -196,8 +196,9 @@ static void cli_reg_write_read_cmd_common(char *pcWriteBuffer, int xWriteBufferL
 
 		os_printf("regshow W: addr:0x%08x, value:0x%08x - check:0x%08x\r\n",
 				  reg_addr, reg_value, REG_READ(reg_addr));
-	} else
+	} else {
 		os_printf("regshow -w/r addr [value]\r\n");
+	}
 }
 
 static void cli_reg_write_read_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -285,7 +286,7 @@ static void cli_reg_dump_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 	else if (os_strcmp(argv[1], "sdmadc") == 0) {
 		sdmadc_struct_dump(0x2,0x8);
 	}
-#endif 
+#endif
 	else if (os_strcmp(argv[1], "spi") == 0) {
 		spi_struct_dump(index);
 	} else if (os_strcmp(argv[1], "i2c") == 0) {

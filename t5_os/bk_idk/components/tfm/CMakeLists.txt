@@ -7,6 +7,7 @@ endif()
 set(incs)
 set(srcs)
 
+if (CONFIG_BUILD_TFM)
 if (CONFIG_TFM)
 	list(APPEND srcs
 		tfm_ns_interface.c
@@ -41,6 +42,7 @@ if (CONFIG_TFM_PS)
        list(APPEND srcs
                tfm/interface/src/tfm_ps_ipc_api.c
        )
+endif()
 endif()
 
 
@@ -77,6 +79,7 @@ ExternalProject_Add(tfm_project
 		-DTEST_NS=${CONFIG_TFM_TEST_NS}
 		-DUSER=$ENV{USER}
 		-DBL2=${CONFIG_TFM_BL2}
+		-DJUMP=${CONFIG_JUMP_BIN}
 		-DTFM_PROFILE=profile_medium
 		-DFPGA=${CONFIG_TFM_FPGA}
 		-DOTP_NV_COUNTERS_RAM_EMULATION=${CONFIG_OTP_NV_COUNTERS_RAM_EMULATION}
@@ -102,6 +105,9 @@ ExternalProject_Add(tfm_project
 		-DCONFIG_XIP_NO_VERSION=${CONFIG_XIP_NO_VERSION}
 		-DCONFIG_BL2_VALIDATE_ENABLED_BY_EFUSE=${CONFIG_BL2_VALIDATE_ENABLED_BY_EFUSE}
 		-DCONFIG_BL2_SKIP_VALIDATE=${CONFIG_BL2_SKIP_VALIDATE}
+		-DCONFIG_OTA_CONFIRM_UPDATE=${CONFIG_OTA_CONFIRM_UPDATE}
+		-DCONFIG_DECOMPRESS_RESUME=${CONFIG_DECOMPRESS_RESUME}
+		-DCONFIG_OTA_UPDATE_PUBKEY=${CONFIG_OTA_UPDATE_PUBKEY}
 		-DCONFIG_BL2_WDT=${CONFIG_BL2_WDT}
 		-DCONFIG_PM_NSC=${CONFIG_PM_NSC}
 		-DCONFIG_AES_GCM_NSC=${CONFIG_TFM_AES_GCM_NSC}
@@ -111,7 +117,11 @@ ExternalProject_Add(tfm_project
 		-DCONFIG_BL2_WDT_PERIOD=${CONFIG_BL2_WDT_PERIOD}
 		-DCONFIG_INITIAL_ATTESTATION=${CONFIG_INITIAL_ATTESTATION}
 		-DCONFIG_BL2_UPDATE_WITH_PC=${CONFIG_BL2_UPDATE_WITH_PC}
+		-DCONFIG_RANDOM_AES_UPGRADE_BL2=${CONFIG_RANDOM_AES_UPGRADE_BL2}
 		-DCONFIG_TFM_CRYPTO_IOVEC_BUFFER_SIZE=${CONFIG_TFM_CRYPTO_IOVEC_BUFFER_SIZE}
+		-DCONFIG_BUILD_TFM=${CONFIG_BUILD_TFM}
+		-DCONFIG_MCUBOOT_V2_1_0=${CONFIG_MCUBOOT_V2_1_0}
+		-DCONFIG_DBUS_CHECK_CRC=${CONFIG_DBUS_CHECK_CRC}
 		&& cd ${tfm_build_dir}
 		&& ninja -- install
 	BUILD_BYPRODUCTS ${tfm_build_dir}/secure_fw/libtfm_s_veneers.a
@@ -122,7 +132,8 @@ ExternalProject_Add(tfm_project
 add_dependencies(${COMPONENT_LIB} tfm_project)
 add_library(lib_tfm STATIC IMPORTED GLOBAL)
 add_dependencies(lib_tfm tfm_project)
-if (CONFIG_TFM_SYSTEM_CLOCK OR CONFIG_TFM_FWU)
+
+if (CONFIG_BUILD_TFM)
 set_target_properties(lib_tfm PROPERTIES IMPORTED_LOCATION ${tfm_build_dir}/secure_fw/libtfm_s_veneers.a)
 target_link_libraries(${COMPONENT_LIB} PUBLIC lib_tfm)
 target_compile_definitions(${COMPONENT_LIB}

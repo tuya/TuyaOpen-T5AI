@@ -166,6 +166,7 @@ int cli_mpc_init(void);
 int cli_int_target_init(void);
 int cli_lin_init(void);
 int cli_scr_init(void);
+int cli_reset_reason_init(void);
 
 int cli_jpeg_sw_enc_init(void);
 int cli_psa_crypto_init(void);

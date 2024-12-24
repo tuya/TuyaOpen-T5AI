@@ -514,8 +514,8 @@ static inline void gpio_ll_wakeup_enable(uint64_t index, uint64_t type_l, uint64
 
 	REG_WRITE(GPIO_LL_REG_BASE+0x42*4, rdata);
 
-extern void delay(INT32 num);
-	delay(10);
+extern void bk_delay(INT32 num);
+	bk_delay(10);
 	REG_WRITE(GPIO_LL_REG_BASE+0x47*4, 0xffffffff);
 	REG_WRITE(GPIO_LL_REG_BASE+0x48*4, 0xffffffff);
 
@@ -584,8 +584,8 @@ static inline void gpio_ll_wakeup_interrupt_clear()
 	REG_WRITE(GPIO_LL_REG_BASE+0x47*4, (REG_READ(GPIO_LL_REG_BASE+0x47*4))|int_state);
 	REG_WRITE(GPIO_LL_REG_BASE+0x48*4, (REG_READ(GPIO_LL_REG_BASE+0x48*4))|(int_state >> 32));
 
-	extern void delay(INT32 num);
-	delay(10);
+	extern void bk_delay(INT32 num);
+	bk_delay(10);
 	REG_WRITE(GPIO_LL_REG_BASE+0x47*4, 0xffffffff);
 	REG_WRITE(GPIO_LL_REG_BASE+0x48*4, 0xffffffff);
 

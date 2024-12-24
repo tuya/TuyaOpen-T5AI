@@ -113,6 +113,7 @@ uint8 hnd_crc8(
 
 void doorbell_hex_dump(uint8_t *data, uint32_t length)
 {
+#if 0
 	for (int i = 0; i < length; i++)
 	{
 		os_printf("%02X ", data[i]);
@@ -123,6 +124,7 @@ void doorbell_hex_dump(uint8_t *data, uint32_t length)
 		}
 	}
 	os_printf("\n");
+#endif
 }
 
 db_channel_t *doorbell_transmission_malloc(uint16_t max_rx_size, uint16_t max_tx_size)

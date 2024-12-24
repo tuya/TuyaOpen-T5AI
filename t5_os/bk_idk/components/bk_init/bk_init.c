@@ -347,12 +347,10 @@ int bk_init(void)
 #endif //!(CONFIG_SYS_CPU1)
 
 	app_cli_init();
-#if CONFIG_AT
-// Modified by TUYA Start
-//	extern int atsvr_app_init(void);
-//	if(0 != atsvr_app_init())
-//		return -1;
-// Modified by TUYA End
+#if CONFIG_AT 
+	extern int atsvr_app_init(void);
+	if(0 != atsvr_app_init())
+		return -1;	
 #endif
 
 #if (CONFIG_VAULT_SUPPORT)
@@ -415,10 +413,10 @@ extern int mp_do_startup(int heap_len);
 #endif
 #endif
 #if CONFIG_SYS_CPU1
-	bk_pm_cp1_boot_ok_response_set();
+#if CONFIG_PSRAM
+	REG_READ(SOC_PSRAM_DATA_BASE);//check psram whether valid
 #endif
-#if (CONFIG_SYS_CPU1)
-	bk_pm_module_vote_psram_ctrl(PM_POWER_PSRAM_MODULE_NAME_MEDIA, PM_POWER_MODULE_STATE_ON);
+	bk_pm_cp1_boot_ok_response_set();
 #endif
 #if CONFIG_USB //&& CONFIG_MENTOR_USB
 	bk_usb_driver_init();
@@ -427,12 +425,5 @@ extern int mp_do_startup(int heap_len);
 #if (CONFIG_PSRAM)
 	bk_psram_id_auto_detect();
 #endif
-
-    // Modified by TUYA Start
-#if (CONFIG_SYS_CPU0)
-    bk_set_printf_sync(false);
-#endif
-    // Modified by TUYA End
-
 	return 0;
 }

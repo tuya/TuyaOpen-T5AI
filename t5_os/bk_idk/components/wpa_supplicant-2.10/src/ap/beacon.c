@@ -880,7 +880,7 @@ void handle_probe_req(struct hostapd_data *hapd,
 	int ret;
 	u16 csa_offs[2];
 	size_t csa_offs_len;
-#ifndef CONFIG_NO_RADIUS
+#ifdef CONFIG_HOSTAPD_ACL
 	struct radius_sta rad_info;
 #endif
 

@@ -75,15 +75,7 @@ const bk_logic_partition_t bk_flash_partitions[BK_PARTITION_MAX_USER] = {
         .partition_owner = BK_FLASH_EMBEDDED,
         .partition_description = "usr_config",
         .partition_start_addr = 0x3da000,
-        .partition_length = 0x22000,
-        .partition_options = PAR_OPT_EXECUTE_DIS | PAR_OPT_READ_EN | PAR_OPT_WRITE_DIS,
-    },
-    [BK_PARTITION_EASYFLASH_USER] = 
-    {
-        .partition_owner = BK_FLASH_EMBEDDED,
-        .partition_description = "easyflash",
-        .partition_start_addr = 0x3fc000,
-        .partition_length = 0x2000,
+        .partition_length = 0x24000,
         .partition_options = PAR_OPT_EXECUTE_DIS | PAR_OPT_READ_EN | PAR_OPT_WRITE_DIS,
     },
     [BK_PARTITION_RF_FIRMWARE_USER] = 

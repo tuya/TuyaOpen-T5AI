@@ -46,9 +46,6 @@ extern bk_err_t bk_dvp_camera_deinit();
 
 camera_info_t camera_info = {0};
 bool dvp_camera_reset_open_ind = false;
-beken_semaphore_t camera_act_sema = NULL;
-static beken_thread_t disc_task = NULL;
-camera_connect_state_t camera_connect_state_change_cb = NULL;
 media_mailbox_msg_t camera_media_msg = {0};
 
 void camera_uvc_device_info_notify_to_cp0(bk_uvc_device_brief_info_t *info, uvc_state_t state)
@@ -156,20 +153,6 @@ end:
 	return ret;
 }
 
-static bk_err_t camera_dvp_free_encode_mem_handle(media_mailbox_msg_t *msg)
-{
-	int ret = BK_OK;
-
-#ifdef CONFIG_DVP_CAMERA
-	ret = bk_dvp_camera_free_encode_mem();
-#endif
-	LOGI("%s complete\n", __func__);
-
-	msg_send_rsp_to_media_major_mailbox(msg, ret, APP_MODULE);
-
-	return ret;
-}
-
 static bk_err_t camera_dvp_h264_reset_handle(media_mailbox_msg_t *msg)
 {
 	int ret = BK_FAIL;
@@ -193,59 +176,6 @@ static bk_err_t camera_dvp_h264_reset_handle(media_mailbox_msg_t *msg)
 	msg_send_rsp_to_media_major_mailbox(msg, ret, APP_MODULE);
 
 	return ret;
-}
-
-
-static void camera_uvc_connect_state_change_task_entry(beken_thread_arg_t data)
-{
-	uint8_t state = *(uint8_t *)data;
-
-	LOGI("%s, state:%d\r\n", __func__, state);
-
-	if (camera_connect_state_change_cb)
-	{
-		camera_connect_state_change_cb(state);
-	}
-	else
-	{
-		// restart by self
-		if (CAMERA_STATE_ENABLED != get_camera_state())
-		{
-			LOGI("%s, state:%d\r\n", __func__, state);
-			if (state == UVC_CONNECTED)
-			{
-				int ret = bk_uvc_camera_open(camera_info.device);
-
-				if (ret != BK_OK)
-				{
-					LOGE("%s open failed\n", __func__);
-					goto out;
-				}
-
-				set_camera_state(CAMERA_STATE_ENABLED);
-			}
-		}
-	}
-
-out:
-	disc_task = NULL;
-	rtos_delete_thread(NULL);
-}
-
-void camera_uvc_conect_state(uint8_t state)
-{
-	int ret = rtos_create_thread(&disc_task,
-						 4,
-						 "disc_task",
-						 (beken_thread_function_t)camera_uvc_connect_state_change_task_entry,
-						 1024 * 2,
-						 (beken_thread_arg_t)&state);
-
-	if (BK_OK != ret)
-	{
-		LOGE("%s camera_uvc_disconnect_task_entry init failed\n", __func__);
-		return;
-	}
 }
 
 bk_err_t camera_uvc_open_handle(media_mailbox_msg_t *msg)
@@ -320,28 +250,7 @@ bk_err_t camera_uvc_reset_handle(media_mailbox_msg_t *msg)
 	int ret = BK_OK;
 	LOGI("%s\n", __func__);
 
-#ifdef CONFIG_USB_UVC
-
-	if (msg->param == UVC_DISCONNECT_ABNORMAL)
-	{
-		if (CAMERA_STATE_DISABLED == get_camera_state())
-		{
-			LOGI("%s already close\n", __func__);
-			goto end;
-		}
-
-		bk_uvc_camera_close();
-
-		set_camera_state(CAMERA_STATE_DISABLED);
-	}
-
-	camera_uvc_conect_state((uint8_t)msg->param);
-
-#endif
-
-end:
-
-	os_free(msg);
+	msg_send_rsp_to_media_major_mailbox(msg, ret, APP_MODULE);
 
 	LOGI("%s, complete!\n", __func__);
 
@@ -622,12 +531,3 @@ void camera_init(void)
 
 	BK_ASSERT(camera_info.device != NULL);
 }
-
-bk_err_t media_app_register_uvc_connect_state_cb(void *cb)
-{
-	camera_connect_state_change_cb = cb;
-
-	return BK_OK;
-}
-
-

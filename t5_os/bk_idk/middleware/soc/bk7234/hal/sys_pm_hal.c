@@ -704,8 +704,17 @@ static inline void sys_hal_set_low_voltage(volatile uint32_t *ana_r8, volatile u
 	sys_ll_set_ana_reg8_r_vanaldosel(0);//tenglong20230417(need modify setting value)
 
 	sys_ll_set_ana_reg9_vlden(1);//0x1: coreldo low voltage enable
-	sys_ll_set_ana_reg9_vdd12lden(1);//0x1: digldo low voltage enable
-
+	#if CONFIG_DIGLDO_LOW_VOLTAGE_ENABLE
+	if(sys_ll_get_ana_reg9_vdd12lden() != 0x1)
+	{
+		sys_ll_set_ana_reg9_vdd12lden(1);//0x1: digldo low voltage enable
+	}
+	#else
+	if(sys_ll_get_ana_reg9_vdd12lden() != 0x0)
+	{
+		sys_ll_set_ana_reg9_vdd12lden(0);//0x0: digldo low voltage disable
+	}
+	#endif
 	sys_ll_set_ana_reg8_ioldo_lp(1);
 	sys_ll_set_ana_reg8_aloldohp(0);
 
@@ -1347,7 +1356,7 @@ void sys_hal_low_power_hardware_init()
 	sys_hal_power_config_default();
 
 	/*set the lp voltage*/
-	sys_hal_lp_vol_set(0x3); // core 0.525V
+	sys_hal_lp_vol_set(CONFIG_LP_VOL);
 
 	/*set rosc calib trig once*/
 	sys_hal_rosc_calibration(3, 0);

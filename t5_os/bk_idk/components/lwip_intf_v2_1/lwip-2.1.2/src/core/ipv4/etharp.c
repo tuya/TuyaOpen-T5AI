@@ -136,14 +136,6 @@ static inline bool sys_time_cmp(uint32_t time1, uint32_t time2)
 static netif_addr_idx_t etharp_cached_entry;
 #endif /* !LWIP_NETIF_HWADDRHINT */
 
-/** Try hard to create a new entry - we want the IP address to appear in
-    the cache (even if this means removing an active entry or so). */
-#define ETHARP_FLAG_TRY_HARD     1
-#define ETHARP_FLAG_FIND_ONLY    2
-#if ETHARP_SUPPORT_STATIC_ENTRIES
-#define ETHARP_FLAG_STATIC_ENTRY 4
-#endif /* ETHARP_SUPPORT_STATIC_ENTRIES */
-
 #if LWIP_NETIF_HWADDRHINT
 #define ETHARP_SET_ADDRHINT(netif, addrhint)  do { if (((netif) != NULL) && ((netif)->hints != NULL)) { \
                                               (netif)->hints->addr_hint = (addrhint); }} while(0)
@@ -535,7 +527,7 @@ etharp_find_entry(const ip4_addr_t *ipaddr, u8_t flags, struct netif *netif)
  *
  * @see pbuf_free()
  */
-static err_t
+err_t
 etharp_update_arp_entry(struct netif *netif, const ip4_addr_t *ipaddr, struct eth_addr *ethaddr, u8_t flags
 #if BK_LWIP
                        , s16_t *loc
@@ -880,7 +872,7 @@ etharp_input(struct pbuf *p, struct netif *netif)
       /* ARP request for our address? */
       //if (for_us && !etharp_tmr_flag) {
       if (for_us) {
-#if BK_LWIP
+#if BK_LWIP && !CONFIG_BRIDGE
         if (!uap_ip_is_start() && (i >= 0)) {
           LWIP_DEBUGF(ETHARP_DEBUG | LWIP_DBG_TRACE, ("etharp_input: rtime %d, sys_now %d\n", arp_table[i].rtime, sys_now()));
           /* If not request before */

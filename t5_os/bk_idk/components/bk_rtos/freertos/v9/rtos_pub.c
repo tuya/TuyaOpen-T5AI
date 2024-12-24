@@ -984,6 +984,16 @@ bool rtos_is_in_interrupt_context(void)
 	return platform_is_in_interrupt_context();
 }
 
+bool rtos_local_irq_disabled(void)
+{
+    return platform_local_irq_disabled();
+}
+
+bool rtos_is_scheduler_suspended(void)
+{
+	return xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED;
+}
+
 void rtos_wait_for_interrupt(void)
 {
 	arch_wait_for_interrupt();

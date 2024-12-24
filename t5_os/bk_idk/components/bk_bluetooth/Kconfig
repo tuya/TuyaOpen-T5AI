@@ -36,4 +36,8 @@ menu "Bk_ble"
     config BLUETOOTH_BLE_DISCOVER_AUTO
         bool "auto ble discover. Only used when single ble host"
         default y
+
+    config BLUETOOTH_CALIBRATION_ENABLE
+        bool "whether to enable bluetooth calibration"
+        default y
 endmenu

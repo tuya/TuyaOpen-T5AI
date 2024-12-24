@@ -84,6 +84,12 @@ static void cli_flash_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
 		uint16_t line_mode = os_strtoul(argv[2], NULL, 16);
 		bk_flash_set_line_mode(line_mode);
 		msg = CLI_CMD_RSP_SUCCEED;
+	} else if (os_strcmp(argv[1], "write_status") == 0) {
+		/*enable FLASH_QUAD_ENABLE first*/
+		uint16_t status = os_strtoul(argv[2], NULL, 16);
+		bk_flash_write_status_reg(status);
+		os_printf("write status %#x, read status %#x\r\n",status,bk_flash_read_status_reg());
+		msg = CLI_CMD_RSP_SUCCEED;
 	} else {
 		cli_flash_help();
 		msg = CLI_CMD_RSP_ERROR;

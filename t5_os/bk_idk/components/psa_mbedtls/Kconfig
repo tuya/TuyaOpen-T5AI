@@ -3,24 +3,43 @@ menu "PSA Mbedtls"
 		bool "Enable mbedtls v3.5.2"
 		default n
 
-	config PSA_MBEDTLS_TEST
-		bool "Enable psa mbedtls test"
-		default n
-	config PSA_CUSTOMIZATION_TZ_L
-		bool "Enable adapt customization interface"
-		default n
-	config PSA_CUSTOMIZATION_TEST
-		bool "Enable psa customization test"
-		default n
-	config PSA_MBEDTLS_FORWARD_COMPATIBILITY
-		bool "forward compatibility"
-		default n
+	menu "PSA Mbedtls Options"
+		depends on PSA_MBEDTLS
 
-	config MBEDTLS_SSL_IN_CONTENT_LEN
-		int "Config MBEDTLS_SSL_IN_CONTENT_LEN"
-		default 4096
-
-	config MBEDTLS_SSL_OUT_CONTENT_LEN
-		int "Config MBEDTLS_SSL_OUT_CONTENT_LEN"
-		default 4096
+		config PSA_MBEDTLS_TEST
+			bool "Enable psa mbedtls test"
+			default n
+	
+		config PSA_CUSTOMIZATION_TZ_L
+			bool "Enable adapt customization interface"
+			default n
+	
+		config PSA_CUSTOMIZATION_TEST
+			bool "Enable psa customization test"
+			default n
+	
+		config MBEDTLS_SSL_IN_CONTENT_LEN
+			int "Config MBEDTLS_SSL_IN_CONTENT_LEN"
+			default 4096
+	
+		config MBEDTLS_SSL_OUT_CONTENT_LEN
+			int "Config MBEDTLS_SSL_OUT_CONTENT_LEN"
+			default 4096
+	
+		config TE200_ENTROPY
+			bool "Enable TE200 entropy"
+			default n
+	
+	        config TRUSTENGINE_TEST
+	                bool "Enable security engine cli"
+	                default y
+	
+	        config TRUSTENGINE
+	                bool "Enable hardware crypto engine"
+	                default n
+	
+	        config SW_CRYPTO
+	                bool "Enable software crypto"
+	                default n
+	endmenu
 endmenu

@@ -19,7 +19,7 @@
 
 #include <soc/soc.h>
 #include "hal_port.h"
-#include "aon_pmu_hw.h"
+#include "aon_pmu_struct.h"
 
 #if CONFIG_TFM_AON_PMU_LL_NSC
 #include "tfm_aon_pmu_ll_nsc.h"
@@ -53,6 +53,11 @@ static inline uint32_t aon_pmu_ll_get_r0_memchk_bps(void) {
 	return r->memchk_bps;
 }
 
+static inline uint32_t aon_pmu_ll_get_r7b_memchk_bps(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	return r->memchk_bps;
+}
+
 static inline void aon_pmu_ll_set_r0_fast_boot(uint32_t v) {
 	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
 	r->fast_boot = v;
@@ -60,6 +65,11 @@ static inline void aon_pmu_ll_set_r0_fast_boot(uint32_t v) {
 
 static inline uint32_t aon_pmu_ll_get_r0_fast_boot(void) {
 	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	return r->fast_boot;
+}
+
+static inline uint32_t aon_pmu_ll_get_r7b_fast_boot(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
 	return r->fast_boot;
 }
 
@@ -71,6 +81,57 @@ static inline void aon_pmu_ll_set_r0_gpio_sleep(uint32_t v) {
 static inline uint32_t aon_pmu_ll_get_r0_gpio_sleep(void) {
 	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
 	return r->gpio_sleep;
+}
+
+static inline uint32_t aon_pmu_ll_get_r7b_gpio_sleep(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	return r->gpio_sleep;
+}
+
+static inline void aon_pmu_ll_set_r0_ota_finish(uint32_t v) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	r->ota_finish = v;
+}
+
+static inline uint32_t aon_pmu_ll_get_r0_ota_finish(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	return r->ota_finish;
+}
+#define aon_ll_is_running_from_ota aon_pmu_ll_get_r0_ota_finish
+
+static inline uint32_t aon_pmu_ll_get_r7b_ota_finish(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	return r->ota_finish;
+}
+
+static inline void aon_pmu_ll_set_r0_reset_reason(uint32_t v) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	r->reset_reason = v;
+}
+
+static inline uint32_t aon_pmu_ll_get_r0_reset_reason(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	return r->reset_reason;
+}
+
+static inline uint32_t aon_pmu_ll_get_r7b_reset_reason(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	return r->reset_reason;
+}
+
+static inline void aon_pmu_ll_set_r0_gpio_retention_bitmap(uint32_t v) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	r->gpio_retention_bitmap = v;
+}
+
+static inline uint32_t aon_pmu_ll_get_r0_gpio_retention_bitmap(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	return r->gpio_retention_bitmap;
+}
+
+static inline uint32_t aon_pmu_ll_get_r7b_gpio_retention_bitmap(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	return r->gpio_retention_bitmap;
 }
 
 //reg r1:
@@ -445,14 +506,14 @@ static inline uint32_t aon_pmu_ll_get_r41_wakeup_ena(void) {
 	return r->wakeup_ena;
 }
 
-static inline void aon_pmu_ll_set_r41_io_drv(uint32_t v) {
+static inline void aon_pmu_ll_set_r41_gpio_clksel(uint32_t v) {
 	aon_pmu_r41_t *r = (aon_pmu_r41_t*)(SOC_AON_PMU_REG_BASE + (0x41 << 2));
-	r->io_drv = v;
+	r->gpio_clksel = v;
 }
 
-static inline uint32_t aon_pmu_ll_get_r41_io_drv(void) {
+static inline uint32_t aon_pmu_ll_get_r41_gpio_clksel(void) {
 	aon_pmu_r41_t *r = (aon_pmu_r41_t*)(SOC_AON_PMU_REG_BASE + (0x41 << 2));
-	return r->io_drv;
+	return r->gpio_clksel;
 }
 
 static inline void aon_pmu_ll_set_r41_xtal_sel(uint32_t v) {
@@ -690,7 +751,6 @@ static inline uint32_t aon_pmu_ll_get_reg73_cal_done(void) {
 	return r->cal_done;
 }
 
-//reg r7a:
 static inline uint32_t aon_pmu_ll_get_r7a(void) {
 	aon_pmu_r7a_t *r = (aon_pmu_r7a_t*)(SOC_AON_PMU_REG_BASE + (0x7a << 2));
 	return r->v;

@@ -58,7 +58,7 @@ static void yuv_buf_init_common(void)
 
 static void yuv_buf_deinit_common(void)
 {
-	yuv_buf_hal_reset_config_to_default(&s_yuv_buf.hal);
+	yuv_buf_hal_soft_reset(&s_yuv_buf.hal);
 	/* 1) power off yuv_buf
 	 * 2) disable yuv_buf system interrupt
 	 * 3) unregister isr
@@ -337,8 +337,8 @@ static void yuv_buf_isr(void)
 	}
 
 	if (yuv_buf_hal_is_fifo_full_int_triggered(hal, int_status)) {
-		YUV_BUF_LOGE("sensor fifo is full\r\n");
 		if (s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_FULL].isr_handler) {
+			YUV_BUF_LOGE("sensor fifo is full\r\n");
 			s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_FULL].isr_handler(0, s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_FULL].param);
 		}
 	}
@@ -350,22 +350,22 @@ static void yuv_buf_isr(void)
 	}
 
 	if (yuv_buf_hal_is_sensor_resolution_err_int_triggered(hal, int_status)) {
-		YUV_BUF_LOGE("sensor's yuyv data resoltion is not right\r\n");
+		YUV_BUF_LOGE("sensor's yuyv data resolution is not right\r\n");
 		if (s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_SEN_RESL].isr_handler) {
 			s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_SEN_RESL].isr_handler(0, s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_SEN_RESL].param);
 		}
 	}
 
 	if (yuv_buf_hal_is_h264_err_int_triggered(hal, int_status)) {
-		YUV_BUF_LOGE("h264 encode error\r\n");
 		if (s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_H264_ERR].isr_handler) {
+			YUV_BUF_LOGE("h264 encode error\r\n");
 			s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_H264_ERR].isr_handler(0, s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_H264_ERR].param);
 		}
 	}
 
 	if (yuv_buf_hal_is_enc_slow_int_triggered(hal, int_status)) {
-		YUV_BUF_LOGE("jpeg code rate is slow than sensor's data rate\r\n");
 		if (s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_ENC_SLOW].isr_handler) {
+			YUV_BUF_LOGE("jpeg encode rate is slow than sensor's data rate\r\n");
 			s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_ENC_SLOW].isr_handler(0, s_yuv_buf.yuv_buf_isr_handler[YUV_BUF_ENC_SLOW].param);
 		}
 	}

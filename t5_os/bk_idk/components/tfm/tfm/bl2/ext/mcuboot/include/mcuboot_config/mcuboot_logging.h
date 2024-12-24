@@ -29,8 +29,9 @@ extern "C" {
 #define MCUBOOT_LOG_LEVEL_OFF       0
 #define MCUBOOT_LOG_LEVEL_ERROR     1
 #define MCUBOOT_LOG_LEVEL_WARNING   2
-#define MCUBOOT_LOG_LEVEL_INFO      3
-#define MCUBOOT_LOG_LEVEL_DEBUG     4
+#define MCUBOOT_LOG_LEVEL_FORCE     3
+#define MCUBOOT_LOG_LEVEL_INFO      4
+#define MCUBOOT_LOG_LEVEL_DEBUG     5
 
 /*
  * The compiled log level determines the maximum level that can be
@@ -58,6 +59,13 @@ extern "C" {
     if (efuse_is_err_log_enabled()) printf("[WRN] " _fmt "\r\n", ##__VA_ARGS__)
 #else
 #define MCUBOOT_LOG_WRN(...) IGNORE(__VA_ARGS__)
+#endif
+
+#if MCUBOOT_LOG_LEVEL >= MCUBOOT_LOG_LEVEL_FORCE
+#define MCUBOOT_LOG_FORCE(_fmt, ...)                  \
+    if (efuse_is_err_log_enabled()) printf("[FORCE] " _fmt "\r\n", ##__VA_ARGS__)
+#else
+#define MCUBOOT_LOG_FORCE(...) IGNORE(__VA_ARGS__)
 #endif
 
 #if MCUBOOT_LOG_LEVEL >= MCUBOOT_LOG_LEVEL_INFO

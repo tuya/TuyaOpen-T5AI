@@ -8,7 +8,7 @@
 #include <driver/hal/hal_timer_types.h>
 #include <driver/hal/hal_spi_types.h>
 #include <driver/sys_pm_types.h>
-
+#include <modules/pm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,7 +96,8 @@ void sys_hal_module_power_ctrl(power_module_name_t module,power_module_state_t p
 void sys_hal_wakeup_interrupt_clear(wakeup_source_t interrupt_source);
 void sys_hal_module_power_ctrl(power_module_name_t module,power_module_state_t power_state);
 void sys_hal_module_RF_power_ctrl (module_name_t module,power_module_state_t power_state);
-void sys_hal_core_bus_clock_ctrl(high_clock_module_name_t core, uint32_t clksel,uint32_t clkdiv, high_clock_module_name_t bus,uint32_t bus_clksel,uint32_t bus_clkdiv);
+int32 sys_hal_core_bus_clock_ctrl(uint32_t cksel_core, uint32_t ckdiv_core,uint32_t ckdiv_bus, uint32_t ckdiv_cpu0,uint32_t ckdiv_cpu1);
+// void sys_hal_core_bus_clock_ctrl(high_clock_module_name_t core, uint32_t clksel,uint32_t clkdiv, high_clock_module_name_t bus,uint32_t bus_clksel,uint32_t bus_clkdiv);
 void sys_hal_cpu0_main_int_ctrl(dev_clk_pwr_ctrl_t clock_state);
 void sys_hal_cpu1_main_int_ctrl(dev_clk_pwr_ctrl_t clock_state);
 void sys_hal_set_cpu1_boot_address_offset(uint32_t address_offset);
@@ -118,6 +119,8 @@ int32 sys_hal_rosc_calibration(uint32_t rosc_cali_mode, uint32_t cali_interval);
 int sys_hal_rosc_test_mode(bool enabled);
 int32 sys_hal_bandgap_cali_set(uint32_t value);//increase or decrease the dvdddig voltage
 uint32_t sys_hal_bandgap_cali_get();
+bk_err_t sys_hal_switch_cpu_bus_freq(pm_cpu_freq_e cpu_bus_freq);
+bk_err_t sys_hal_core_bus_clock_ctrl(uint32_t cksel_core, uint32_t ckdiv_core,uint32_t ckdiv_bus, uint32_t ckdiv_cpu0,uint32_t ckdiv_cpu1);
 /*low power feature end*/
 uint32 sys_hal_get_chip_id(void);
 uint32 sys_hal_get_device_id(void);
@@ -371,7 +374,11 @@ void sys_hal_cb_manu_val_set(uint32_t value);
 void sys_hal_ana_reg11_vsel_set(uint32_t value);
 void sys_hal_ana_reg10_sdm_val_set(uint32_t value);
 void sys_hal_ana_reg11_spi_trigger_set(uint32_t value);
+
+void sys_hal_apll_cal_val_set(uint32_t value);
+void sys_hal_apll_spi_trigger_set(uint32_t value);
 void sys_hal_i2s0_ckdiv_set(uint32_t value);
+void sys_hal_apll_config_set(uint32_t value);
 /**  I2S End  **/
 
 

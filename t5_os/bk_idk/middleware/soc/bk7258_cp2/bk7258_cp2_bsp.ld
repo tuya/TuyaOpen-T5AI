@@ -82,12 +82,14 @@ SECTIONS
     .a_device_null :
     {
       KEEP(*(.a_deviceobj_null))
+      . = ALIGN(4);
     } > FLASH
 
     .a_devices :
     {
       __device_start = .;
       KEEP(*(.a_deviceobj_*))
+      . = ALIGN(4);
       __device_end = .;
     } > FLASH
 
@@ -95,6 +97,7 @@ SECTIONS
     {
       __a_init_start = .;
       KEEP(*(.a_init_entry_*))
+      . = ALIGN(4);
       __a_init_end = .;
     } > FLASH
 
@@ -108,6 +111,7 @@ SECTIONS
     .ARM.exidx :
     {
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        . = ALIGN(4);
     } > FLASH
     __exidx_end = .;
 
@@ -131,6 +135,7 @@ SECTIONS
         LONG (__itcm_text)
         LONG (__itcm_start__)
         LONG ((__itcm_end__ - __itcm_start__) / 4)
+        . = ALIGN(4);
         __copy_table_end__ = .;
     } > FLASH
 
@@ -145,6 +150,7 @@ SECTIONS
         /* Add each additional bss section here */
         LONG (__bss2_start__)
         LONG ((__bss2_end__ - __bss2_start__) / 4)
+        . = ALIGN(4);
         __zero_table_end__ = .;
     } > FLASH
 
@@ -160,6 +166,7 @@ SECTIONS
         *(.itcm_section*)
         *(.itcm_sec_code*)
         *(.interrupt)
+        . = ALIGN(4);
         __itcm_end__ = .;
     } > ITCM AT > FLASH
 
@@ -171,7 +178,7 @@ SECTIONS
 
         *(.dtcm)
         *(.dtcm_sec_data*)
-
+        . = ALIGN(4);
         __dtcm_end__ = .;
     } > DTCM AT > FLASH
 
@@ -200,6 +207,7 @@ SECTIONS
         *(.sdata)
 
         *(.gnu.linkonce.d*)
+        . = ALIGN(4);
         __data_end__ = .;
     } > RAM AT > FLASH
 
@@ -260,6 +268,7 @@ SECTIONS
 
         * (.swap_data)
         * (.swap_data*)
+        . = ALIGN(4);
         _swap_end = .;
     } > SWAP AT > FLASH
 

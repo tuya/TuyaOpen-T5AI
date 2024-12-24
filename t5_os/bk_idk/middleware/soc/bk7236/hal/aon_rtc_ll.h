@@ -27,12 +27,26 @@ extern "C" {
 
 static inline void aon_rtc_ll_enable(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5));		//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl |= (0x1<<6);	//hw->ctrl.en
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.en = 1;
+#endif
 }
 
 static inline void aon_rtc_ll_disable(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5));		//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl &= ~(0x1<<6);	//hw->ctrl.en
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.en = 0;
+#endif
 }
 
 static inline bool aon_rtc_ll_is_enable(aon_rtc_hw_t *hw)
@@ -42,12 +56,26 @@ static inline bool aon_rtc_ll_is_enable(aon_rtc_hw_t *hw)
 
 static inline void aon_rtc_ll_stop_counter(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5));		//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl |= (0x1<<1);	//hw->ctrl.cnt_stop
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.cnt_stop = 1;
+#endif
 }
 
 static inline void aon_rtc_ll_start_counter(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5)); 	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl &= ~(0x1<<1);	//hw->ctrl.cnt_stop
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.cnt_stop = 0;
+#endif
 }
 
 static inline bool aon_rtc_ll_is_counter_stop(aon_rtc_hw_t *hw)
@@ -57,12 +85,26 @@ static inline bool aon_rtc_ll_is_counter_stop(aon_rtc_hw_t *hw)
 
 static inline void aon_rtc_ll_reset_counter(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5)); 	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl |= (0x1<<0);	//hw->ctrl.cnt_reset
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.cnt_reset = 1;
+#endif
 }
 
 static inline void aon_rtc_ll_clear_reset_counter(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5)); 	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl &= ~(0x1<<0);	//hw->ctrl.cnt_reset
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.cnt_reset = 0;
+#endif
 }
 
 static inline bool aon_rtc_ll_is_counter_reset(aon_rtc_hw_t *hw)
@@ -97,12 +139,26 @@ static inline uint32_t aon_rtc_ll_get_tick_val_hi(aon_rtc_hw_t *hw)
 
 static inline void aon_rtc_ll_enable_tick_int(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5)); 	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl |= (0x1<<3);	//hw->ctrl.cnt_reset
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.tick_int_en = 1;
+#endif
 }
 
 static inline void aon_rtc_ll_disable_tick_int(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5)); 	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl &= ~(0x1<<3);	//hw->ctrl.tick_int_en
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.tick_int_en = 0;
+#endif
 }
 
 static inline bool aon_rtc_ll_is_tick_int_enable(aon_rtc_hw_t *hw)
@@ -118,7 +174,14 @@ static inline bool aon_rtc_ll_get_tick_int_status(aon_rtc_hw_t *hw)
 //write 1 to clear interrupt
 static inline void aon_rtc_ll_clear_tick_int_status(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4)); 	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl |= (0x1<<5);	//hw->ctrl.tick_int_sts
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.tick_int_sts = 1;
+#endif
 }
 
 static inline void aon_rtc_ll_set_upper_val(aon_rtc_hw_t *hw, uint32_t up_val)
@@ -143,12 +206,26 @@ static inline uint32_t aon_rtc_ll_get_upper_val_hi(aon_rtc_hw_t *hw)
 
 static inline void aon_rtc_ll_enable_upper_int(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5));	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl |= (0x1<<2);	//hw->ctrl.up_int_en
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.up_int_en = 1;
+#endif
 }
 
 static inline void aon_rtc_ll_disable_upper_int(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<4) | (0x1<<5));	//W1C bits:hw->ctrl.up_int_sts, hw->ctrl.tick_int_sts, avoid clear it if its' value == 1 by this operation
+	ctrl &= ~(0x1<<2);	//hw->ctrl.up_int_en
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.up_int_en = 0;
+#endif
 }
 
 static inline bool aon_rtc_ll_is_upper_int_enable(aon_rtc_hw_t *hw)
@@ -164,7 +241,14 @@ static inline bool aon_rtc_ll_get_upper_int_status(aon_rtc_hw_t *hw)
 //write 1 to clear interrupt
 static inline void aon_rtc_ll_clear_upper_int_status(aon_rtc_hw_t *hw)
 {
+#if 1
+	uint32_t ctrl = hw->ctrl.ctrl_v;
+	ctrl &= ~((0x1<<5));	//W1C:hw->ctrl.tick_int_sts, avoid clear it by this operation
+	ctrl |= (0x1<<4);	//hw->ctrl.up_int_sts
+	hw->ctrl.ctrl_v = ctrl;
+#else
 	hw->ctrl.up_int_sts = 1;
+#endif
 }
 
 static inline uint32_t aon_rtc_ll_get_counter_val(aon_rtc_hw_t *hw)

@@ -23,7 +23,7 @@ OPERATE_RET tkl_ethernetif_init(TKL_NETIF_HANDLE netif)
 {
     // struct netif *p_netif = (struct netif *)netif;
     
-    // os_printf("tkl_ethernetif_init\r\n");
+    // bk_printf("tkl_ethernetif_init\r\n");
     // p_netif->flags |= NETIF_FLAG_LINK_UP;
 
     return OPRT_OK;
@@ -46,7 +46,7 @@ OPERATE_RET tkl_ethernetif_output(TKL_NETIF_HANDLE netif, TKL_PBUF_HANDLE p)
 
 	// if (vif_idx >= NX_VIRT_DEV_MAX)
 	// {
-	// 	os_printf("%s: invalid vif: %d!\r\n", __func__, vif_idx);
+	// 	bk_printf("%s: invalid vif: %d!\r\n", __func__, vif_idx);
 	// 	return ERR_ARG;
 	// }
     
@@ -100,7 +100,7 @@ OPERATE_RET tkl_ethernetif_recv(TKL_NETIF_HANDLE netif, TKL_PBUF_HANDLE p)
 //         /* full packet send to tcpip_thread to process */
 //         if (p_netif->input(p_buf, p_netif) != ERR_OK)    // ethernet_input
 //         {
-//             os_printf("ethernetif_input: IP input error\r\n");
+//             bk_printf("ethernetif_input: IP input error\r\n");
 //             pbuf_free(p_buf);
 //             p_buf = NULL;
 //             return OPRT_COM_ERROR;

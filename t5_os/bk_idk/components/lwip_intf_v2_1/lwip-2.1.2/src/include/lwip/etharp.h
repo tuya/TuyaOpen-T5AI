@@ -60,6 +60,14 @@
 extern "C" {
 #endif
 
+/** Try hard to create a new entry - we want the IP address to appear in
+    the cache (even if this means removing an active entry or so). */
+#define ETHARP_FLAG_TRY_HARD     1
+#define ETHARP_FLAG_FIND_ONLY    2
+#if ETHARP_SUPPORT_STATIC_ENTRIES
+#define ETHARP_FLAG_STATIC_ENTRY 4
+#endif /* ETHARP_SUPPORT_STATIC_ENTRIES */
+
 /** 1 seconds period */
 #define ARP_TMR_INTERVAL 1000
 

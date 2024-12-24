@@ -48,12 +48,6 @@ if (CONFIG_STA_PS)
 	)
 endif()
 
-if (CONFIG_OTA_TFTP OR CONFIG_OTA_HTTP)
-	list(APPEND srcs
-		cli_ota.c
-	)
-endif()
-
 if (CONFIG_WIFI_CLI_ENABLE)
 	list(APPEND srcs
 		cli_wifi.c
@@ -166,11 +160,9 @@ if (CONFIG_SOC_BK7271)
 	list(APPEND srcs "cli_dsp_bk7271.c")
 endif()
 
-# Modified by TUYA Start
-# if (CONFIG_USB)
-# 	list(APPEND srcs "cli_usb.c")
-# endif()
-# Modified by TUYA End
+if (CONFIG_USB)
+	list(APPEND srcs "cli_usb.c")
+endif()
 
 if (CONFIG_VAULT_SUPPORT)
 	if (CONFIG_SECURITYIP)

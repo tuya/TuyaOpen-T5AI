@@ -304,7 +304,6 @@ int rtos_set_semaphore( beken_semaphore_t* semaphore )
     }
     else
     {
-		RTOS_ASSERT_INT_ENABLED_WITH_SCHEDULER();
         result = xSemaphoreGive( *semaphore );
     }
 
@@ -601,10 +600,10 @@ static void timer_callback2( xTimerHandle handle )
 {
     beken2_timer_t *timer = (beken2_timer_t*) pvTimerGetTimerID( handle );
 
-	if(BEKEN_MAGIC_WORD != timer->beken_magic)
-	{
-		return;
-	}
+    if(BEKEN_MAGIC_WORD != timer->beken_magic)
+    {
+        return;
+    }
     if ( timer->function )
     {
         timer->function( timer->left_arg, timer->right_arg );
@@ -615,6 +614,7 @@ static void timer_callback1( xTimerHandle handle )
 {
     beken_timer_t *timer = (beken_timer_t*) pvTimerGetTimerID( handle );
 
+    rtos_reload_timer(timer);
     if ( timer->function )
     {
         timer->function( timer->arg);
@@ -626,17 +626,17 @@ bk_err_t rtos_start_oneshot_timer( beken2_timer_t* timer )
     signed portBASE_TYPE result;
 
     if ( platform_is_in_interrupt_context() != 0 )
-	{
+    {
         signed portBASE_TYPE xHigherPriorityTaskWoken = 0;
         result = xTimerStartFromISR(timer->handle, &xHigherPriorityTaskWoken );
         portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
     } 
-	else
-	{
-		RTOS_ASSERT_INT_ENABLED_WITH_SCHEDULER();
+    else
+    {
+        RTOS_ASSERT_INT_ENABLED_WITH_SCHEDULER();
 
         result = xTimerStart( timer->handle, BEKEN_WAIT_FOREVER );
-	}
+    }
 
     if ( result != pdPASS )
     {
@@ -816,7 +816,7 @@ bk_err_t rtos_init_timer( beken_timer_t *timer,
 	
     timer->handle = _xTimerCreate("", 
 								(portTickType)( time_ms / bk_get_ms_per_tick() ), 
-								pdTRUE, 
+								pdFALSE, // pdTRUE, // the restart is initiated by timer_callback1, instead of the kernel.
 								timer, 
 								(native_timer_handler_t) timer_callback1 );
     if ( timer->handle == NULL )
@@ -1229,6 +1229,16 @@ void rtos_start_int(void)
 bool rtos_is_in_interrupt_context(void)
 {
 	return platform_is_in_interrupt_context();
+}
+
+bool rtos_local_irq_disabled(void)
+{
+    return platform_local_irq_disabled();
+}
+
+bool rtos_is_scheduler_suspended(void)
+{
+	return xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED;
 }
 
 void rtos_wait_for_interrupt(void)

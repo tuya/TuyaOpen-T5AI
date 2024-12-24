@@ -13,9 +13,6 @@ if (CONFIG_SECURITY_OTA)
 		list(APPEND srcs security_ota_https.c)
 	endif()
 
-	if (CONFIG_OTA_HTTP)
-		list(APPEND srcs security_ota_http.c)
-	endif()
 else()
 	if (CONFIG_OTA_HTTPS)
 		list(APPEND srcs ota_https.c)
@@ -24,6 +21,10 @@ else()
 	if (CONFIG_OTA_HTTP)
 		list(APPEND srcs ota.c)
 	endif()
+endif()
+
+if (CONFIG_OTA_TEST)
+	list(APPEND srcs cli_ota.c)
 endif()
 
 armino_component_register(SRCS "${srcs}"

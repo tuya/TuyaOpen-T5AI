@@ -321,6 +321,15 @@ int mcheck_ate(uint16_t check_res[48])
 
 int driver_init(void)
 {
+	interrupt_init();
+
+#if CONFIG_MAILBOX
+	extern bk_err_t ipc_init(void);
+	extern bk_err_t mb_ipc_init(void);
+	ipc_init();
+	mb_ipc_init();
+#endif
+
 	sys_drv_init();
 
 #if CONFIG_AON_PMU
@@ -330,8 +339,6 @@ int driver_init(void)
 #if CONFIG_POWER_CLOCK_RF
 	power_clk_rf_init();
 #endif
-
-	interrupt_init();
 
 	bk_gpio_driver_init();
 
@@ -465,7 +472,7 @@ int driver_init(void)
 	bk_lin_driver_init();
 #endif
 
-#if CONFIG_MBEDTLS_ACCELERATOR
+#if (CONFIG_MBEDTLS_ACCELERATOR || CONFIG_TRUSTENGINE)
 	extern int dubhe_driver_init( unsigned long dbh_base_addr );
 	dubhe_driver_init(SOC_SHANHAI_BASE);
 #endif
@@ -473,7 +480,7 @@ int driver_init(void)
 #if CONFIG_OTP_V1 && (!CONFIG_SPE || CONFIG_ATE_TEST)
 	bk_otp_init();
 #endif
-#if (!CONFIG_ATE_TEST)
+#if (!CONFIG_ATE_TEST && CONFIG_SYS_CPU0)
 	{
 		uint16_t check_res[48];
 		if (mcheck_ate(check_res)) {

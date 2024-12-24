@@ -412,35 +412,12 @@ uint32_t bk_qspi_flash_read_id(qspi_id_t id) {
 	read_id_cmd.wire_mode = QSPI_1WIRE;
 	read_id_cmd.work_mode = INDIRECT_MODE;
 	read_id_cmd.op = QSPI_READ;
-	read_id_cmd.cmd = 0x9f;
-	read_id_cmd.addr = 0x00;
-	read_id_cmd.addr_valid_bit = QSPI_ADDR_VALID_BIT8;
-	read_id_cmd.data_len = 2;
+	read_id_cmd.cmd = FLASH_READ_ID_CMD;
+	read_id_cmd.data_len = FLASH_READ_ID_SIZE;
 
 	BK_LOG_ON_ERR(bk_qspi_command(id, &read_id_cmd));
-
-	bk_qspi_read(id, &read_id_data, 2);
-
-	return read_id_data;
-}
-
-uint32_t bk_qspi_flash_read_test(qspi_id_t id, uint32_t cmd, uint32_t addr, uint32_t addr_len, uint32_t data_len)
-{
-	qspi_cmd_t read_id_cmd = {0};
-	uint32_t read_id_data = 0;
-
-	read_id_cmd.device = QSPI_FLASH;
-	read_id_cmd.wire_mode = QSPI_1WIRE;
-	read_id_cmd.work_mode = INDIRECT_MODE;
-	read_id_cmd.op = QSPI_READ;
-	read_id_cmd.cmd = cmd;
-	read_id_cmd.addr = addr;
-	read_id_cmd.addr_valid_bit = addr_len;
-	read_id_cmd.data_len = data_len;
-
-	BK_LOG_ON_ERR(bk_qspi_command(id, &read_id_cmd));
-
-	bk_qspi_read(id, &read_id_data, data_len);
+	
+	bk_qspi_read(id, &read_id_data, FLASH_READ_ID_SIZE);
 
 	return read_id_data;
 }

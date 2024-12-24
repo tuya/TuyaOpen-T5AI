@@ -7,6 +7,7 @@
 * @copyright Copyright 2021-2030 Tuya Inc. All Rights Reserved.
 *
 */
+
 #ifndef __TKL_FS_H__
 #define __TKL_FS_H__
 
@@ -16,6 +17,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+    DEV_INNER_FLASH,
+    DEV_EXT_FLASH,
+    DEV_SDCARD,
+} FS_DEV_TYPE_T;
 
 /********************************************************************************
  *********************************tuya_os_fs_intf********************************
@@ -33,6 +40,17 @@ extern "C" {
 int tkl_fs_mkdir(const char* path);
 
 /**
+* @brief Make directory recursively
+*
+* @param[in] path: path of directory
+*
+* @note This API is used for making a directory
+*
+* @return 0 on success. Others on failed
+*/
+int tkl_fs_mkdir_r(const char* path);
+
+/**
 * @brief Remove directory
 *
 * @param[in] path: path of directory
@@ -42,6 +60,17 @@ int tkl_fs_mkdir(const char* path);
 * @return 0 on success. Others on failed
 */
 int tkl_fs_remove(const char* path);
+
+/**
+* @brief Remove directory recursively
+*
+* @param[in] path: path of directory
+*
+* @note This API is used for removing a directory
+*
+* @return 0 on success. Others on failed
+*/
+int tkl_fs_remove_r(const char* path);
 
 
 /**
@@ -331,6 +360,30 @@ int tkl_fileno(TUYA_FILE file);
 * @return 0 success,-1 failed
 */
 int tkl_ftruncate(int fd, UINT64_T length);
+
+/**
+* @brief mount file system
+*
+* @param[in] mount point
+*
+* @param[in] device type fs based
+*
+* @note This API is used to mount file system.
+*
+* @return 0 success,-1 failed
+*/
+int tkl_fs_mount(const char *path, FS_DEV_TYPE_T dev_type);
+
+/**
+* @brief unmount file system
+*
+* @param[in] mount point
+*
+* @note This API is used to unmount file system.
+*
+* @return 0 success,-1 failed
+*/
+int tkl_fs_unmount(const char *path);
 
 #ifdef __cplusplus
 } // extern "C"

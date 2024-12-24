@@ -78,7 +78,7 @@ static bool spk_file_empty = false;
 
 static uint32_t const_data_count = 0;
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 static void cli_aud_intf_help(void)
 {

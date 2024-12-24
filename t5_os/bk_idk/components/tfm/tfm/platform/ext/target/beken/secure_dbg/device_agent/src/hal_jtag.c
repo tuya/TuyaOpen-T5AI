@@ -2,9 +2,10 @@
 #include <stdbool.h>
 #include "hal_jtag.h"
 
+#if CONFIG_BL2_SECURE_DEBUG
 int dubhe_driver_init( unsigned long);
 void arm_ce_dbg_set(bool debug_en);
-void close_wdt(void);
+void nmi_wdt_stop(void);
 
 static bool allowed_debug(void)
 {
@@ -40,7 +41,7 @@ void hal_secure_debug(void)
 void hal_jtag_enable(void)
 {
 #if !CONFIG_BL2_WDT
-	close_wdt();
+	nmi_wdt_stop();
 #endif
 	arm_ce_dbg_set(true);
 	if (efuse_is_spe_debug_enabled()) {
@@ -55,5 +56,5 @@ void hal_jtag_disable(void)
 	*((volatile uint32_t*)CORTEX_M33_REG_DAUTHCTRL) = CORTEX_M33_CPU_DEBUG_DISABLE_VALUE;
 	arm_ce_dbg_set(false);
 }
-// eof
+#endif
 

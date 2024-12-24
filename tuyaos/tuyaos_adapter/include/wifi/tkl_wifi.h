@@ -37,7 +37,8 @@ typedef enum {
     COUNTRY_CODE_CN,
     COUNTRY_CODE_US,
     COUNTRY_CODE_JP,
-    COUNTRY_CODE_EU
+    COUNTRY_CODE_EU,
+    COUNTRY_CODE_TR
 } COUNTRY_CODE_E;
 
 /* tuya sdk definition of wifi function type */
@@ -466,6 +467,21 @@ OPERATE_RET tkl_wifi_register_recv_mgnt_callback(const BOOL_T enable, const WIFI
  */
 OPERATE_RET tkl_wifi_ioctl(WF_IOCTL_CMD_E cmd,  void *args);
 
+/**
+ * @brief get wifi country code
+ * 
+ * @param[out]       ccode  country code
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
+OPERATE_RET tkl_wifi_get_country_code(UCHAR_T *ccode);
+
+/**
+ * @brief set wifi country code
+ * 
+ * @param[in]       ccode  country code
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
+OPERATE_RET tkl_wifi_set_country_code_v2(const UCHAR_T *ccode);
 
 #ifdef __cplusplus
 }

@@ -119,7 +119,7 @@ static const flash_config_t flash_config[] = {
 	{0xC86018,   1,               FLASH_SIZE_16M,FLASH_LINE_MODE_TWO,  0,       2,            0x0F,         0x0F,        0x00,         0x0A,         0x00E,                0,            0,           0xA0,                          0x01}, //gd_25lq128e
 #endif
 #if CONFIG_FLASH_QUAD_ENABLE
-	{0xC86516,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,      2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                9,            1,           0xA0,                          0x02}, //en_25qe32a
+	{0xC86516,   2,               FLASH_SIZE_4M, FLASH_LINE_MODE_FOUR, 14,      2,            0x1F,         0x1F,        0x09,         0x0E,         0x00E,                9,            1,           0xA0,                          0x02}, //en_25qe32a
 #else
 	{0xC86516,   1,               FLASH_SIZE_4M, FLASH_LINE_MODE_TWO, 0,        2,            0x1F,         0x1F,        0x00,         0x0E,         0x00E,                0,            0,           0xA0,                          0x01}, //en_25qe32a
 #endif
@@ -314,7 +314,41 @@ static bool flash_is_need_update_status_reg(uint32_t protect_cfg, uint32_t cmp_c
 	}
 }
 
-static void flash_set_protect_type(flash_protect_type_t type)
+static void calculateProtectionBits(uint32_t flash_size, uint32_t length, uint8_t* cmp, 
+									uint8_t* bp4, uint8_t* bp3, uint8_t* bp2, uint8_t* bp1, uint8_t* bp0) {
+	*cmp = 0; *bp4 = 1; *bp3 = 1; *bp2 = 1; *bp1 = 1; *bp0 = 1;
+	if (flash_size == 0x400000)
+	{
+		//protect area
+		if (length < 0x20000) { // 128KB
+			*cmp = 0; *bp4 = 0; *bp3 = 1; *bp2 = 0; *bp1 = 1; *bp0 = 0;
+		} else if (length < 0x40000) { // 256KB
+			*cmp = 0; *bp4 = 0; *bp3 = 1; *bp2 = 0; *bp1 = 1; *bp0 = 1;
+		} else if (length < 0x80000) { // 512KB
+			*cmp = 0; *bp4 = 0; *bp3 = 1; *bp2 = 1; *bp1 = 0; *bp0 = 0;
+		} else if (length < 0x100000) { // 1MB
+			*cmp = 0; *bp4 = 0; *bp3 = 1; *bp2 = 1; *bp1 = 0; *bp0 = 1;
+		} else if (length < 0x200000) { // 2MB
+			*cmp = 0; *bp4 = 0; *bp3 = 1; *bp2 = 1; *bp1 = 1; *bp0 = 0;
+		} else if (length < 0x300000) { // 3MB
+			*cmp = 1; *bp4 = 0; *bp3 = 0; *bp2 = 1; *bp1 = 0; *bp0 = 1;
+		} else if (length < 0x380000) { // 3584KB
+			*cmp = 1; *bp4 = 0; *bp3 = 0; *bp2 = 1; *bp1 = 0; *bp0 = 0;
+		} else if (length < 0x3C0000) { // 3840KB
+			*cmp = 1; *bp4 = 0; *bp3 = 0; *bp2 = 0; *bp1 = 1; *bp0 = 1;
+		} else if (length < 0x3E0000) { // 3968KB
+			*cmp = 1; *bp4 = 0; *bp3 = 0; *bp2 = 0; *bp1 = 1; *bp0 = 0;
+		} else if (length < 0x3F0000) { // 4032KB
+			*cmp = 1; *bp4 = 0; *bp3 = 0; *bp2 = 0; *bp1 = 0; *bp0 = 1;
+		} else if (length < 0x400000) { // 4MB
+			*cmp = 0; *bp4 = 1; *bp3 = 1; *bp2 = 1; *bp1 = 1; *bp0 = 1;
+		} else { // all
+			*cmp = 0; *bp4 = 1; *bp3 = 1; *bp2 = 1; *bp1 = 1; *bp0 = 1;
+		}
+	}
+}
+
+static void flash_set_protect_type_normal(flash_protect_type_t type)
 {
 	uint32_t protect_cfg = flash_get_protect_cfg(type);
 	uint32_t cmp_cfg = flash_get_cmp_cfg(type);
@@ -325,6 +359,46 @@ static void flash_set_protect_type(flash_protect_type_t type)
 		flash_set_cmp_cfg(&status_reg, cmp_cfg);
 
 		FLASH_LOGD("write status reg:%x, status_reg_size:%d\r\n", status_reg, s_flash.flash_cfg->status_reg_size);
+		flash_hal_write_status_reg(&s_flash.hal, s_flash.flash_cfg->status_reg_size, status_reg);
+	}
+}
+
+static void flash_set_protect_type(flash_protect_type_t type)
+{
+	uint32_t protect_cfg;
+	uint32_t cmp_cfg;
+	uint32_t status_reg;
+	if (type == FLASH_PROTECT_APP)
+	{
+#if (((CONFIG_SOC_BK7236XX) || (CONFIG_SOC_BK7239XX) || (CONFIG_SOC_BK7286XX)) && \
+		CONFIG_PRIMARY_CPU0_APP_PHY_PARTITION_OFFSET && CONFIG_PRIMARY_CPU0_APP_PHY_PARTITION_SIZE)
+		uint8_t cmp, bp4, bp3, bp2, bp1, bp0;
+
+		calculateProtectionBits(s_flash.flash_cfg->flash_size,(CONFIG_PRIMARY_CPU0_APP_PHY_PARTITION_OFFSET + CONFIG_PRIMARY_CPU0_APP_PHY_PARTITION_SIZE), 
+								&cmp, &bp4, &bp3, &bp2, &bp1, &bp0);
+        protect_cfg = (bp4 << 4) | (bp3 << 3) | (bp2 << 2) | (bp1 << 1) | bp0;
+        cmp_cfg = cmp;
+#else
+		protect_cfg = flash_get_protect_cfg(FLASH_UNPROTECT_LAST_BLOCK);
+		cmp_cfg = flash_get_cmp_cfg(FLASH_UNPROTECT_LAST_BLOCK);
+#endif
+	}
+	else
+	{
+		protect_cfg = flash_get_protect_cfg(type);
+		cmp_cfg = flash_get_cmp_cfg(type);
+	}
+
+	status_reg = flash_hal_read_status_reg(&s_flash.hal, s_flash.flash_cfg->status_reg_size);
+	
+#if CONFIG_FLASH_WRITE_STATUS_VOLATILE
+	flash_hal_set_volatile_status_write(&s_flash.hal);
+#endif
+	if (flash_is_need_update_status_reg(protect_cfg, cmp_cfg, status_reg)) {
+		flash_set_protect_cfg(&status_reg, protect_cfg);
+		flash_set_cmp_cfg(&status_reg, cmp_cfg);
+
+		//FLASH_LOGD("write status reg:%x, status_reg_size:%d\r\n", status_reg, s_flash.flash_cfg->status_reg_size);
 		flash_hal_write_status_reg(&s_flash.hal, s_flash.flash_cfg->status_reg_size, status_reg);
 	}
 }
@@ -542,7 +616,7 @@ bk_err_t bk_flash_driver_init(void)
 	s_flash.flash_id = flash_hal_get_id(&s_flash.hal);
 	FLASH_LOGI("id=0x%x\r\n", s_flash.flash_id);
 	flash_get_current_config();
-	flash_set_protect_type(FLASH_UNPROTECT_LAST_BLOCK);
+	flash_set_protect_type_normal(FLASH_UNPROTECT_LAST_BLOCK);
 #if (0 == CONFIG_JTAG)
 	flash_hal_disable_cpu_data_wr(&s_flash.hal);
 #endif
@@ -640,11 +714,13 @@ bk_err_t bk_flash_write_bytes(uint32_t address, const uint8_t *user_buf, uint32_
 {
 	flash_switch_to_line_mode_two();
 	if (address >= s_flash.flash_cfg->flash_size) {
+		flash_restore_line_mode();
 		FLASH_LOGW("write error:invalid address 0x%x\r\n", address);
 		return BK_ERR_FLASH_ADDR_OUT_OF_RANGE;
 	}
 
 	if (flash_is_area_write_disable(address)) {
+		flash_restore_line_mode();
 		return BK_ERR_FLASH_ADDR_OUT_OF_RANGE;
 	}
 	flash_write_common(user_buf, address, size);
@@ -717,16 +793,34 @@ void bk_flash_read_cbus(uint32_t address, void *user_buf, uint32_t size)
 }
 
 __attribute__((section(".iram")))
+bool is_addr_write_primary_cbus(uint32_t address, uint32_t size)
+{
+	uint32_t primary_vir_start = FLASH_PHY2VIRTUAL(CEIL_ALIGN_34(get_flash_map_offset(0)));
+	uint32_t primary_vir_end = FLASH_PHY2VIRTUAL(CEIL_ALIGN_34(get_flash_map_offset(0) + get_flash_map_phy_size(0)) - 34);
+	if (address >= primary_vir_start && address + size <= primary_vir_end) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+__attribute__((section(".iram")))
 void bk_flash_write_cbus(uint32_t address, const uint8_t *user_buf, uint32_t size)
 {
 	flash_switch_to_line_mode_two();
+	if (!is_addr_write_primary_cbus(address, size)) {
+		return;
+	}
 	bk_flash_cpu_write_enable();
-
+	if (!is_addr_write_primary_cbus(address, size)) {
+		return;
+	}
 #if CONFIG_SECUREBOOT
 	memcpy((void*)(0x02000000+address), (const void*)user_buf,size);
 #else
 	flash_memcpy((char*)(0x02000000+address), (const char*)user_buf,size);
 #endif
+	while(flash_hal_is_busy(&s_flash.hal));
 
 	bk_flash_cpu_write_disable();
 	flash_restore_line_mode();
@@ -856,6 +950,11 @@ bk_err_t bk_flash_write_status_reg(uint16_t status_reg_data)
 	flash_hal_write_status_reg(&s_flash.hal, s_flash.flash_cfg->status_reg_size, status_reg_data);
 	flash_restore_line_mode();
 	return BK_OK;
+}
+
+uint32_t bk_flash_get_crc_err_num(void)
+{
+	return flash_hal_get_crc_err_num(&s_flash.hal);
 }
 
 flash_protect_type_t bk_flash_get_protect_type(void)

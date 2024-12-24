@@ -31,7 +31,6 @@ typedef struct {
 #define yuv_buf_hal_set_global_ctrl(hal) yuv_buf_ll_init((hal)->hw)
 #define yuv_buf_hal_set_em_base_addr(hal, address) yuv_buf_ll_set_em_base_addr((hal)->hw, address)
 #define yuv_buf_hal_set_emr_base_addr(hal, address) yuv_buf_ll_set_emr_base_addr((hal)->hw, address)
-#define yuv_buf_hal_reset_config_to_default(hal) yuv_buf_ll_reset_config_to_default((hal)->hw)
 #define yuv_buf_hal_set_mclk_div(hal, mclk_div) yuv_buf_ll_set_mclk_div((hal)->hw, mclk_div)
 #define yuv_buf_hal_rencode_start(hal)		yuv_buf_ll_rencode_start((hal)->hw)
 #define yuv_buf_hal_enable_yuv_buf_mode(hal) yuv_buf_ll_enable_yuv_buf_mode((hal)->hw)

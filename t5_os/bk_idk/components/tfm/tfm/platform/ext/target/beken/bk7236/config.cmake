@@ -19,6 +19,7 @@ set(TEST_NS_SLIH_IRQ                 OFF   CACHE BOOL    "Whether to build NS re
 set(CRYPTO_HW_ACCELERATOR            ON         CACHE BOOL      "Whether to enable the crypto hardware accelerator on supported platforms")
 set(CRYPTO_NV_SEED                   OFF        CACHE BOOL      "Use stored NV seed to provide entropy")
 set(BL2                              ON         CACHE BOOL      "Whether to build BL2")
+set(JUMP                             ON         CACHE BOOL      "Whether to build JUMP")
 set(DEFAULT_MCUBOOT_FLASH_MAP        OFF        CACHE BOOL      "Whether to use the default flash map defined by TF-M project")
 set(FPGA                             OFF        CACHE BOOL      "Build for FPGA")
 

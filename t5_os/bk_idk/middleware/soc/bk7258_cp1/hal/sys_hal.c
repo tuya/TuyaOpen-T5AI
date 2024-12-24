@@ -2268,6 +2268,13 @@ void sys_hal_set_ana_cb_cal_manu(uint32_t value)
     sys_ll_set_ana_reg5_bcal_en(value);
 }
 
+// Modified by TUYA Start
+void sys_hal_set_ana_adc_div(uint32_t value)
+{
+    sys_ll_set_ana_reg5_adc_div(value);
+}
+// Modified by TUYA End
+
 void sys_hal_set_ana_cb_cal_trig(uint32_t value)
 {
     sys_ll_set_ana_reg5_bcal_start(value);

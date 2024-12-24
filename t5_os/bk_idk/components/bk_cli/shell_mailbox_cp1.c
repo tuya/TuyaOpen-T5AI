@@ -11,6 +11,8 @@
 #include "cache.h"
 #endif
 
+#define ACK_STATE_MASK   0xFFFF
+
 #define TX_QUEUE_LEN     8
 #define RX_BUFF_SIZE     160
 
@@ -37,6 +39,7 @@ typedef struct
 	u16    packet_tag;
 
 	u8     tx_stopped;
+	u8     log_blocked;
 
 	tx_complete_t   tx_complete_callback;
 
@@ -62,6 +65,8 @@ static u16        shell_mb_write_sync(shell_dev_t * shell_dev, u8 * pBuf, u16 Bu
 static u16        shell_mb_write_echo(shell_dev_t * shell_dev, u8 * pBuf, u16 BufLen);
 static bool_t     shell_mb_ctrl(shell_dev_t * shell_dev, u8 cmd, void *param);
 static bool_t     shell_mb_close(shell_dev_t * shell_dev);
+
+static void shell_mb_tx_isr2(shell_mb_ext_t *mb_ext);
 
 static const shell_dev_drv_t shell_mb_drv = 
 	{
@@ -101,6 +106,7 @@ shell_dev_t     atsvr_shell_dev_mb =
 		.dev_ext = &atsvr_dev_mb_ext
 	};
 #endif
+
 /* ===============================  internal functions  =========================== */
 static void shell_mb_rx_isr(shell_mb_ext_t *mb_ext, mb_chnl_cmd_t *cmd_buf)
 {
@@ -117,6 +123,23 @@ static void shell_mb_rx_isr(shell_mb_ext_t *mb_ext, mb_chnl_cmd_t *cmd_buf)
 		}
 
 		result = ACK_STATE_COMPLETE;
+	}
+	else if (cmd_buf->hdr.cmd == MB_CMD_LOG_UNBLOCK)
+	{
+		if (mb_ext->log_blocked == 0) {
+			return;
+		}
+		log_cmd_t * log_cmd = (log_cmd_t *)cmd_buf;
+		/* do nothing except notifying app to free buffer. */
+		if(mb_ext->tx_complete_callback != NULL)
+		{
+			mb_ext->tx_complete_callback(log_cmd->buf, log_cmd->tag);
+		}
+
+		result = ACK_STATE_COMPLETE;
+		mb_ext->log_blocked = 0;
+		shell_mb_tx_isr2(mb_ext);
+
 	}
 	else if(cmd_buf->hdr.cmd == MB_CMD_USER_INPUT)   /* cmd line inputs. */
 	{
@@ -163,7 +186,9 @@ static void shell_mb_rx_isr(shell_mb_ext_t *mb_ext, mb_chnl_cmd_t *cmd_buf)
 static void shell_mb_tx_isr2(shell_mb_ext_t *mb_ext)
 {
 	mb_chnl_cmd_t	mb_cmd_buf;
-
+	if (mb_ext->log_blocked) {
+		return;
+	}
 	/* next tx. */
 	if(mb_ext->list_out_idx != mb_ext->list_in_idx)
 	{
@@ -210,11 +235,16 @@ static void shell_mb_tx_cmpl_isr2(shell_mb_ext_t *mb_ext, mb_chnl_ack_t *ack_buf
 
 	//	return;
 	}
+	
+	if ( ((ack_buf->hdr.state & CHNL_STATE_COM_FAIL) == 0) && 
+     		(ack_buf->ack_state & ACK_STATE_BLOCK) ) {
+		mb_ext->log_blocked = 1;
+	}
 
 	/* MB_CMD_LOG_OUT tx complete. */
 
 	if( (ack_buf->hdr.state & CHNL_STATE_COM_FAIL) 
-		|| (ack_buf->ack_state != ACK_STATE_PENDING) )
+		|| ((ack_buf->ack_state & ACK_STATE_MASK) != ACK_STATE_PENDING) )
 	{
 		/* MB_CMD_LOG_OUT handle complete. */
 		/* so notify app to free buffer. */
@@ -224,6 +254,7 @@ static void shell_mb_tx_cmpl_isr2(shell_mb_ext_t *mb_ext, mb_chnl_ack_t *ack_buf
 			mb_ext->tx_complete_callback(log_cmd->buf, log_cmd->tag);
 		}
 	}
+
 }
 
 static void shell_mb_tx_cmpl_isr(shell_mb_ext_t *mb_ext, mb_chnl_ack_t *ack_buf)
@@ -414,7 +445,7 @@ static void shell_mb_flush(shell_mb_ext_t *mb_ext)
 
 static void shell_mb_tx_trigger(shell_mb_ext_t *mb_ext)
 {
-	if(mb_ext->tx_stopped == 0)
+	if(mb_ext->tx_stopped == 0 || mb_ext->log_blocked == 1)
 		return;
 
 	mb_ext->tx_stopped = 0;   // set tx_stopped to 0 firstly, then enable TX.
@@ -437,6 +468,7 @@ static bool_t shell_mb_init(shell_dev_t * shell_dev)
 
 	memset(mb_ext, 0, sizeof(shell_mb_ext_t));
 	mb_ext->tx_stopped = 1;
+	mb_ext->log_blocked = 0;
 	mb_ext->chnl_id = dev_id;
 
 	mb_ext->tx_sync_buf = mb_chnl_get_tx_buff(mb_ext->chnl_id);
@@ -577,7 +609,7 @@ static bool_t shell_mb_ctrl(shell_dev_t * shell_dev, u8 cmd, void *param)
 		case SHELL_IO_CTRL_GET_STATUS:
 			if(param == NULL)
 				return bFALSE;
-			
+
 			u16   free_items;
 
 			if(mb_ext->list_out_idx > mb_ext->list_in_idx)

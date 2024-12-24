@@ -2,9 +2,10 @@ if (CONFIG_SOC_BK7258) # CONFIG_SOC_BK7258
 if (CONFIG_MEDIA)
 set(incs include pipeline)
 
+set(srcs core/media_mem_share.c)
 
 if (CONFIG_MEDIA_APP)
-	set(srcs
+	list(APPEND srcs
 		cli/media_cli.c
 		app/media_app.c
 		comm/comm_act.c
@@ -25,15 +26,14 @@ if (CONFIG_MEDIA_APP AND CONFIG_AUD_INTF_TEST)
 endif()
 
 if (CONFIG_MEDIA_MAJOR)
-	set(srcs
+	list(APPEND srcs
 		core/media_ui.c
 		comm/frame_buffer.c
 	)
 endif() #CONFIG_MEDIA_MAJOR
 
 if (CONFIG_MEDIA_MINOR) #CONFIG_MEDIA_MINOR
-	set(srcs
-		)
+
 endif() #CONFIG_MEDIA_MINOR
 
 
@@ -194,6 +194,7 @@ if (CONFIG_MEDIA_MINOR)
 	list(APPEND srcs
 		mailbox/media_minor_mailbox.c
 		pipeline/jpeg_decode_pipeline_cp2.c
+		camera/yuv_rotate_cp2.c
 	)
 endif()#CONFIG_MEDIA_MINOR
 

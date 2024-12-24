@@ -1,0 +1,20 @@
+BK7258
+===================
+
+:link_to_translation:`zh_CN:[中文]`
+
+Introduction to Development Board
+------------------------------------------------------------------------
+
+ - BK7258 include three Cortex M33 core
+ - BK7258 supports FreeRTOS V10
+
+
+.. figure:: ../../_static/demo_board_7258.png
+    :align: center
+    :alt: BK7258 Demo Board
+    :figclass: align-center
+
+    BK7258 Demo Board
+
+

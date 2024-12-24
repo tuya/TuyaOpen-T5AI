@@ -84,7 +84,10 @@ endif()
 add_subdirectory(lib/ext)
 add_subdirectory(lib/fih)
 add_subdirectory(tools)
+
+if (CONFIG_BUILD_TFM)
 add_subdirectory(secure_fw)
+endif()
 
 if(NS OR TFM_S_REG_TEST OR TFM_NS_REG_TEST OR TEST_BL2 OR TEST_BL1_1 OR TEST_BL1_2)
     add_subdirectory(${TFM_TEST_REPO_PATH}/tfm_tests ${CMAKE_CURRENT_BINARY_DIR}/tf-m-tests)
@@ -93,6 +96,10 @@ endif()
 add_subdirectory(interface)
 if(BL2)
     add_subdirectory(bl2)
+endif()
+
+if(JUMP)
+    add_subdirectory(jump)
 endif()
 
 if(BL1 AND PLATFORM_DEFAULT_BL1)

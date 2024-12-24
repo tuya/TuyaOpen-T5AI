@@ -110,7 +110,7 @@ def gen_otp_efuse_config_file(aes_type, flash_aes_key, pubkey_pem_file, securebo
         data["data_type"] = "hex"
         data["status"] = "true"
         otp_efuse_config["Security_Data"].append(data)
-    else:
+    elif os.path.exists(pubkey_pem_file):
         h = Rotpk_hash(pubkey_pem_file, False)
         hash_dict = h.gen_rotpk_hash()
         bl2_pk_hash = hash_dict['bl2_rotpk_hash']

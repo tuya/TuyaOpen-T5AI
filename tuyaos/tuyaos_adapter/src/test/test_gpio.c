@@ -14,10 +14,17 @@ static void __gpio_irq_test(void *args)
     bk_printf("--- [%s %d]\r\n", __func__, __LINE__);
 }
 
+static void __gpio_cmd_usage(void)
+{
+    bk_printf("xgpio input|output [gpio num] 0|1\r\n");
+    bk_printf("xgpio irq [gpio num] [rase|fall|low|high|start|stop]\r\n");
+}
+
 void cli_gpio_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    if (argc == 0 || argv == NULL) {
-        bk_printf("[%s %d] parameter failed\r\n", __func__, __LINE__);
+    if (argc == 1) {
+        bk_printf("no parameter\r\n");
+        __gpio_cmd_usage();
         return;
     }
     for (int i = 0; i < argc; i++) {
@@ -34,8 +41,10 @@ void cli_gpio_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **arg
         cfg.direct = TUYA_GPIO_OUTPUT;
     else if (!strcmp("irq", argv[2]))
         irq = 1;
-    else
+    else {
+        __gpio_cmd_usage();
         return;
+    }
 
     if (irq) {
         TUYA_GPIO_IRQ_T cfg;

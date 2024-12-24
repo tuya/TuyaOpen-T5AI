@@ -490,6 +490,20 @@ def enc_from_config_json(cfg_json, nm):
     gen_file_list.add('%s_crc.bin'%(outfile))
     return outfile
 
+# add 0xff padding to binary file
+def add_padding_to_binary(binary_file):
+    with open(binary_file , 'ab')as f:
+        f.write(bytes([0xff] * 34))  # 34 bytes align
+
+def check_and_padding_binary(app_pack_secs, app_crc_name):
+    last_firmware = app_pack_secs[-1]['firmware']
+    last_firmware_size = os.path.getsize(last_firmware)
+    last_partition_raw_size = parse_int(app_pack_secs[-1]['size'])
+    last_firmware_aligned_size = (((last_firmware_size + 32 - 1) // 32) * 32) # 32 bytes align
+    app_crc_name += '.bin'
+    if last_firmware_aligned_size < last_partition_raw_size:
+        add_padding_to_binary(app_crc_name) # if the last firmware not fill up the partition, add padding value.
+
 #generate all app
 def package_json_rebuild():
     global image_name
@@ -508,6 +522,7 @@ def package_json_rebuild():
     #gen all_app_pack.bin
     app_pack_name = pack_from_config_json(config_json, 'all_app')
     app_crc_name = crc_from_config_json(config_json, app_pack_name)
+    check_and_padding_binary(app_pack_secs, app_crc_name)
     register_file_operation('%s.bin'%(app_pack_name), build_path, 'rm') #delete intermediate file
     
     src = '%s.bin'%(app_crc_name)
@@ -541,6 +556,7 @@ def package_json_enc_rebuild():
     #gen all_app_pack.bin
     all_app_pack_name = pack_from_config_json(config_json, 'all_app')
     all_app_crc_name  = crc_from_config_json(config_json, all_app_pack_name)
+    check_and_padding_binary(app_pack_secs, all_app_crc_name)
     all_app_enc_name  = enc_from_config_json(config_json, all_app_pack_name)
     #all_app_crc_name = crc_from_config_json(config_json, all_app_enc_name)
     create_only_support_enc('%s.bin'%(all_app_crc_name), '%s_crc.bin'%(all_app_enc_name), 0x110, 34)
@@ -554,7 +570,6 @@ def package_json_enc_rebuild():
     app_pack_name = pack_from_config_json(config_json, 'app')
     app_enc_name = enc_from_config_json(config_json, app_pack_name)
     os.system('python3 %s -i %s.bin -o %s -g %s -ap %s -pjd %s packager'%(ota_tool, app_pack_name, 'app_pack.rbl', header_path, armino_path, project_dir))
-
     gen_file_list.add('%s/app_pack.rbl'%(build_path))
 
 #generate all ab app
@@ -576,6 +591,7 @@ def package_json_ab_rebuild():
     #gen all_app_ab_crc.bin
     app_pack_name = pack_from_config_json(config_json, 'all_app')
     app_crc_name = crc_from_config_json(config_json, app_pack_name)
+    check_and_padding_binary(app_pack_secs, app_crc_name)
     register_file_operation('%s.bin'%(app_pack_name), build_path, 'rm') #delete intermediate file
 
     src = '%s.bin'%(app_crc_name)

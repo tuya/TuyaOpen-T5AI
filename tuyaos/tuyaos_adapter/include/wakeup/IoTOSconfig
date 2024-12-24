@@ -1,0 +1,6 @@
+# Ktuyaconf
+
+config ENABLE_WAKEUP
+    bool "ENABLE_WAKEUP: support wakeup"
+    default n
+	

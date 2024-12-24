@@ -872,19 +872,24 @@ bk_err_t bk_pwm_capture_init(pwm_chan_t sw_ch, const pwm_capture_init_config_t *
 	pwm_chan_init_common(sw_ch);
 
 	pwm_hal_set_pwm_ursx(&s_pwm[id].hal, hw_ch/2, 1) ;
-	pwm_hal_set_timx_arr(&s_pwm[id].hal, hw_ch/2, 0xffffffff);
+	pwm_hal_set_timx_arr(&s_pwm[id].hal, hw_ch/2, 0xfffffff);
 	//
 	PWM_LOGE("TODO:%s,fixed psc", __func__);
 	pwm_hal_set_prescaler_pscx(&s_pwm[id].hal, hw_ch/2, 25);
-	pwm_hal_set_pwm_dier_ccxie(&s_pwm[id].hal, hw_ch, 1);	//ccr2,5,8
+	pwm_hal_set_pwm_dier_ccxie(&s_pwm[id].hal, hw_ch*3/2, 1);
+	pwm_hal_set_pwm_dier_ccxie(&s_pwm[id].hal, hw_ch*3/2+1, 1);	
+	pwm_hal_set_pwm_dier_ccxie(&s_pwm[id].hal, hw_ch*3/2+2, 1);	
 
 	pwm_hal_set_pwm_ccmr_chxe(&s_pwm[id].hal, hw_ch, 1);	//channel 2
+	pwm_hal_set_pwm_ccmr_chxp(&s_pwm[id].hal, hw_ch, 0);
+	pwm_hal_set_pwm_cr1_oc1pe(&s_pwm[id].hal,1);
 
 	pwm_hal_set_timx_ccm(&s_pwm[id].hal, (hw_ch/2), 1);			 //CAPTURE mode
 	pwm_hal_set_smsx(&s_pwm[id].hal, (hw_ch/2), 5)	;			 //clear timer every capture
 
+
 	PWM_LOGE("TODO:%s,detect input type should change from hw_ch to xxx", __func__);
-	pwm_hal_set_tsx(&s_pwm[id].hal, (hw_ch/2), hw_ch);
+	//pwm_hal_set_tsx(&s_pwm[id].hal, (hw_ch/2), 2);
 
 #if 0
 	pwm_id_t id;
@@ -959,19 +964,6 @@ bk_err_t bk_pwm_capture_stop(pwm_chan_t sw_ch)
 	pwm_hal_stop_common(&s_pwm[id].hal, hw_ch);
 #endif
 	return BK_OK;
-}
-
-//It's up the caller to make sure the channel ID is correct
-uint32_t bk_pwm_capture_get_value(pwm_chan_t sw_ch)
-{
-#if 0
-	pwm_id_t id;
-	pwm_ch_t hw_ch;
-
-	pwm_sw_ch_to_hw_id_ch(sw_ch, &id, &hw_ch);
-	return pwm_hal_get_capture_value(&s_pwm[id].hal, hw_ch);
-#endif
-	return 0;
 }
 
 static pwm_group_t pwm_group_find_channel(pwm_chan_t sw_ch)
@@ -1839,6 +1831,160 @@ static void pwm_group_update_config(pwm_group_t group)
 		s_pwm_groups[group].is_param_need_update = false;
 		s_pwm_groups[group].is_flip_mode_need_update = false;
 	}
+}
+
+uint32_t pwm_capture_status(pwm_id_t id)
+{
+	pwm_hal_t *hal = &s_pwm[id].hal;
+
+	return pwm_hal_get_pwm_interrupt_status(hal);
+}
+
+uint32_t ccr_value1 = 0;
+uint32_t ccr_value2 = 0;
+uint32_t ccr_value31 = 0;
+uint32_t ccr_value32 = 0;
+uint32_t ccr_value41 = 0;
+uint32_t ccr_value42 = 0;
+uint32_t ccr_value51 = 0;
+uint32_t ccr_value52 = 0;
+//It's up the caller to make sure the channel ID is correct
+uint32_t bk_pwm_capture_get_value(pwm_chan_t sw_ch)
+{
+	PWM_LOGI("ccr_value1 %d,ccr_value2 %d\r\n",ccr_value1,ccr_value2);	
+	PWM_LOGI("duty %d,period %d\r\n",
+		(uint32_t)(((float)ccr_value2/(ccr_value1 + ccr_value2))*100),
+		ccr_value1 + ccr_value2);	
+	PWM_LOGI("ccr_value31 %d,ccr_value32 %d,ccr_value41 %d,ccr_value42 %d,ccr_value51 %d,ccr_value52 %d\r\n"
+	,ccr_value31
+	,ccr_value32
+	,ccr_value41
+	,ccr_value42
+	,ccr_value51
+	,ccr_value52);
+
+	return 0;
+}
+
+void pwm_capture_handler(pwm_id_t id)
+{
+	pwm_hal_t *hal = &s_pwm[id].hal;
+	uint32_t int_status = 0;
+	uint32_t cnt1 = 0;
+	uint32_t crr = 0;
+	uint32_t sh = 0;
+	uint32_t crr2 = 0;
+	uint32_t sh2 = 0;
+	uint32_t crr3 = 0;
+	uint32_t sh3 = 0;
+
+	crr2 = 0;
+	sh2 = 0;
+
+	int_status = pwm_hal_get_pwm_interrupt_status(hal);
+
+	if(int_status & 0x1)
+	{
+		crr = pwm_hal_get_ccr1_value(hal);
+		sh = pwm_hal_get_ccr1_shad_value(hal);
+
+		crr2 = pwm_hal_get_ccr2_value(hal);
+		sh2 = pwm_hal_get_ccr2_shad_value(hal);
+
+		crr3 = pwm_hal_get_ccr3_value(hal);
+		sh3 = pwm_hal_get_ccr3_shad_value(hal);
+
+		cnt1 = pwm_hal_get_tim1_cnt_value(&s_pwm[id].hal);
+
+	}
+	else if(int_status & 0x2)
+	{
+		crr = pwm_hal_get_ccr2_value(hal);
+		sh = pwm_hal_get_ccr2_shad_value(hal);
+
+		crr3 = pwm_hal_get_ccr3_value(hal);
+		sh3 = pwm_hal_get_ccr3_shad_value(hal);
+
+		cnt1 = pwm_hal_get_tim1_cnt_value(&s_pwm[id].hal);
+	}
+	else if(int_status & 0x8)
+	{
+		crr = pwm_hal_get_ccr4_value(hal);
+		sh = pwm_hal_get_ccr4_shad_value(hal);
+
+		crr3 = pwm_hal_get_ccr6_value(hal);
+		sh3 = pwm_hal_get_ccr6_shad_value(hal);
+
+		cnt1 = pwm_hal_get_tim2_cnt_value(&s_pwm[id].hal);
+	}
+	else if(int_status & 0x10)
+	{
+		crr = pwm_hal_get_ccr5_value(hal);
+		sh = pwm_hal_get_ccr5_shad_value(hal);
+
+		crr3 = pwm_hal_get_ccr6_value(hal);
+		sh3 = pwm_hal_get_ccr6_shad_value(hal);
+
+		cnt1 = pwm_hal_get_tim2_cnt_value(&s_pwm[id].hal);
+	}
+	else if(int_status & 0x40)
+	{
+		crr = pwm_hal_get_ccr7_value(hal);
+		sh = pwm_hal_get_ccr7_shad_value(hal);
+
+		cnt1 = pwm_hal_get_tim3_cnt_value(&s_pwm[id].hal);
+
+		crr2 = pwm_hal_get_ccr8_value(hal);
+		sh2 = pwm_hal_get_ccr8_shad_value(hal);
+
+		crr3 = pwm_hal_get_ccr9_value(hal);
+		sh3 = pwm_hal_get_ccr9_shad_value(hal);
+
+		ccr_value31 = crr;
+		ccr_value32 = sh;
+		ccr_value41 = crr2;
+		ccr_value42 = sh2;
+		ccr_value51 = crr3;
+		ccr_value52 = sh3;
+
+		if(pwm_hal_get_pwm_ccmr_ch5p(&s_pwm[id].hal) == 0)
+		{
+			ccr_value1 = sh;
+			pwm_hal_set_pwm_ccmr_ch5p(&s_pwm[id].hal,1);
+		}
+		else if(pwm_hal_get_pwm_ccmr_ch5p(&s_pwm[id].hal) == 1)
+		{
+			ccr_value2 = sh;
+			pwm_hal_set_pwm_ccmr_ch5p(&s_pwm[id].hal,0);
+		}
+		else
+		{
+			ccr_value1 = 0;
+			ccr_value2 = 0;
+			ccr_value31 = crr;
+			ccr_value32 = sh;
+			ccr_value41 = crr2;
+			ccr_value42 = sh2;
+			ccr_value51 = crr3;
+			ccr_value52 = sh3;
+		}
+	}
+	else if(int_status & 0x80)
+	{
+		crr = pwm_hal_get_ccr8_value(hal);
+		sh = pwm_hal_get_ccr8_shad_value(hal);
+
+		crr3 = pwm_hal_get_ccr9_value(hal);
+		sh3 = pwm_hal_get_ccr9_shad_value(hal);
+
+		cnt1 = pwm_hal_get_tim3_cnt_value(&s_pwm[id].hal);
+	}
+	else
+	{
+		PWM_LOGI("No capture channel\r\n");
+		PWM_LOGI("cnt1:%d,crr:%d,sh:%d,crr2:%d,sh2:%d,crr3:%d,sh3:%d\r\n",cnt1,crr,sh,crr2,sh2,crr3,sh3);
+	}
+
 }
 
 static void pwm_isr_common(pwm_id_t id)

@@ -18,7 +18,7 @@
 
 static uint32_t color_value = 0;
 static beken_timer_t lcd_rgb_timer;
-#define pdata_addr	0x60000000
+#define pdata_addr	0x60700000
 
 #define LCD_WIDTH       320             // 480
 #define LCD_HIGTH       480                //480             // 800
@@ -28,12 +28,12 @@ static beken_timer_t lcd_rgb_timer;
 static uint32_t lcd_width = 320;
 static uint32_t lcd_height = 480;
 static uint32_t lcd_ppi = PPI_320X480;
-//static char lcd_name[16] = "ili9488";
 static char *lcd_name = NULL;
 static int __check_chip_support(const char *str)
 {
     if (!os_strcmp(str, "ili9488") ||
         !os_strcmp(str, "st7701sn") ||
+        !os_strcmp(str, "gc9503_boe") ||
         !os_strcmp(str, "st7701s")) {
         return 1;
     }
@@ -50,6 +50,10 @@ static int __get_string_to_ppi(const char *str)
         lcd_width  = 480;
         lcd_height = 800;
         lcd_ppi = PPI_480X800;
+    } else if (!os_strcmp(str, "480x854")) {
+        lcd_width  = 480;
+        lcd_height = 854;
+        lcd_ppi = PPI_480X854;
     } else if (!os_strcmp(str, "480x480")) {
         lcd_width  = 480;
         lcd_height = 480;
@@ -65,8 +69,8 @@ static void color_test_usage(void)
 {
     bk_printf("color test usage:\r\n");
     bk_printf("\txlcd [device] [PPI] [color] [set color value]\r\n");
-    bk_printf("\t\tdevice: ili9488|st7701s|st7701s ...\r\n");
-    bk_printf("\t\tPPI: 320x480|480x800 ...\r\n");
+    bk_printf("\t\tdevice: ili9488|st7701s|st7701s|gc9503_boe ...\r\n");
+    bk_printf("\t\tPPI: 320x480|480x854|480x480|480x800 ...\r\n");
     bk_printf("\t\tcolor: red|blue|green|purple or set [value]\r\n");
     bk_printf("\texample:\r\n");
     bk_printf("\tcolor random:          xlcd ili9488 320x480\r\n");
@@ -142,6 +146,7 @@ static void lcd_rgb_change_color(const char *str)
     lcd_display.x_end = lcd_width - 1;
     lcd_display.y_start = 0;
     lcd_display.y_end = lcd_height - 1;
+    os_printf("--- %s, %d %d\n", lcd_name, lcd_width, lcd_height);
     ret = media_app_lcd_display(&lcd_display);
     if(BK_OK != ret)
     {
@@ -163,6 +168,9 @@ void cli_xlcd_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **arg
     for (int i = 0; i < argc; i++) {
         bk_printf("argv[%d]: %s\r\n", i, argv[i]);
     }
+
+    bk_printf("------- not used ------\r\n");
+    return;
 
     lcd_name = argv[1];
     if (!__check_chip_support(lcd_name)) {

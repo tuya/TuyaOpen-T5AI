@@ -262,6 +262,16 @@ __bk_weak bool rtos_is_in_interrupt_context(void)
 	return false;
 }
 
+__bk_weak bool rtos_local_irq_disabled(void)
+{
+    return false;
+}
+
+__bk_weak bool rtos_is_scheduler_suspended(void)
+{
+	return false;
+}
+
 __bk_weak int32 sys_drv_int_disable(uint32 param)
 {
 	return 0;

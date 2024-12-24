@@ -58,6 +58,7 @@ typedef struct
 	void (*fb_complete) (frame_buffer_t* buffer);  /**< dvp notify upper layer a complete frame ready */
 	frame_buffer_t* (*fb_malloc)(fb_type_t type, uint32_t size); /**< malloc jpeg psram buffer */
 	void (*fb_free)(frame_buffer_t* buffer);
+	int (*frame_ops)(uint32_t param);
 } dvp_camera_config_t;
 
 

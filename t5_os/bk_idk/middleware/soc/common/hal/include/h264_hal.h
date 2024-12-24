@@ -94,6 +94,8 @@ void h264_hal_local_info(h264_hal_t *hal);
 
 void h264_hal_int_config(h264_hal_t *hal,uint32_t int_mode);
 
+void h264_hal_set_vui_fps(h264_hal_t *hal,uint32_t fps);
+
 #ifdef __cplusplus
 }
 #endif

@@ -62,16 +62,6 @@ bk_err_t efuse_hal_write(efuse_hal_t *hal, uint8_t addr, uint8_t wr_data)
 		return BK_ERR_EFUSE_READ_FAIL;
 	}
 
-#if 0
-	ret = efuse_hal_check_can_write(read_data, wr_data);
-	if (ret == -1) {
-		return BK_OK;
-	}
-	if (ret == -2) {
-		return BK_ERR_EFUSE_CANNOT_WRTIE;
-	}
-#endif
-
 	efuse_ll_enable_vdd25(hal->hw);
 
 	efuse_ll_set_direction_write(hal->hw);

@@ -5,6 +5,8 @@ from .ota import *
 from .gen_license import get_license
 from .common import *
 
+OTA_CONFIRM = 0xA16D8FB0
+
 def gen_ota_config_file(ota_csv, outfile):
     ota = OTA(ota_csv)
     f = open(outfile, 'w+')
@@ -15,6 +17,11 @@ def gen_ota_config_file(ota_csv, outfile):
     if (ota.get_strategy().upper() == 'OVERWRITE'):
         line = f'#define %-45s %d\r\n' %(macro_name, 1)
         f.write(line)
+
+        macro_name = f'OVERWRITE_CONFIRM'
+        line = f'#define %-45s 0x%x\r\n' %(macro_name, OTA_CONFIRM)
+        f.write(line)
+
     else:
         line = f'#define %-45s %d\r\n' %(macro_name, 0)
         f.write(line)
@@ -24,7 +31,7 @@ def gen_ota_config_file(ota_csv, outfile):
         line = f'#define %-45s %d\r\n' %(macro_name, 1)
         f.write(line)
         macro_name = f'XIP_SET'
-        line = f'#define %-45s 0x%x\r\n' %(macro_name, 0xDEADBEEF)
+        line = f'#define %-45s 0x%x\r\n' %(macro_name, OTA_CONFIRM)
         f.write(line)
         macro_name = f'XIP_MAGIC_TYPE'
         line = f'#define %-45s %d\r\n' %(macro_name, 1)
@@ -50,6 +57,14 @@ def gen_ota_config_file(ota_csv, outfile):
 
     macro_name = f'CONFIG_OTA_ENCRYPTED'
     if ota.get_encrypt():
+        line = f'#define %-45s %d\r\n' %(macro_name, 1)
+        f.write(line)
+    else:
+        line = f'#define %-45s %d\r\n' %(macro_name, 0)
+        f.write(line)
+
+    macro_name = f'CONFIG_ANTI_ROLLBACK'
+    if ota.get_anti_rollback():
         line = f'#define %-45s %d\r\n' %(macro_name, 1)
         f.write(line)
     else:
