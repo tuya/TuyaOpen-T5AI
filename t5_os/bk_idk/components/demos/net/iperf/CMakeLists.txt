@@ -4,4 +4,4 @@ set(srcs
 	)
 endif()
 
-armino_component_register(SRCS "${srcs}" PRIV_REQUIRES bk_common lwip_intf_v2_1)
+armino_component_register(SRCS "${srcs}" PRIV_REQUIRES bk_common lwip_intf_v2_1 psa_mbedtls)

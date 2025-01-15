@@ -17,61 +17,31 @@
 
 #define TAG "HTTPS_OTA"
 
-extern UINT8  ota_flag ;
+#define IMAGE_HEADER_SIZE 5120
+#define DEFAULT_OTA_BUF_SIZE IMAGE_HEADER_SIZE
 
-#define HTTPS_INPUT_SIZE   (5120)
+security_ota_cb_t security_ota_cb = NULL;
 
-/* this crt for url https://docs.bekencorp.com , support test*/
-const char ca_crt_rsa[] = {
-"-----BEGIN CERTIFICATE-----\r\n"
-"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\r\n"
-"clib3BcxKZX9qK4A6FAATghuSQ==\r\n"
-"-----END CERTIFICATE-----\r\n"
-};
+void security_ota_dispatch_event(security_ota_event_id_t event_id, void* event_data, int event_data_len)
+{
+	security_ota_event_t event;
+	event.event_id = event_id;
+	event.data = event_data;
+	event.data_len = event_data_len;
+	if(security_ota_cb != NULL)
+		security_ota_cb(event);
+}
 
-bk_http_client_handle_t bk_https_client_flash_init(bk_http_input_t config)
+bk_http_client_handle_t bk_https_client_flash_init(security_ota_config_t ota_config)
 {
 	bk_http_client_handle_t client = NULL;
 
-	ota_flag = 1;
 #if CONFIG_SYSTEM_CTRL
 	bk_wifi_ota_dtim(1);
 #endif
-	security_ota_init();
-	client = bk_http_client_init(&config);
+	security_ota_cb = ota_config.ota_event_handler;
+	security_ota_init(ota_config.http_config->url);
+	client = bk_http_client_init(ota_config.http_config);
 
 	return client;
 
@@ -81,15 +51,11 @@ bk_err_t bk_https_client_flash_deinit(bk_http_client_handle_t client)
 {
 	int err;
 
-	ota_flag = 0;
 #if CONFIG_SYSTEM_CTRL
 	bk_wifi_ota_dtim(0);
 #endif
-	if (security_ota_deinit() != 0) {
-		return BK_FAIL;
-	}
 
-	if(!client)
+	if(client)
 		err = bk_http_client_cleanup(client);
 	else
 		return BK_FAIL;
@@ -100,18 +66,14 @@ bk_err_t bk_https_client_flash_deinit(bk_http_client_handle_t client)
 
 bk_err_t https_ota_event_cb(bk_http_client_event_t *evt)
 {
-	int ret = BK_OK;
-
     if(!evt) {
         return BK_FAIL;
     }
 
     switch (evt->event_id) {
     case HTTP_EVENT_ERROR:
-	BK_LOGE(TAG, "HTTPS_EVENT_ERROR\r\n");
 	break;
     case HTTP_EVENT_ON_CONNECTED:
-	BK_LOGE(TAG, "HTTPS_EVENT_ON_CONNECTED\r\n");
 #ifdef CONFIG_HTTP_OTA_WITH_BLE
 #if CONFIG_BLUETOOTH
 	bk_ble_register_sleep_state_callback(ble_sleep_cb);
@@ -119,60 +81,36 @@ bk_err_t https_ota_event_cb(bk_http_client_event_t *evt)
 #endif
 	break;
     case HTTP_EVENT_HEADER_SENT:
-	BK_LOGE(TAG, "HTTPS_EVENT_HEADER_SENT\r\n");
 	break;
     case HTTP_EVENT_ON_HEADER:
-	BK_LOGE(TAG, "HTTPS_EVENT_ON_HEADER\r\n");
 	break;
     case HTTP_EVENT_ON_DATA:
-	ret = security_ota_parse_data((char *)evt->data,evt->data_len);
-	if (ret != BK_OK){
-		BK_LOGE(TAG, "HTTP_EVENT_ON_DATA err, ret:-0x%x\r\n", -ret);
-		return BK_FAIL;
-	}
-	BK_LOGD(TAG, "HTTP_EVENT_ON_DATA, length:%d\r\n", evt->data_len);
+	security_ota_parse_data((char *)evt->data,evt->data_len);
 	break;
     case HTTP_EVENT_ON_FINISH:
-	if (security_ota_parse_data((char*)bk_http_ptr->wr_buf, bk_http_ptr->wr_last_len) !=0) {
-		return BK_FAIL;
-	}
-
-	bk_https_client_flash_deinit(evt->client);
-	BK_LOGI(TAG, "HTTPS_EVENT_ON_FINISH\r\n");
+	// bk_https_client_flash_deinit(evt->client);
 	break;
     case HTTP_EVENT_DISCONNECTED:
-	BK_LOGE(TAG, "HTTPS_EVENT_DISCONNECTED\r\n");
 	break;
 
     }
     return BK_OK;
 }
 
-int bk_https_ota_download(const char *url)
+int bk_https_ota_download(security_ota_config_t ota_config)
 {
-	int err;
+	int err = 0;
 
-      if(!url)
-      {
-          err = BK_FAIL;
-          BK_LOGI(TAG, "url is NULL\r\n");
-
-          return err;
-      }
-	bk_http_input_t config = {
-	    .url = url,
-	    .cert_pem = ca_crt_rsa,
-	    .event_handler = https_ota_event_cb,
-	    .buffer_size = HTTPS_INPUT_SIZE,
-	    .timeout_ms = 15000
-	};
-
-	bk_http_client_handle_t client = bk_https_client_flash_init(config);
+	bk_http_client_handle_t client = bk_https_client_flash_init(ota_config);
 	if (client == NULL) {
 		BK_LOGI(TAG, "client is NULL\r\n");
 		err = BK_FAIL;
 		return err;
 	}
+	char resume_download[20];
+	snprintf(resume_download,20,"bytes=%u-", security_ota_get_restart());
+	bk_http_client_set_header(client, "Range", resume_download);
+
 	err = bk_http_client_perform(client);
 	if(err == BK_OK){
 		BK_LOGI(TAG, "bk_http_client_perform ok\r\n");
@@ -180,7 +118,139 @@ int bk_https_ota_download(const char *url)
 	} else {
 		bk_https_client_flash_deinit(client);
 		BK_LOGI(TAG, "bk_http_client_perform fail, err:%x\r\n", err);
+		return err;
 	}
+	bk_https_client_flash_deinit(client);
 
 	return err;
+}
+
+static bool redirection_required(int status_code)
+{
+	switch (status_code) {
+		case HttpStatus_MovedPermanently:
+		case HttpStatus_Found:
+		case HttpStatus_SeeOther:
+		case HttpStatus_TemporaryRedirect:
+		case HttpStatus_PermanentRedirect:
+			return true;
+		default:
+			return false;
+	}
+	return false;
+}
+
+static bool process_again(int status_code)
+{
+	switch (status_code) {
+		case HttpStatus_MovedPermanently:
+		case HttpStatus_Found:
+		case HttpStatus_SeeOther:
+		case HttpStatus_TemporaryRedirect:
+		case HttpStatus_PermanentRedirect:
+		case HttpStatus_Unauthorized:
+			return true;
+		default:
+			return false;
+	}
+	return false;
+}
+
+static bk_err_t _http_handle_response_code(bk_http_client_handle_t http_client, int status_code)
+{
+	bk_err_t err;
+	if (redirection_required(status_code)) {
+		err = bk_http_client_set_redirection(http_client);
+		if (err != BK_OK) {
+			BK_LOGE(TAG, "URL redirection Failed");
+			return err;
+		}
+	} else if (status_code == HttpStatus_Unauthorized) {
+		BK_LOGE(TAG, "HttpStatus_Unauthorized\r\n");
+		bk_http_client_add_auth(http_client);
+	} else if(status_code == HttpStatus_NotFound || status_code == HttpStatus_Forbidden) {
+		BK_LOGE(TAG, "File not found(%d)", status_code);
+		return BK_FAIL;
+	} else if (status_code >= HttpStatus_BadRequest && status_code < HttpStatus_InternalError) {
+		BK_LOGE(TAG, "Client error (%d)", status_code);
+		return BK_FAIL;
+	} else if (status_code >= HttpStatus_InternalError) {
+		BK_LOGE(TAG, "Server error (%d)", status_code);
+		return BK_FAIL;
+	}
+	else {
+		BK_LOGE(TAG, "status_code: (%d)", status_code);
+	}
+
+	char upgrade_data_buf[DEFAULT_OTA_BUF_SIZE];
+	// process_again() returns true only in case of redirection.
+	if (process_again(status_code)) {
+		 BK_LOGE(TAG, "_http_handle_response_code status_code: %d\r\n", status_code);
+		while (1) {
+			/*
+			 *	In case of redirection, bk_http_client_read() is called
+			 *	to clear the response buffer of http_client.
+			 */
+			int data_read = bk_http_client_read(http_client, upgrade_data_buf, DEFAULT_OTA_BUF_SIZE);
+			BK_LOGE(TAG, "_http_handle_response_code data_read: !!!!!!!!!!%d\r\n", data_read);
+			if (data_read <= 0) {
+				return BK_OK;
+			}
+		}
+	}
+	return BK_OK;
+}
+
+static bk_err_t _http_connect(bk_http_client_handle_t http_client)
+{
+	bk_err_t err = BK_FAIL;
+	int status_code, header_ret;
+	do {
+		char *post_data = NULL;
+		/* Send POST request if body is set.
+		 * Note: Sending POST request is not supported if partial_http_download
+		 * is enabled
+		 */
+		int post_len = bk_http_client_get_post_field(http_client, &post_data);
+		err = bk_http_client_open(http_client, post_len);
+		if (err != BK_OK) {
+			BK_LOGE(TAG, "Failed to open HTTP connection\r\n");
+			return err;
+		}
+		if (post_len) {
+			BK_LOGI(TAG, "post_len:%d\r\n", post_len);
+			int write_len = 0;
+			while (post_len > 0) {
+				write_len = bk_http_client_write(http_client, post_data, post_len);
+				if (write_len < 0) {
+					BK_LOGE(TAG, "Write failed\r\n");
+					return BK_FAIL;
+				}
+				post_len -= write_len;
+				post_data += write_len;
+			}
+		}
+		BK_LOGI(TAG, "BEGIN FEATCH HEADER\r\n");
+		header_ret = bk_http_client_fetch_headers(http_client);
+		if (header_ret < 0) {
+			BK_LOGE(TAG, "bk_http_client_fetch_headers fail\r\n");
+			return header_ret;
+		}
+		else {
+			BK_LOGD(TAG, "header_ret:%d\r\n", header_ret);
+		}
+		status_code = bk_http_client_get_status_code(http_client);
+		err = _http_handle_response_code(http_client, status_code);
+		if (err != BK_OK) {
+			return err;
+		}
+	} while (process_again(status_code));
+	BK_LOGD(TAG, "_http_connect over\r\n");
+	return err;
+}
+
+static void _http_cleanup(bk_http_client_handle_t client)
+{
+	bk_http_client_close(client);
+	bk_http_client_cleanup(client);
 }

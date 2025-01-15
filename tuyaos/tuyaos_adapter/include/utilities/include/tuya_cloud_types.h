@@ -255,6 +255,7 @@ typedef struct {
         uint32_t  ip4;
     } u_addr;
     IP_ADDR_TYPE type;
+    BOOL_T dhcpen;  /* enable dhcp or not */
 } TUYA_IP_ADDR_T;
 
 #define IPADDR4_FMT           "%d.%d.%d.%d"
@@ -265,6 +266,8 @@ typedef struct
     char ip[16];    /* ip addr:  xxx.xxx.xxx.xxx  */
     char mask[16];  /* net mask: xxx.xxx.xxx.xxx  */
     char gw[16];    /* gateway:  xxx.xxx.xxx.xxx  */
+    char dns[16];    /* dns server:  xxx.xxx.xxx.xxx  */
+    BOOL_T dhcpen;  /* enable dhcp or not */
 } NW_IP_S;
 /* tuyaos definition of IP addr */
 typedef uint32_t TUYA_IP_ADDR_T;
@@ -417,13 +420,13 @@ typedef struct{
 
 /**
  * @brief flash type
- * 
+ *
  */
 typedef enum {
     TUYA_FLASH_TYPE_BTL0 = 0,
     TUYA_FLASH_TYPE_BTL1,
     TUYA_FLASH_TYPE_STACK,
-    TUYA_FLASH_TYPE_APP_BIN,    
+    TUYA_FLASH_TYPE_APP_BIN,
     TUYA_FLASH_TYPE_APP,
     TUYA_FLASH_TYPE_OTA,
     TUYA_FLASH_TYPE_USER0,
@@ -431,7 +434,7 @@ typedef enum {
     TUYA_FLASH_TYPE_KV_DATA,
     TUYA_FLASH_TYPE_KV_SWAP,
     TUYA_FLASH_TYPE_KV_KEY,
-    TUYA_FLASH_TYPE_UF,    
+    TUYA_FLASH_TYPE_UF,
     TUYA_FLASH_TYPE_INFO,
     TUYA_FLASH_TYPE_KV_UF,
     TUYA_FLASH_TYPE_KV_PROTECT,
@@ -450,7 +453,7 @@ typedef enum {
 
 /**
  * @brief flash partition information
- * 
+ *
  */
 typedef struct {
     uint32_t block_size;
@@ -460,7 +463,7 @@ typedef struct {
 
 /**
  * @brief flash type base information
- * 
+ *
  */
 #ifndef TUYA_FLASH_TYPE_MAX_PARTITION_NUM
 #define TUYA_FLASH_TYPE_MAX_PARTITION_NUM (TUYA_FLASH_TYPE_MAX)
@@ -710,6 +713,15 @@ typedef enum {
     TUYA_GPIO_LEVEL_NONE,
 } TUYA_GPIO_LEVEL_E;
 
+typedef enum {
+    TUYA_GPIO_WAKEUP_LOW = 0,
+    TUYA_GPIO_WAKEUP_HIGH,
+    TUYA_GPIO_WAKEUP_RISE,
+    TUYA_GPIO_WAKEUP_FALL,
+    TUYA_GPIO_WAKEUP_MAX,
+} TUYA_GPIO_WAKE_TYPE_E;
+
+
 /**
  * @brief gpio direction
  */
@@ -764,7 +776,7 @@ typedef struct {
 
 /**
  * @brief i2c num
- * 
+ *
  */
 typedef enum {
     TUYA_I2C_NUM_0,		    // I2C 0
@@ -844,7 +856,7 @@ typedef void (*TUYA_I2C_IRQ_CB)(TUYA_I2C_NUM_E port, TUYA_IIC_IRQ_EVT_E event);
 
 /**
  * @brief i2c flag
- * 
+ *
  */
 // #define TUYA_I2C_FLAG_WR              (1u << 0) // write flag
 // #define TUYA_I2C_FLAG_RD              (1u << 1) // read flag
@@ -856,7 +868,7 @@ typedef void (*TUYA_I2C_IRQ_CB)(TUYA_I2C_NUM_E port, TUYA_IIC_IRQ_EVT_E event);
 
 /**
  * @brief i2c message struct
- * 
+ *
  */
 // typedef struct {
 //     uint32_t        flags;
@@ -867,7 +879,7 @@ typedef void (*TUYA_I2C_IRQ_CB)(TUYA_I2C_NUM_E port, TUYA_IIC_IRQ_EVT_E event);
 
 /**
  * @brief PWM flag
- * 
+ *
  */
 typedef enum {
     TUYA_PWM_NUM_0,		    // PWM 0
@@ -914,7 +926,7 @@ typedef struct {
 
 /**
  * @brief pwm cb, used in irq mode
- * 
+ *
  */
 typedef void (*TUYA_PWM_IRQ_CB)(TUYA_PWM_NUM_E port, TUYA_PWM_CAPTURE_DATA_T data, void *arg);
 
@@ -939,7 +951,7 @@ typedef struct {
 
 /**
  * @brief spi mode
- * 
+ *
  */
 typedef enum {
     TUYA_SPI_NUM_0,		    // SPI 0
@@ -960,7 +972,7 @@ typedef enum {
 
 /**
  * @brief spi bit order
- * 
+ *
  */
 typedef enum {
     TUYA_SPI_ORDER_MSB2LSB  = 0,    // SPI Bit order from MSB to LSB
@@ -978,7 +990,7 @@ typedef enum {
 
 /**
  * @brief spi databits
- * 
+ *
  */
 typedef enum {
     TUYA_SPI_DATA_BIT8  = 0,
@@ -987,7 +999,7 @@ typedef enum {
 
 /**
  * @brief spi cs mode
- * 
+ *
  */
 typedef enum {
     TUYA_SPI_AUTO_TYPE  = 0,            // hardware auto set
@@ -997,7 +1009,7 @@ typedef enum {
 
 /**
  * @brief spi config
- * 
+ *
  */
 typedef struct {
     TUYA_SPI_ROLE_E      role;
@@ -1006,7 +1018,7 @@ typedef struct {
     TUYA_SPI_DATABITS_E  databits;
     TUYA_SPI_BIT_ORDER_E bitorder;
     uint32_t               freq_hz;
-    uint32_t               spi_dma_flags; /*!< SPI dma format , 1 use dma */ 
+    uint32_t               spi_dma_flags; /*!< SPI dma format , 1 use dma */
 } TUYA_SPI_BASE_CFG_T;
 
 /****** SPI Event *****/
@@ -1020,13 +1032,13 @@ typedef enum {
 
 /**
  * @brief spi cb,used in irq mode
- * 
+ *
  */
 typedef void (*TUYA_SPI_IRQ_CB)(TUYA_SPI_NUM_E port, TUYA_SPI_IRQ_EVT_E event);
 
 /**
  * @brief SPI Status
- * 
+ *
  */
 typedef struct {
     uint32_t busy       : 1;              ///< Transmitter/Receiver busy flag,1 is busy
@@ -1036,7 +1048,7 @@ typedef struct {
 
 /**
  * @brief i2s message struct
- * 
+ *
  */
 
 /**
@@ -1089,28 +1101,28 @@ typedef struct {
     TUYA_I2S_BITS_PER_SAMP_E    bits_per_sample;            /*!< I2S sample bits in one channel */
     TUYA_I2S_CHANNEL_FMT_E      channel_format;             /*!< I2S channel format.*/
     TUYA_I2S_COMM_FORMAT_E      communication_format;       /*!< I2S communication format */
-    uint32_t                    i2s_dma_flags;              /*!< I2S dma format , 1 use dma */  
+    uint32_t                    i2s_dma_flags;              /*!< I2S dma format , 1 use dma */
 }TUYA_I2S_BASE_CFG_T;
 
     // 文件访问权限
 #define TUYA_IRUSR  0400    /* Read by owner.  */
 #define TUYA_IWUSR  0200    /* Write by owner.  */
 #define TUYA_IXUSR  0100    /* Execute by owner.  */
-     
-     
+
+
     // 缓冲区搜索起始位置类型
 #define TUYA_SEEK_SET   0   /* Seek from beginning of file.  */
 #define TUYA_SEEK_CUR   1   /* Seek from current position.  */
 #define TUYA_SEEK_END   2   /* Seek from end of file.  */
-     
+
 #define TUYA_R_OK       4
 #define TUYA_W_OK       2
 #define TUYA_X_OK       1
 #define TUYA_F_OK       0
- 
+
 typedef void* TUYA_DIR;
 typedef void* TUYA_FILEINFO;
-typedef void* TUYA_FILE; 
+typedef void* TUYA_FILE;
 
 
 /**
@@ -1207,18 +1219,17 @@ typedef struct {
  *  ota pack data, write to flash addr(start_addr + offset)
  */
 typedef struct {
-    uint32_t   total_len;     ///< ota image totle len   
-    uint32_t   start_addr;    ///< ota flash start addr 
+    uint32_t   total_len;     ///< ota image totle len
+    uint32_t   start_addr;    ///< ota flash start addr
     uint32_t   offset;        ///< ota image offset
     UCHAR_T* data;          ///< ota data
     uint32_t   len;           ///< ota data len
     void*  pri_data;      ///< private pointer
-
 } TUYA_OTA_DATA_T;
 
 /**
  * @brief uart type
- * 
+ *
  */
 typedef enum {
     TUYA_UART_NUM_0,		    // UART 0
@@ -1234,13 +1245,12 @@ typedef enum {
     TUYA_UART_SYS = 0,
     TUYA_UART_USB,
     TUYA_UART_SDIO,
-    TUYA_UART_WCH,
     TUYA_UART_MAX_TYPE,
 } TUYA_UART_TYPE_E;
 
 /**
  * @brief uart databits
- * 
+ *
  */
 typedef enum {
     TUYA_UART_DATA_LEN_5BIT      = 0x05,
@@ -1251,7 +1261,7 @@ typedef enum {
 
 /**
  * @brief uart stop bits
- * 
+ *
  */
 typedef enum {
     TUYA_UART_STOP_LEN_1BIT      = 0x01,
@@ -1261,7 +1271,7 @@ typedef enum {
 
 /**
  * @brief uart parity
- * 
+ *
  */
 typedef enum {
     TUYA_UART_PARITY_TYPE_NONE    = 0,
@@ -1282,7 +1292,7 @@ typedef enum {
 
 /**
  * @brief uart config
- * 
+ *
  */
 typedef struct {
     uint32_t                      baudrate;
@@ -1295,7 +1305,7 @@ typedef struct {
 
 /**
  * @brief uart irq callback
- * 
+ *
  * @param[in] port_id: uart port id
  *                     the high 16bit - uart type
  *                                      it's value must be one of the TUYA_UART_TYPE_E type
@@ -1325,7 +1335,7 @@ typedef struct {
 
 /**
  * @brief timer num
- * 
+ *
  */
 typedef enum {
     TUYA_TIMER_NUM_0,		    // TIMER 0
@@ -1341,7 +1351,7 @@ typedef enum {
         (__CFG)->mode = __MODE;                         \
         (__CFG)->cb   = __CB;                           \
         (__CFG)->arg  = __ARG
-    
+
 typedef enum {
     TUYA_TIMER_MODE_ONCE = 0,
     TUYA_TIMER_MODE_PERIOD
@@ -1361,7 +1371,7 @@ typedef struct {
  */
 typedef struct {
     TUYA_GPIO_NUM_E gpio_num;
-    TUYA_GPIO_LEVEL_E level;
+    TUYA_GPIO_WAKE_TYPE_E  level;
 } TUYA_WAKEUP_SOURCE_GPIO_T;
 
 /**
@@ -1375,7 +1385,7 @@ typedef struct {
 
 /**
  * @brief timer num
- * 
+ *
  */
 typedef enum {
     TUYA_RTC_NUM_0,         // RTC 0
@@ -1392,6 +1402,8 @@ typedef enum {
     TUYA_RTC_MODE_PERIOD
 } TUYA_RTC_MODE_E;
 
+
+typedef void (*TUYA_RTC_ISR_CB)(TUYA_RTC_NUM_E port, void *args);
 /**
  * @brief tuya wake source rtc
  */
@@ -1399,6 +1411,8 @@ typedef struct {
     TUYA_RTC_NUM_E RTC_num;
     TUYA_RTC_MODE_E mode;
     uint32_t ms;
+    TUYA_RTC_ISR_CB cb;
+    void    *args;
 } TUYA_WAKEUP_SOURCE_RTC_T;
 
 /**
@@ -1454,6 +1468,16 @@ typedef enum {
     TRANS_SEND = 1,
 }TUYA_TRANS_TYPE_E;
 
+typedef enum {
+    TUYA_NETIF_STA_IDX = 0,
+    TUYA_NETIF_AP_IDX,
+    TUYA_NETIF_ETH_IDX,
+    TUYA_NETIF_NUM
+} TUYA_NETIF_TYPE_E;
+
+/* tuyaos definition of IP addr */
+typedef uint32_t TUYA_IP_ADDR_T;
+
 /* tuyaos errorno */
 typedef int TUYA_ERRNO;
 #define UNW_SUCCESS       0
@@ -1488,8 +1512,8 @@ typedef int TUYA_ERRNO;
 #define UNW_EMSGSIZE      -29
 #define TUYA_ERRNO_NOT_SUPPORT 255
 
-/** 
-* tkl thread priority define 
+/**
+* tkl thread priority define
 **/
 
 #define TKL_THREAD_PRI_HIGHEST      8

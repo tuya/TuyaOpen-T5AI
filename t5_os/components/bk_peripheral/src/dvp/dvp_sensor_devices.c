@@ -25,6 +25,11 @@
 
 #include "dvp_sensor_devices.h"
 
+// Modified by TUYA Start
+#include "tuya_cloud_types.h"
+#include "tkl_i2c.h"
+// Modified by TUYA End
+
 #define DVP_I2C_TIMEOUT (2000)
 
 const dvp_sensor_config_t *dvp_sensor_configs[] =
@@ -47,6 +52,13 @@ void dvp_sensor_devices_init(void)
 
 int dvp_camera_i2c_read_uint8(uint8_t addr, uint8_t reg, uint8_t *value)
 {
+//Modified by TUYA Start
+#if CONFIG_TUYA_GPIO_MAP
+    int port = tkl_vi_get_dvp_i2c_idx();
+    tkl_i2c_master_send(port, addr, &reg, 1, 1);
+    tkl_i2c_master_receive(port, addr, value, 1, 0);
+    bk_printf("read addr %02x reg %02x value %02x\r\n", addr, reg, *value);
+#else
 	i2c_mem_param_t mem_param = {0};
 
 	mem_param.dev_addr = addr;
@@ -57,10 +69,19 @@ int dvp_camera_i2c_read_uint8(uint8_t addr, uint8_t reg, uint8_t *value)
 	mem_param.data = value;
 
 	return bk_i2c_memory_read(CONFIG_DVP_CAMERA_I2C_ID, &mem_param);
+#endif
+//Modified by TUYA End
 }
 
 int dvp_camera_i2c_read_uint16(uint8_t addr, uint16_t reg, uint8_t *value)
 {
+//Modified by TUYA Start
+#if CONFIG_TUYA_GPIO_MAP
+    uint8_t r = reg;
+    int port = tkl_vi_get_dvp_i2c_idx();
+    tkl_i2c_master_send(port, addr, &r, 1, 1);
+    tkl_i2c_master_receive(port, addr, value, 2, 0);
+#else
 	i2c_mem_param_t mem_param = {0};
 
 	mem_param.dev_addr = addr;
@@ -71,10 +92,19 @@ int dvp_camera_i2c_read_uint16(uint8_t addr, uint16_t reg, uint8_t *value)
 	mem_param.data = value;
 
 	return bk_i2c_memory_read(CONFIG_DVP_CAMERA_I2C_ID, &mem_param);
+#endif
+//Modified by TUYA End
 }
 
 int dvp_camera_i2c_write_uint8(uint8_t addr, uint8_t reg, uint8_t value)
 {
+    //Modified by TUYA Start
+#if CONFIG_TUYA_GPIO_MAP
+    uint8_t r[2];
+    int port = tkl_vi_get_dvp_i2c_idx();
+    r[0] = reg; r[1] = value;
+    tkl_i2c_master_send(port, addr, r, 2, 0);
+#else
 	i2c_mem_param_t mem_param = {0};
 	mem_param.dev_addr = addr;
 	mem_param.mem_addr_size = I2C_MEM_ADDR_SIZE_8BIT;
@@ -84,10 +114,21 @@ int dvp_camera_i2c_write_uint8(uint8_t addr, uint8_t reg, uint8_t value)
 	mem_param.data = (uint8_t *)(&value);
 
 	return bk_i2c_memory_write(CONFIG_DVP_CAMERA_I2C_ID, &mem_param);
+#endif
+//Modified by TUYA End
 }
 
 int dvp_camera_i2c_write_uint16(uint8_t addr, uint16_t reg, uint8_t value)
 {
+    //Modified by TUYA Start
+#if CONFIG_TUYA_GPIO_MAP
+    uint8_t r[2];
+    int port = tkl_vi_get_dvp_i2c_idx();
+    r[0] = (reg >> 8) & 0xff;
+    r[1] = (reg >> 0) & 0xff;
+    r[2] = value;
+    tkl_i2c_master_send(port, addr, r, 3, 0);
+#else
 	i2c_mem_param_t mem_param = {0};
 	mem_param.dev_addr = addr;
 	mem_param.mem_addr_size = I2C_MEM_ADDR_SIZE_16BIT;
@@ -97,6 +138,8 @@ int dvp_camera_i2c_write_uint16(uint8_t addr, uint16_t reg, uint8_t value)
 	mem_param.data = (uint8_t *)(&value);
 
 	return bk_i2c_memory_write(CONFIG_DVP_CAMERA_I2C_ID, &mem_param);
+#endif
+//Modified by TUYA End
 }
 
 

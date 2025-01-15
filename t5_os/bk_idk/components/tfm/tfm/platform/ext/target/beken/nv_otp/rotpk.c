@@ -19,7 +19,7 @@ tfm_plat_get_rotpk_hash(uint8_t image_id,
 	if (image_id == 0) {
 		*rotpk_hash_size = 32;
 		return tfm_plat_otp_read(PLAT_OTP_ID_BL2_ROTPK_0, 32, rotpk_hash);
-        } else {
+	} else {
 		OTP_LOGE("invalid image_id=%d\r\n", image_id);
 		return -1;
 	}

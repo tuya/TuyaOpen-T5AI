@@ -505,7 +505,7 @@ const phy_os_funcs_t g_phy_os_funcs = {
 #endif
 
     ////
-    ._delay                    = delay,
+    ._delay                    = bk_delay,
     ._delay_us                 = delay_us,
     ._ddev_control             = ddev_control,
     ._bk_wdt_stop              = bk_wdt_stop,

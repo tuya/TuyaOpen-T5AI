@@ -26,20 +26,24 @@ static uint32_t s_efuse_data = 0;
 
 int bk_efuse_init(void)
 {
-        uint8_t *efuse_byte_p = (uint8_t*)&s_efuse_data;
-        int offset;
+	uint8_t *efuse_byte_p = (uint8_t*)&s_efuse_data;
+	int offset;
 
-        bk_efuse_driver_init();
-        for (offset = 0; offset < 4; offset ++) {
-                bk_efuse_read_byte(offset, efuse_byte_p);
-                efuse_byte_p++;
-        }
-        return BK_OK;
+	bk_efuse_driver_init();
+	for (offset = 0; offset < 4; offset ++) {
+		bk_efuse_read_byte(offset, efuse_byte_p);
+		efuse_byte_p++;
+	}
+	return BK_OK;
 }
 
 bool efuse_is_secureboot_enabled(void)
 {
+#if CONFIG_BL2_VALIDATE_ENABLED_BY_EFUSE
 	return !!(s_efuse_data & BIT(EFUSE_SECUREBOOT_ENABLED_BIT));
+#else
+	return true;
+#endif
 }
 
 bool efuse_is_spe_debug_enabled(void)

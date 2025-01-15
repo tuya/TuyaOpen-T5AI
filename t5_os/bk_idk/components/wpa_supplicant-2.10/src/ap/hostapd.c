@@ -2328,6 +2328,10 @@ int hostapd_setup_interface_complete(struct hostapd_iface *iface, int err)
 	int not_ready_in_sync_ifaces = 0;
 #endif
 
+#if CONFIG_UAPSD
+	iface->drv_flags |= WPA_DRIVER_FLAGS_AP_UAPSD;
+#endif
+
 	if (!iface->need_to_start_in_sync)
 		return hostapd_setup_interface_complete_sync(iface, err);
 
@@ -3913,6 +3917,21 @@ int ap_channel_switch(struct hostapd_iface *ap_iface, int new_freq)
     settings.freq_params.ht_enabled = ap_iface->conf->ieee80211n;
 
     if (!ap_iface || !ap_iface->bss[0])
+		return -1;
+
+	return hostapd_switch_channel(ap_iface->bss[0], &settings);
+}
+
+int ap_config_csa_info_and_switch_chanel(struct hostapd_iface *ap_iface, uint8_t sta_csa_count,
+													uint16_t freq)
+{
+	struct csa_settings settings = {6};
+
+	settings.cs_count = sta_csa_count;
+	settings.freq_params.freq = freq;
+	settings.freq_params.ht_enabled = ap_iface->conf->ieee80211n;
+
+	 if (!ap_iface || !ap_iface->bss[0])
 		return -1;
 
 	return hostapd_switch_channel(ap_iface->bss[0], &settings);

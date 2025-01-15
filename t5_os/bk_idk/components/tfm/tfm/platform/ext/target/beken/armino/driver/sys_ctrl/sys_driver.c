@@ -238,9 +238,18 @@ void sys_drv_set_ana_vtempsel(uint32_t value)
     rtos_enable_int(int_level);
 }
 
+static void sys_high_freq_init(void)
+{
+    sys_hal_flash_set_clk(0x1);
+    sys_hal_flash_set_clk_div(0x0);
+    sys_hal_ctrl_vdddig_h_vol(0xD);
+    sys_hal_switch_freq(0x3, 0x0, 0x0);
+}
+
 void sys_drv_early_init(void)
 {
-	sys_hal_early_init();
+    sys_hal_early_init();
+    // sys_high_freq_init();
 }
 
 void sys_drv_set_sys2flsh_2wire(uint32_t value)

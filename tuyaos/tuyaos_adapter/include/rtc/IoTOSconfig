@@ -1,0 +1,6 @@
+# Ktuyaconf
+
+config ENABLE_RTC
+    bool "ENABLE_RTC: support rtc"
+    default n
+

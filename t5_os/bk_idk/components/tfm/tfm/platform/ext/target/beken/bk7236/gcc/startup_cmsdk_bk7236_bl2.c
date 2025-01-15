@@ -21,6 +21,17 @@
 #include "region_defs.h"
 #include "os/os.h"
 #include "cmsis_gcc.h"
+#include "boot_hal.h"
+#include "partitions_gen.h"
+#include "flash_partition.h"
+#include "sleep.h"
+#include "flash_map_backend/flash_map_backend.h"
+#include "sys_driver.h"
+#include "system_cmsdk_bk7236.h"
+#include "sleep.h"
+#include "flash_map_backend/flash_map_backend.h"
+#include "efuse_ll.h"
+#include "aon_pmu_ll.h"
 
 #define ENTRY_SECTION  __attribute__((section(".fix.reset_entry")))
 #define SYSTEM_BASE_ADDR                 (0x44010000)
@@ -192,15 +203,13 @@ __NO_RETURN ENTRY_SECTION __attribute__((naked)) void Reset_Handler(void)
 	/*Memory check vddig*/
 	boot_mem_check();
 
-	/* Only run on core 0 */
-	if (*(volatile uint32_t *)(0x5001F000) != 0) {
-        while(1);
-    }
+	__set_MSPLIM((uint32_t)(&__STACK_LIMIT));
 
-    __set_MSPLIM((uint32_t)(&__STACK_LIMIT));
-
+#if CONFIG_OTA_OVERWRITE
+	deep_sleep_reset();
+#endif
 	/* CMSIS System Initialization */
-    SystemInit();
+	SystemInit();
 
   	// sys_hal_early_init_tfm();
 	sys_drv_early_init();
@@ -209,6 +218,6 @@ __NO_RETURN ENTRY_SECTION __attribute__((naked)) void Reset_Handler(void)
 	sys_hal_ctrl_vdddig_h_vol(0xD);
 	sys_hal_switch_freq(0x3, 0x0, 0x0);
 
-    /* Enter PreMain (C library entry point) */
-    __PROGRAM_START();
+	/* Enter PreMain (C library entry point) */
+	__PROGRAM_START();
 }

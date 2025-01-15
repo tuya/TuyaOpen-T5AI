@@ -33,6 +33,7 @@ static inline void yuv_buf_ll_soft_reset(yuv_buf_hw_t *hw)
 
 static inline void yuv_buf_ll_init(yuv_buf_hw_t *hw)
 {
+	hw->global_ctrl.soft_reset = 0;
 	hw->global_ctrl.soft_reset = 1;
 	hw->global_ctrl.clk_gate_bypass = 1;
 }
@@ -50,6 +51,26 @@ static inline void yuv_buf_ll_enable_yuv_buf_mode(yuv_buf_hw_t *hw)
 static inline void yuv_buf_ll_disable_yuv_buf_mode(yuv_buf_hw_t *hw)
 {
 	hw->ctrl.yuv_mode = 0;
+}
+
+static inline void yuv_buf_ll_enable_hsync_rev(yuv_buf_hw_t *hw)
+{
+	hw->ctrl.hsync_rev = 1;
+}
+
+static inline void yuv_buf_ll_disable_hsync_rev(yuv_buf_hw_t *hw)
+{
+	hw->ctrl.hsync_rev = 0;
+}
+
+static inline void yuv_buf_ll_enable_vsync_rev(yuv_buf_hw_t *hw)
+{
+	hw->ctrl.vsync_rev = 1;
+}
+
+static inline void yuv_buf_ll_disable_vsync_rev(yuv_buf_hw_t *hw)
+{
+	hw->ctrl.vsync_rev = 0;
 }
 
 static inline void yuv_buf_ll_enable_h264_encode_mode(yuv_buf_hw_t *hw)
@@ -260,11 +281,6 @@ static inline bool yuv_buf_ll_is_h264_err_int_triggered(yuv_buf_hw_t *hw, uint32
 static inline bool yuv_buf_ll_is_enc_slow_int_triggered(yuv_buf_hw_t *hw, uint32_t int_status)
 {
 	return (int_status & BIT(8));
-}
-
-static inline void yuv_buf_ll_reset_config_to_default(yuv_buf_hw_t *hw)
-{
-	hw->global_ctrl.soft_reset = 1;
 }
 
 static inline void yuv_buf_ll_int_vsync_nege_mask(yuv_buf_hw_t *hw, uint32_t mask)

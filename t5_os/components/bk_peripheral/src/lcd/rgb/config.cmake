@@ -2,6 +2,7 @@ set(RGB_LCD_DEVICE_FILES "")
 set(RGB_LCD_PATH src/lcd/rgb)
 
 # Modified by TUYA Start
+list(APPEND RGB_LCD_DEVICE_FILES ${RGB_LCD_PATH}/lcd_nv3047.c)
 if (CONFIG_LCD_ILI9488)
 	list(APPEND RGB_LCD_DEVICE_FILES ${RGB_LCD_PATH}/lcd_ili9488.c)
 endif()
@@ -12,6 +13,10 @@ endif()
 
 if (CONFIG_LCD_T50P181CQ)
 	list(APPEND RGB_LCD_DEVICE_FILES ${RGB_LCD_PATH}/lcd_st7701s_t50p181cq.c)
+endif()
+
+if (CONFIG_LCD_TUYA_COMMON_RGB)
+	list(APPEND RGB_LCD_DEVICE_FILES ${RGB_LCD_PATH}/lcd_tuya_rgb.c)
 endif()
 # Modified by TUYA End
 

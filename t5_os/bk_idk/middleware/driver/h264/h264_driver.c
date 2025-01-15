@@ -45,7 +45,7 @@ typedef struct {
 		}\
 	} while (0)
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 static h264_driver_t s_h264 = {0};
 static uint8_t h264_dma_rx_id = 0;
@@ -193,7 +193,6 @@ bk_err_t bk_h264_driver_deinit(void)
 
 	bk_int_isr_unregister(INT_SRC_H264);
 	h264_int_disable();
-	bk_h264_config_reset();
 	os_memset(&s_h264, 0, sizeof(s_h264));
 	s_h264_driver_is_init = false;
 
@@ -349,7 +348,7 @@ bk_err_t bk_h264_deinit(void)
 
 	h264_int_disable();
 	bk_h264_soft_reset();
-	bk_h264_config_reset();
+	h264_hal_reset(&s_h264.hal);
 	sys_drv_h264_pwr_down();
 	os_memset(&h264_compress, 0, sizeof(compress_ratio_t));
 	for (uint8_t i = 0; i < H264_ISR_MAX; i++)
@@ -395,12 +394,12 @@ bk_err_t bk_h264_set_qp(h264_qp_t *qp)
 
 	h264_config_t param_set = {0};
 	param_set.qp = qp->init_qp;
-	param_set.cqp_off = MIN_QP;
-	param_set.tqp = qp->init_qp;
+	param_set.cqp_off = h264_commom_config.cqp_off;
+	param_set.tqp = h264_commom_config.tqp;
 	param_set.iframe_max_qp = qp->i_max_qp;
-	param_set.iframe_min_qp = qp->i_min_qp;
+	param_set.iframe_min_qp = h264_commom_config.iframe_min_qp;
 	param_set.pframe_max_qp = qp->p_max_qp;
-	param_set.pframe_min_qp = qp->p_min_qp;
+	param_set.pframe_min_qp = h264_commom_config.pframe_min_qp;
 
 	const h264_config_t *para = &param_set;
 	h264_hal_qp_config(&s_h264.hal,para);
@@ -592,9 +591,44 @@ bk_err_t bk_h264_int_count_show(void)
 
 bk_err_t bk_h264_config_reset(void)
 {
+	int ret = BK_OK;
+	uint32_t fps = 0;
+	const h264_config_t *config = &h264_commom_config;
+	compress_ratio_t ratio = {0};
 	H264_RETURN_ON_DRIVER_NOT_INIT();
+	uint16_t width = s_h264.hal.hw->img_width & 0xFFFF;
+	uint16_t height = s_h264.hal.hw->img_height & 0xFFFF;
+	ratio.qp.init_qp = s_h264.hal.hw->qp & 0xFF;
+	ratio.qp.i_max_qp = s_h264.hal.hw->iframe_qp_boundary.v & 0x3F;
+	ratio.qp.p_max_qp = s_h264.hal.hw->pframe_qp_boudary.v & 0x3F;
+	ratio.imb_bits = s_h264.hal.hw->iframe_bit_ctrl.v & 0xFFF;
+	ratio.pmb_bits = s_h264.hal.hw->num_pmb_bits & 0xFFFF;
+	fps = s_h264.hal.hw->vui_time_scale_L & 0xFFFF;
 	h264_hal_reset(&s_h264.hal);
-	return BK_OK;
+
+	/* h264 global ctrl set */
+	h264_hal_set_global_ctrl(&s_h264.hal);
+	h264_hal_enable_external_clk_en(&s_h264.hal);
+
+	if(h264_hal_set_img_width(&s_h264.hal, width, height))
+	{
+		return BK_ERR_H264_INVALID_RESOLUTION_TYPE;
+	}
+
+	h264_hal_gop_config(&s_h264.hal, config);
+	h264_hal_qp_config(&s_h264.hal, config);
+	h264_hal_idc_config(&s_h264.hal, config);
+	h264_hal_mb_config(&s_h264.hal, config);
+	h264_hal_scale_factor_config(&s_h264.hal);
+	h264_hal_vui_config(&s_h264.hal, config);
+	h264_hal_cpb_vui_config(&s_h264.hal, config);
+	h264_hal_frame_cbr_config(&s_h264.hal, config);
+	bk_h264_set_qp(&ratio.qp);
+	bk_h264_set_quality(ratio.imb_bits, ratio.pmb_bits);
+	bk_h264_updata_encode_fps(fps);
+	h264_int_enable();
+
+	return ret;
 }
 
 bk_err_t bk_h264_soft_reset(void)
@@ -605,76 +639,10 @@ bk_err_t bk_h264_soft_reset(void)
 	return BK_OK;
 }
 
-/**
- * temporarily used for analog register write
-*/
-static void sys_hal_analog_set_t(uint8_t reg_idx, uint32_t data)
+bk_err_t bk_h264_updata_encode_fps(uint32 fps)
 {
-	REG_WRITE(0x44010000+(0x40+reg_idx)*4,data);
-	while(((REG_READ(0x44010000+0x3a*4)) >> (reg_idx)));
-}
+    H264_RETURN_ON_DRIVER_NOT_INIT();
+    h264_hal_set_vui_fps(&s_h264.hal, fps);
 
-bk_err_t bk_h264_clk_check(void)
-{
-	/*old h264 clk check*/
-	/**
-	extern void delay(INT32 num);
-	volatile uint32_t val = sys_hal_analog_get(0x5);
-	val |= (0x1 << 5) | (0x1 << 3) | (0x1 << 2) | (0x1 << 1);
-	sys_hal_analog_set_t(0x5, val);
-
-	val = sys_hal_analog_get(0x0);
-	val |= (0x1 << 21);
-	val |= (0x1 << 19);
-	val &= ~(0x1 << 4);
-	sys_hal_analog_set_t(0x0, val);
-
-	delay(10);
-
-	val |= (0x1 << 4);
-	val &= ~(0x1 << 19);
-
-	sys_hal_analog_set_t(0x0, val);
-	return BK_OK;
-	**/
-
-	/*new h264 clk check*/
-	volatile uint32_t val = sys_hal_analog_get(0x5);
-	val |=  (0x1 << 14) | (0x1 << 5) | (0x1 << 3) | (0x1 << 2) | (0x1 << 1);
-	sys_hal_analog_set_t(0x5, val);
-
-	val = sys_hal_analog_get(0x0);
-	val |= (0x13 << 20) ;
-	sys_hal_analog_set_t(0x0, val);
-
-	sys_hal_analog_set_t(0x0,0xF1305B57);
-	sys_hal_analog_set_t(0x0,0xF5305B57);
-	sys_hal_analog_set_t(0x0,0xF1305B57);
-	sys_hal_analog_set_t(0x2, 0x7E003450);
-	sys_hal_analog_set_t(0x3, 0xC5F00B88);
-	sys_hal_analog_set_t(0x8, 0x57E627FA);
-	sys_hal_analog_set_t(0x9, 0x787FC6A4);
-
-	delay(10);
-	val = sys_hal_analog_get(0x0);
-	val &= ~(0x1 << 19);
-	val |= (0x1 << 19);
-	sys_hal_analog_set_t(0x0,val);
-	delay(100);
-
-	val = sys_hal_analog_get(0x0);//ffe7 31a7
-	val |= (0x13 << 20) ;
-	sys_hal_analog_set_t(0x0, val);
-
-	val = REG_READ((0x44000000+0x41*4));
-	val &= ~(0x3 << 10);
-	val |= (0x2 << 10);
-	REG_WRITE((0x44000000+0x41*4), val);
-
-	val = REG_READ((0x44000000+0x41*4));
-	val &= (~0x3);
-	val |= 0x3;
-	REG_WRITE((0x44000000+0x41*4), val);
-
-	return BK_OK;
+    return BK_OK;
 }

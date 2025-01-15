@@ -254,13 +254,14 @@ psa_status_t fwu_bootloader_staging_area_init(bl_image_id_t bootloader_image_id)
 #if CONFIG_DIRECT_XIP
     uint32_t update_id = (flash_area_read_offset_enable() ^ 1);
     flash_area_open(update_id,&fap);
-    uint32_t erase_size = (fap->fa_size / 32 *34);
+    uint32_t erase_size = flash_area_get_erase_size(fap);
     wdt_close();
     flash_area_erase(fap, 0, erase_size);
     boot_write_xip_status(fap,XIP_MAGIC_TYPE,XIP_SET);
     flash_area_close(fap);
-#else
-    if (flash_area_erase(fap, 0, fap->fa_size) != 0) {
+#endif
+#if CONFIG_OTA_OVERWRITE
+    if (flash_area_erase(fap, 0, flash_area_get_erase_size(fap)) != 0) {
         LOG_ERRFMT("TFM FWU: erasing flash failed.\r\n");
         return PSA_ERROR_GENERIC_ERROR;
     }
@@ -543,7 +544,7 @@ psa_status_t fwu_bootloader_mark_image_accepted(
     (void)bootloader_image_id;
 #endif
 
-#if (defined(CONFIG_DIRECT_XIP) && defined(CONFIG_XIP_NO_VERSION))
+#if (CONFIG_DIRECT_XIP && CONFIG_XIP_NO_VERSION)
     const struct flash_area *fap;
     uint32_t update_id = (flash_area_read_offset_enable());
     flash_area_open(update_id,&fap);
@@ -576,7 +577,15 @@ psa_status_t fwu_bootloader_abort(bl_image_id_t bootloader_image_id)
         return PSA_ERROR_INVALID_ARGUMENT;
     }
     wdt_close();
-    flash_area_erase(fap, 0, fap->fa_size);
+    uint32_t update_id = (flash_area_read_offset_enable());
+    update_id ^= 1;
+    flash_area_open(update_id, &fap);
+#if CONFIG_OTA_OVERWRITE
+    flash_area_erase(fap, 0, flash_area_get_erase_size(fap));
+#endif
+#if CONFIG_DIRECT_XIP
+    flash_area_erase(fap, 0, flash_area_get_erase_size(fap));
+#endif
     flash_area_close(fap);
     mcuboot_ctx[index].fap = NULL;
     mcuboot_ctx[index].loaded_size = 0;

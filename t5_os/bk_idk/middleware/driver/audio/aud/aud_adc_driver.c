@@ -47,7 +47,7 @@
 #define CONST_DIV_48K		(0x043B5554)
 
 
-extern void delay(int num);//TODO fix me
+extern void bk_delay(int num);//TODO fix me
 
 
 bk_err_t bk_aud_adc_init(aud_adc_config_t *adc_config)
@@ -102,7 +102,7 @@ bk_err_t bk_aud_adc_init(aud_adc_config_t *adc_config)
 
 	//reset mic after configuring parameters
 	sys_drv_aud_mic_rst_set(1);
-	delay(10);
+	bk_delay(10);
 	sys_drv_aud_mic_rst_set(0);
 
 	aud_hal_set_adc_config0_adc_set_gain(adc_config->adc_gain);
@@ -175,7 +175,7 @@ bk_err_t bk_aud_adc_set_samp_rate(uint32_t samp_rate)
 		}
 		sys_drv_apll_config_set(0xC2A0AE86);
 		sys_drv_apll_spi_trigger_set(1);
-		delay(10);
+		bk_delay(10);
 		sys_drv_apll_spi_trigger_set(0);
 	}
 #endif

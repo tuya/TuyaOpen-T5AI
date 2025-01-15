@@ -33,16 +33,18 @@ def get_app_sig(file_name):
 def get_bl2_sig(file_name):
     with open(file_name, 'r') as f:
         d = json.load(f)
-        return [d['bl1_sig_s'], d['bl1_sig_r']]
+        return [d['bl1_sig_r'], d['bl1_sig_s']]
 
-def sign_server_sign_app_bin_hash(tool_path, bl2_bin_hash, app_bin_hash):
+def sign_server_sign_app_bin_hash(tool_path, bl2_bin_hash, bl2_b_bin_hash, app_bin_hash):
     logging.debug(f'')
     logging.debug(f'--------------------On sign server: sign hash of binaries--------------------')
-    cmd = f'{tool_path}/main.py steps sign_app_bin_hash --bl2_bin_hash {bl2_bin_hash} --app_bin_hash {app_bin_hash} --debug'
+    cmd = f'{tool_path}/main.py steps sign_app_bin_hash --bl2_bin_hash {bl2_bin_hash} --bl2_b_bin_hash {bl2_b_bin_hash} --app_bin_hash {app_bin_hash} --debug'
     run_cmd(cmd)
     save_cmd("Sign bin hash", cmd)
 
-    sig_list = get_bl2_sig('manifest_sig.json')
+    sig_list = get_bl2_sig('primary_manifest_sig.json')
+    bl2_b_sig = get_bl2_sig('secondary_manifest_sig.json')
+    sig_list.extend(bl2_b_sig)
     app_sig = get_app_sig('app_sig.json')
     sig_list.append(app_sig)
     return sig_list

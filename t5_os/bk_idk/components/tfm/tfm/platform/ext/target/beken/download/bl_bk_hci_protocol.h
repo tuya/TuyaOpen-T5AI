@@ -11,10 +11,6 @@
 #include "type.h"
 #include "bl_bk_reg.h"
 
-
-
-
-
 typedef enum        // by gwf
 {
     OK = 0,
@@ -33,12 +29,6 @@ enum
 	FLASH_OPERATE_END,
 	FLASH_OPERATE_INVALID
 };
-
-typedef enum boot_flag_t {
-    BOOT_FLAG_INVALID  	= 0,
-    BOOT_FLAG_PRIMARY  	= 1,
-    BOOT_FLAG_SECONDARY = 2,
-}BOOT_FLAG;
 
 typedef enum
 {
@@ -69,90 +59,69 @@ enum {
 
 #define BOOT_FLAG_CTRL_MAGIC        (0x4C725463)
 
-
 enum {
     LINK_CHECK_CMD              = 0x00,
     REGISTER_WRITE_CMD          = 0x01,
     BL2_LINK_CHECK_CMD          = 0x02,
     REGISTER_READ_CMD           = 0x03,
 
-    CMD_ERROR_EVENT				= 0X04,
-    SYS_REBOOT_CMD     			 = 0X0E,
+    CMD_ERROR_EVENT             = 0X04,
+    SYS_REBOOT_CMD              = 0X0E,
 
-    CHANGE_UART_SAMPRATE_CMD      = 0X0F,
+    CHANGE_UART_SAMPRATE_CMD    = 0X0F,
 
-    FLASH_IMAGE_CEC_CHECK		 = 0x10,
+    FLASH_IMAGE_CEC_CHECK       = 0x10,
 
     FLASH_CBUS_DOWNLOAD         = 0x11,
     FLASH_CBUS_END              = 0x12,
+    RANGE_IMAGE_CRC_GET_CMD_EXT = 0x13,
+    FLASH_CBUS_READ             = 0x14,
+    FLASH_CBUS_DOWNLOAD_EXT     = 0x15,
+    FLASH_ENABLE_HIGH_FREQ      = 0x16,
+    FLASH_UPGRADE_BL2           = 0x17,
+    FLASH_UPGRADE_BL2_END       = 0x18,
 
-    SYS_RESET_CMD		 = 0x70,
-    // Bluetooth Tx/Rx Test
-    TX_PN9_CMD                  = 0xA0,
-    RX_PN9_CMD                  = 0xA1,
-    CEVA_BR_SEND_CMD            = 0xA2,
-    CEVA_BR_RECV_CMD            = 0xA3,
-    BLE_ADVERTISER_CMD          = 0xA4,
-    CEVA_FHS_SEND_CMD           = 0xA5,
+    EXT_CMD_JUMP                = 0x25,
 
-    FALSH_STAY_ROM_CMD           = 0xAA,
+    SECURE_DEBUG_CMD            = 0x50,
+    SECURE_DEBUG_REQUEST_CMD    = 0x51,
+    KEY_INJECTION_CMD           = 0x52,
 
-    // Beken Digital Test
-    TEST_CMD_CHIP_ID            = 0xB0,
-    TEST_CMD_RF_TXRX            = 0xB1,
-    TEST_CMD_DEEPSLEEP          = 0xB2,
-    TEST_CMD_SUBDEEPSLEEP       = 0xB3,
-    TEST_CMD_DIGITAL_OP         = 0xB4,
-    TEST_CMD_DMIPS              = 0xB5,
-    TEST_CMD_BR_TXRX            = 0xB6,
-    TEST_CMD_LE_TXRX            = 0xB7,
-    TEST_CMD_BK24_TXRX          = 0xB8,
-    TEST_CMD_LPO_BT_LINK        = 0xB9,
-    TEST_CMD_ADC                = 0xBA,
-    TEST_CMD_FLASH_OP           = 0xBB,
-    TEST_CMD_SPI                = 0xBC,
-    TEST_CMD_I2C                = 0xBD,
-    TEST_CMD_WDT                = 0xBE,
-    TEST_CMD_3DS                = 0xBF,
+    SYS_RESET_CMD               = 0x70,
+
+    FALSH_STAY_ROM_CMD          = 0xAA,
 
     LOOP_MODE_CMD               = 0xCC,
 
     SYS_ERROR_RSP               = 0xEE,
-    SYS_UNDEFINE_INT               = 0xEF,
+    SYS_UNDEFINE_INT            = 0xEF,
 
-    FLASH_OPERATE_CMD   	     = 0XF4,
+    FLASH_OPERATE_CMD           = 0XF4,
 
 } ;//BEKEN_CMD;
 
+#define CMD_EXT_OFFSET       (0xE0)
+
+/* FLASH_operate */
 enum {
-	FLASH_ADDR_WRITE_CMD          = 0X06,
+    FLASH_ADDR_WRITE_CMD = 0X06,
+    FLASH_4K_WRITE_CMD   = 0X07,
+    FLASH_ADDR_READ_CMD  = 0X08,
+    FLASH_4K_READ_CMD    = 0X09,
+    FLASH_CHIP_ERASE_CMD = 0X0A,
+    FLASH_4K_ERASE_CMD   = 0X0B,
+    FLASH_SR_READ_CMD    = 0x0c,
+    FLASH_SR_WRITE_CMD   = 0x0D,
+    FLASH_SPI_OP_CMD     = 0x0E,
+    FLASH_SIZE_ERASE_CMD = 0X0F,
 
-   FLASH_4K_WRITE_CMD          = 0X07,
-
-   FLASH_ADDR_READ_CMD           = 0X08,
-
-   FLASH_4K_READ_CMD           = 0X09,
-
-   FLASH_CHIP_ERRASE_CMD       = 0X0A,
-
-   FLASH_4K_ERRASE_CMD       = 0X0B,
-
-   FLASH_SR_READ_CMD       = 0x0c,
-
-   FLASH_SR_WRITE_CMD      = 0x0D,
-
-   FLASH_SPI_OP_CMD      = 0x0E,
-
-
-   FLASH_SIZE_ERRASE_CMD       = 0X0F,
-
-
-
-
-
-
-};// FLASH_operate
-
+    FLASH_ADDR_WRITE_CMD_EXT = 0X06 + CMD_EXT_OFFSET,
+    FLASH_4K_WRITE_CMD_EXT   = 0X07 + CMD_EXT_OFFSET,
+    FLASH_ADDR_READ_CMD_EXT  = 0X08 + CMD_EXT_OFFSET,
+    FLASH_4K_READ_CMD_EXT    = 0X09 + CMD_EXT_OFFSET,
+    FLASH_CHIP_ERASE_CMD_EXT = 0X0A + CMD_EXT_OFFSET,
+    FLASH_4K_ERASE_CMD_EXT   = 0X0B + CMD_EXT_OFFSET,
+};
 
 #define FLASH_4K_SIZE   0X1000
 #define FLASH_32K_SIZE   0X8000

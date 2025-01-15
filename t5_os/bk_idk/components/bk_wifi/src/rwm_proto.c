@@ -61,7 +61,8 @@ static void rwm_ip_printf(char *dir, struct ethhdr *eth_hdr_ptr)
 
 	switch (IP4H_PROTO(iphdr)) {
 	case 1:     //IP_PROTO_ICMP
-		RWNX_LOGI("%s ICMP, id %0x(%u)\n", dir, ntohs(iphdr->id), ntohs(iphdr->id));
+		RWNX_LOGI("%s ICMP, id %0x(%u), sip %pIn, dip %pIn\n", dir, ntohs(iphdr->id), ntohs(iphdr->id),
+		   &iphdr->src, &iphdr->dest);
 		break;
 	case 2:     //IP_PROTO_IGMP
 		RWNX_LOGI("%s IGMP, id %0x(%u)\n", dir, ntohs(iphdr->id), ntohs(iphdr->id));

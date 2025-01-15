@@ -29,52 +29,50 @@ int show_cache_config_info(void)
 
 void flush_dcache(void *va, long size)
 {
-    if (SCB->CLIDR & SCB_CLIDR_DC_Msk) {
-        SCB_CleanInvalidateDCache_by_Addr(va, size);
-    }
+	if (SCB->CLIDR & SCB_CLIDR_DC_Msk) {
+		SCB_CleanInvalidateDCache_by_Addr(va, size);
+	}
 }
 
 void disable_scb_dcache(void)
 {
-    SCB_DisableDCache();
+	SCB_DisableDCache();
 }
 
 void enable_scb_dcache(void)
 {
-    SCB_EnableDCache();
+	SCB_EnableDCache();
 }
 
 void flush_invalidate_dcache(void)
 {
-    SCB_InvalidateDCache();
+	SCB_InvalidateDCache();
 }
 
 void flush_all_dcache(void)
 {
-    if (SCB->CLIDR & SCB_CLIDR_DC_Msk) {
-        SCB_CleanInvalidateDCache();
-    }
+	if (SCB->CLIDR & SCB_CLIDR_DC_Msk) {
+		SCB_CleanInvalidateDCache();
+	}
 }
 
 void enable_dcache(int enable)
 {
-    if (enable == 0) {
-        SCB_DisableDCache();
+	if (enable == 0) {
+		SCB_DisableDCache();
 #if CONFIG_MPU
-        mpu_disable();
+		mpu_disable();
 #endif
-    } else {
+	} else {
 #if CONFIG_MPU
-        mpu_enable();
+		mpu_enable();
 #endif
-        SCB_EnableDCache();
-        SCB_CleanInvalidateDCache();
-    }
+		SCB_EnableDCache();
+		SCB_CleanInvalidateDCache();
+	}
 }
 
 void invalidate_icache(void)
 {
-    SCB_InvalidateICache();
+	SCB_InvalidateICache();
 }
-// eof
-

@@ -30,6 +30,7 @@ typedef struct {
     int                 (*tkl_select)             (const int maxfd, TUYA_FD_SET_T *readfds, TUYA_FD_SET_T *writefds, TUYA_FD_SET_T *errorfds, const uint32_t ms_timeout);
     TUYA_ERRNO            (*tkl_close)              (const int fd);
     int                 (*tkl_socket_create)      (const TUYA_PROTOCOL_TYPE_E type);
+    int                 (*tkl_socket_create_v6)   (const TUYA_PROTOCOL_TYPE_E type);
     TUYA_ERRNO            (*tkl_connect)            (const int fd, const TUYA_IP_ADDR_T addr, const uint16_t port);
     TUYA_ERRNO            (*tkl_connect_raw)        (const int fd, void *p_socket, const int len);
     TUYA_ERRNO            (*tkl_bind)               (const int fd, const TUYA_IP_ADDR_T addr, const uint16_t port);
@@ -59,6 +60,7 @@ typedef struct {
     OPERATE_RET           (*tkl_getsockname)        (int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
     OPERATE_RET           (*tkl_getpeername)        (int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
     OPERATE_RET           (*tkl_sethostname)        (const char *hostname);
+    OPERATE_RET           (*tkl_check_ipv4_ipv6)    (BOOL_T *has_ipv4, BOOL_T *has_ipv6);
 } TKL_NETWORK_DESC_T;
 
 /**

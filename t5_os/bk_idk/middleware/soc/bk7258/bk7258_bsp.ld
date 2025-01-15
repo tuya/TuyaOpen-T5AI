@@ -148,12 +148,14 @@ SECTIONS
     .a_device_null :
     {
       KEEP(*(.a_deviceobj_null))
+      . = ALIGN(4);
     } > FLASH
 
     .a_devices :
     {
       __device_start = .;
       KEEP(*(.a_deviceobj_*))
+      . = ALIGN(4);
       __device_end = .;
     } > FLASH
 
@@ -161,6 +163,7 @@ SECTIONS
     {
       __a_init_start = .;
       KEEP(*(.a_init_entry_*))
+      . = ALIGN(4);
       __a_init_end = .;
     } > FLASH
 
@@ -174,6 +177,7 @@ SECTIONS
     .ARM.exidx :
     {
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        . = ALIGN(4);
     } > FLASH
     __exidx_end = .;
 
@@ -202,6 +206,7 @@ SECTIONS
         LONG (__dtcm_start__)
         LONG ((__dtcm_end__ - __dtcm_start__) / 4)
 #endif
+        . = ALIGN(4);
         __copy_table_end__ = .;
     } > FLASH
 
@@ -218,6 +223,7 @@ SECTIONS
         LONG ((__video_cache_bss_end__ - __video_cache_bss_start__) / 4)
         LONG (_bt_data_start)
         LONG ((_bt_data_end - _bt_data_start) / 4)
+        . = ALIGN(4);
         __zero_table_end__ = .;
     } > FLASH
 
@@ -244,6 +250,7 @@ SECTIONS
         *sch_slice.c.obj(*.bss *.bss.*)
         *llm.c.obj(*.bss *.bss.*)
 
+        . = ALIGN(4);
         _bt_data_end = .;
     } > SRAM_BT AT > FLASH
 #endif
@@ -282,6 +289,7 @@ SECTIONS
         LONG (__dtcm_cpu2_content)
         LONG (__dtcm_cpu2_start__)
         LONG ((__dtcm_cpu2_end__ - __dtcm_cpu2_start__) / 4)
+        . = ALIGN(4);
         __tcm_copy_table_end__ = .;
     } > FLASH
 
@@ -305,6 +313,7 @@ SECTIONS
         PROVIDE(__dtcm_cpu0_content = LOADADDR(.dtcm_cpu0));
         __dtcm_cpu0_start__ = .;
         *(.dtcm_cpu0)
+        . = ALIGN(4);
         __dtcm_cpu0_end__ = .;
     } > DTCM0 AT > FLASH
 
@@ -328,6 +337,7 @@ SECTIONS
         PROVIDE(__dtcm_cpu1_content = LOADADDR(.dtcm_cpu1));
         __dtcm_cpu1_start__ = .;
         *(.dtcm_cpu1)
+        . = ALIGN(4);
         __dtcm_cpu1_end__ = .;
     } > DTCM1 AT > FLASH
 
@@ -351,6 +361,7 @@ SECTIONS
         PROVIDE(__dtcm_cpu2_content = LOADADDR(.dtcm_cpu2));
         __dtcm_cpu2_start__ = .;
         *(.dtcm_cpu2)
+        . = ALIGN(4);
         __dtcm_cpu2_end__ = .;
     } > DTCM2 AT > FLASH
 #else
@@ -379,7 +390,7 @@ SECTIONS
         *(.dtcm)
         *(.dtcm_section*)
         *(.dtcm_sec_data*)
-
+        . = ALIGN(4);
         __dtcm_end__ = .;
     } > DTCM AT > FLASH
 #endif
@@ -400,6 +411,7 @@ SECTIONS
         *(.interrupt)
 
 
+        . = ALIGN(4);
         __iram_end__ = .;
 
     } > IRAM AT > FLASH
@@ -444,6 +456,22 @@ SECTIONS
 
         *(.video_spec_data*)
         *(.gnu.linkonce.d*)
+    /*  __data_end__ = .; */
+    } > RAM AT > FLASH
+
+    .ty_lcd :
+    {
+        . = ALIGN(4);
+
+        __data_lcd_start__ = .;
+        *(*ty_lcd.rodata)
+        *(*ty_lcd.rodata.*)
+        *(*ty_lcd.data)
+        *(*ty_lcd.data.*)
+        *(*ty_lcd.sdata)
+
+        . = ALIGN(4);
+        __data_lcd_end__ = .;
         __data_end__ = .;
     } > RAM AT > FLASH
 
@@ -497,6 +525,8 @@ SECTIONS
 	/* Modified by TUYA Start */
         *(*ts2.bss)
         *(*ts2.bss.*)
+        *(*ty_lcd.bss)
+        *(*ty_lcd.bss.*)
 	/* Modified by TUYA End */
 
 #if CONFIG_CACHE_ENABLE
@@ -582,6 +612,7 @@ SECTIONS
 
         * (.swap_data)
         * (.swap_data*)
+        . = ALIGN(4);
         _swap_end = .;
     } > SWAP AT > FLASH
 

@@ -17,6 +17,8 @@ enum {
 	PARTITION_OTP_NV,
 	PARTITION_PS,
 	PARTITION_ITS,
+	PARTITION_OTA_CONTROL,
+	PARTITION_PUBLIC_KEY,
 	PARTITION_CNT,
 };
 
@@ -30,6 +32,9 @@ enum {
 
 #define FLASH_PHY2VIRTUAL(phy_addr)      ((((phy_addr) / 34) << 5) + ((phy_addr) % 34))
 #define SOC_FLASH_BASE_ADDR 0x02000000
+#define HDR_SZ                  0x1000
+
+#define BOOT_VERSION_OFFSET              (CONFIG_PRIMARY_MANIFEST_PHY_PARTITION_OFFSET + 0x4)
 
 int partition_init(void);
 uint32_t partition_get_phy_offset(uint32_t id);

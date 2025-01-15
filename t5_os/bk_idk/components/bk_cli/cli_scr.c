@@ -25,7 +25,7 @@ typedef struct {
 	uint8_t len;
 } scr_data_t;
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 static gpio_scr_map_group_t g_scr_chan = 0;
 
@@ -52,9 +52,9 @@ static void scr_fast_active(void)
 	bk_scr_gpio_config(g_scr_chan, BK_SCR_GPIO_PAUSE);
 
 	sys_hal_module_power_ctrl(POWER_MODULE_NAME_AHBP, POWER_MODULE_STATE_OFF);
-	delay(5000);
+	bk_delay(5000);
 	sys_hal_module_power_ctrl(POWER_MODULE_NAME_AHBP, POWER_MODULE_STATE_ON);
-	delay(1000);
+	bk_delay(1000);
 
 	bk_scr_soft_reset();
 
@@ -74,7 +74,7 @@ static void scr_fast_active(void)
 	bk_scr_set_control(BK_SCR_CTRL_ATR_START_FLUSH_FIFO, 1);
 	bk_scr_set_control(BK_SCR_CTRL_GLOBAL_INTR_EN, 1);
 
-	delay(1000);
+	bk_delay(1000);
 
 	bk_scr_set_control(BK_SCR_CTRL_VCC, 1);
 	bk_scr_set_control(BK_SCR_CTRL_ACT_FAST, 1);

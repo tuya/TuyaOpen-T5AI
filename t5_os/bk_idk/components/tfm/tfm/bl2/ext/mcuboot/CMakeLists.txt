@@ -14,6 +14,22 @@ set(MCUBOOT_KEY_ENC "${MCUBOOT_PATH}/enc-rsa2048-pub.pem" CACHE FILEPATH "Path t
 
 add_subdirectory("${MCUBOOT_PATH}/boot/bootutil" bootutil)
 
+set(SOURCE_MCUBOOT
+    ${CMAKE_CURRENT_SOURCE_DIR}/bl2_main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bl2_securedebug.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/keys.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/flash_map_extended.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/flash_map_legacy.c
+)
+
+set(INCLUDE_MCUBOOT
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
+set(LINK_MCUBOOT
+    bootutil
+)
+
 target_include_directories(bootutil
     PUBLIC
         include
@@ -42,26 +58,17 @@ target_include_directories(mcuboot_config
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> # for mcuboot_config.h only
 )
 
-target_include_directories(bl2
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-)
+target_include_directories(bl2 PUBLIC ${INCLUDE_MCUBOOT})
+target_sources(bl2 PRIVATE ${SOURCE_MCUBOOT})
+target_link_libraries(bl2 PUBLIC ${LINK_MCUBOOT})
 
-target_sources(bl2
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/bl2_main.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/bl2_securedebug.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/keys.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/flash_map_extended.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/flash_map_legacy.c
-)
+if (CONFIG_RANDOM_AES_UPGRADE_BL2 STREQUAL "y")
+    target_include_directories(bl2_B PUBLIC ${INCLUDE_MCUBOOT})
+    target_sources(bl2_B PRIVATE ${SOURCE_MCUBOOT})
+    target_link_libraries(bl2_B PUBLIC ${LINK_MCUBOOT})
+endif()
 
-target_link_libraries(bl2
-    PUBLIC
-        bootutil
-)
-
-set(MCUBOOT_ALLOWED_LOG_LEVELS OFF ERROR WARNING INFO DEBUG)
+set(MCUBOOT_ALLOWED_LOG_LEVELS OFF ERROR WARNING FORCE INFO DEBUG)
 list(FIND MCUBOOT_ALLOWED_LOG_LEVELS ${MCUBOOT_LOG_LEVEL} LOG_LEVEL_ID)
 
 if (MCUBOOT_ALIGN_VAL GREATER 8)
@@ -126,6 +133,7 @@ if(NS)
     )
 endif()
 
+if (CONFIG_BUILD_TFM)
 add_custom_target(tfm_s_signed_bin
     SOURCES tfm_s_signed.bin
 )
@@ -135,7 +143,7 @@ add_custom_command(OUTPUT tfm_s_signed.bin
     WORKING_DIRECTORY ${MCUBOOT_PATH}/scripts
 
     #Sign secure binary image with provided secret key
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper/wrapper.py
+    COMMAND ${Python3_EXECUTABLE} -B ${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper/wrapper.py
         -v ${MCUBOOT_IMAGE_VERSION_S}
         --layout $<TARGET_OBJECTS:signing_layout_s>
         -k ${MCUBOOT_KEY_S}
@@ -175,6 +183,7 @@ target_link_libraries(signing_layout_ns
     PRIVATE
         platform_bl2
 )
+endif()
 
 if(MCUBOOT_SIGNED)
 if(NS)
@@ -187,7 +196,7 @@ if(NS)
         WORKING_DIRECTORY ${MCUBOOT_PATH}/scripts
 
         #Sign non-secure binary image with provided secret key
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper/wrapper.py
+        COMMAND ${Python3_EXECUTABLE} -B ${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper/wrapper.py
             -v ${MCUBOOT_IMAGE_VERSION_NS}
             --layout $<TARGET_OBJECTS:signing_layout_ns>
             -k ${MCUBOOT_KEY_NS}
@@ -237,7 +246,7 @@ if(NS)
         # Use the non-secure key to sign the combined image if FORWARD_PROT_MSG is set.
         # In such a configuration there is a subsystem with higher privileges controlling the
         # the boot process and current implementation requires to use the non-secure key here.
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper/wrapper.py
+        COMMAND ${Python3_EXECUTABLE} -B ${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper/wrapper.py
             -v ${MCUBOOT_IMAGE_VERSION_S}
             --layout $<TARGET_OBJECTS:signing_layout_s>
             -k $<IF:$<BOOL:${FORWARD_PROT_MSG}>,${MCUBOOT_KEY_NS},${MCUBOOT_KEY_S}>

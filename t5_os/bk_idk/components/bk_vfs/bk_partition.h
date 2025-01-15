@@ -29,7 +29,11 @@ struct bk_little_fs_partition {
 		struct part_flash_s {
 			uint32_t start_addr;
 			uint32_t size;
-		} part_flash;
+            // Modified by TUYA Start
+            uint32_t page_size;
+            uint32_t block_size;
+            // Modified by TUYA End
+        } part_flash;
 	};
 };
 

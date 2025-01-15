@@ -15,5 +15,5 @@ def save_cmd(description, cmd):
         f.write('\r\n')
 
 def save_bk_loader_cmd(partition_name, bin_name, offset):
-    cmd = f'bk_loader.exe download --portinfo 18 --baudrate 1500000 --infile {bin_name} --startaddress {hex(offset)}'
+    cmd = f'bk_loader.exe download --portinfo 18 --baudrate 1500000 --infile {bin_name} --startaddress {hex(offset)} --reboot 0'
     save_cmd(f'Flashing {partition_name}:{bin_name} to flash offset {hex(offset)}', cmd)

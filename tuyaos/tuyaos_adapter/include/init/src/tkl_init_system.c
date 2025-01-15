@@ -35,6 +35,10 @@ const TKL_OS_T TKL_OS  = {
     .free                   = tkl_system_free,
     .calloc                 = tkl_system_calloc,
     .realloc                = tkl_system_realloc,
+#if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM==1)
+    .psram_malloc           = tkl_system_psram_malloc,
+    .psram_free             = tkl_system_psram_free,
+#endif
     //! thread
     .thread_create          = tkl_thread_create,
     .thread_release         = tkl_thread_release,
@@ -74,7 +78,9 @@ TUYA_WEAK_ATTRIBUTE TKL_OS_T* tkl_os_desc_get()
 #ifdef ENABLE_FILE_SYSTEM
 const TKL_FS_T TKL_FS = {
     .fs_mkdir               = tkl_fs_mkdir,
+    .fs_mkdir_r             = tkl_fs_mkdir,
     .fs_remove              = tkl_fs_remove,
+    .fs_remove_r            = tkl_fs_remove,
     .fs_mode                = tkl_fs_mode,
     .fs_is_exist            = tkl_fs_is_exist,
     .fs_rename              = tkl_fs_rename,

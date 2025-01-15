@@ -25,6 +25,7 @@ list(APPEND srcs
 	src/rwnx_utils.c
 	src/sa_ap.c
 	src/sa_station.c
+	src/rwnx_debug.c
 	src/skbuff.c
 	src/soft_encrypt.c
 	src/wifi_api.c
@@ -33,7 +34,7 @@ list(APPEND srcs
 	src/wifi_init.c
 	src/wifi_netif.c
 	src/wifi_v2.c
-	#src/wifi_wpa_cmd.c
+	src/wifi_wpa_cmd.c
 )
 if(CONFIG_AT)
 list(APPEND srcs

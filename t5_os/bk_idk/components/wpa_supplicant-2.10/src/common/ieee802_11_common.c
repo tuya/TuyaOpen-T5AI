@@ -45,6 +45,8 @@ static int ieee802_11_parse_vendor_specific(const u8 *pos, size_t elen,
 	switch (oui) {
 #ifdef BK_SUPPLICANT
 	case OUI_BEKEN:
+		elems->bk_vsie = pos;
+		elems->bk_vsie_len = elen;
 		break;
 #endif
 

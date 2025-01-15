@@ -10,7 +10,6 @@ set(incs
 	include/bk_private
 	include/bk_private/legacy
 	common
-	reset_reason
 	pwm
 	flash
 	uart
@@ -43,7 +42,6 @@ list(APPEND incs
 
 set(srcs
 	common/driver.c
-	reset_reason/reset_reason.c
 	sys_ctrl/sys_driver.c
 	sys_ctrl/sys_driver_common.c
 	sys_ctrl/sys_ps_driver.c
@@ -97,6 +95,7 @@ if (CONFIG_FLASH_ORIGIN_API)
 endif()
 
 if (NOT CMAKE_BUILD_EARLY_EXPANSION)
+	add_subdirectory(reset_reason)
 	add_subdirectory(h264)
 	add_subdirectory(device)
 	add_subdirectory(hw_rotate)
@@ -265,15 +264,28 @@ endif() #if (CONFIG_TRNG_SUPPORT)
 
 if (CONFIG_FLASH)
 	list(APPEND srcs
-		"flash/flash_driver.c"
-		"flash/flash_partition.c"
+		flash/flash_partition.c
 		)
+	if (CONFIG_SYS_CPU0)
+		list(APPEND srcs flash/flash_driver.c)
+		if ((CONFIG_CPU_CNT GREATER 1))
+			list(APPEND srcs flash/flash_server.c)
+		endif()
+	endif()
+	if (NOT CONFIG_SYS_CPU0)
+		list(APPEND srcs flash/flash_client.c)
+	endif()		
 endif() #if (CONFIG_FLASH)
 
 if (CONFIG_QSPI)
 	list(APPEND srcs
 		"qspi/qspi_driver.c"
+		# Modified by TUYA Start
+		"qspi/qspi_flash_W25Q32.c"
 		"qspi/qspi_flash_GD5F1GQ5.c"
+		"qspi/qspi_flash_GD25Q127C.c"
+		"qspi/qspi_flash_common.c"
+		# Modified by TUYA End
 		"qspi/qspi_statis.c"
 		"qspi/qspi_psram.c"
 		"qspi/qspi_flash.c"
@@ -473,6 +485,7 @@ if (CONFIG_MAILBOX)
 		list(APPEND srcs
 			mailbox/mailbox_channel.c
 			mailbox/mb_ipc_cmd.c
+			mailbox/mb_ipc.c
 			mailbox/mb_chnl_buff.c
 			spinlock/amp_res_lock.c
 			spinlock/spinlock.c

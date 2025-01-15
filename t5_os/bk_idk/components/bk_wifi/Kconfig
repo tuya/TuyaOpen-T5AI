@@ -20,6 +20,10 @@ menu "Bk_Wifi"
 		help
 			Use WiFi-6 Code Stack
 
+	config RWNX_MEM_STATS
+		bool "RWNX mem statistics"
+		default y
+
 	config WIFI_BAND_5G
 		depends on WIFI_ENABLE
 		bool "Enable 5G Band"
@@ -81,6 +85,13 @@ menu "Bk_Wifi"
 		bool "Wifi CSI"
 		default n
 
+	config WIFI_AUTO_COUNTRY_CODE
+		bool "Wifi AUTO CC"
+		default y
+
+	config WIFI_SCAN_COUNTRY_CODE
+		bool "Wifi SCAN CC"
+		default y
 
 	config MSDU_RESV_HEAD_LENGTH
 		int "Set Msdu Resv Head Length"
@@ -156,6 +167,10 @@ menu "Bk_Wifi"
 
 	config TCP_PROTECT_EN
 		bool "Enable tcp protect in connection"
+		default n
+
+	config AP_TX_TIM
+		bool "Enable ap tx tim in connection"
 		default n
 
 	config RECEIVE_BCMC_IN_DTIM10
@@ -306,6 +321,12 @@ menu "Bk_Wifi"
 		help
 			enable use ap ps
 
+	config UAPSD
+		bool "Enable UAPSD"
+		default n
+		help
+			Enable use uapsd
+
 	config USE_P2P_PS
 		bool "Enable Use P2P PS"
 		default n
@@ -338,4 +359,13 @@ menu "Bk_Wifi"
 		range 2 10
 		default 2
 
+	config MAC_SHORT_RETRY
+		int "MAC short retry limit"
+		range 1 240
+		default 240
+
+	config MAC_LONG_RETRY
+		int "MAC long retry limit"
+		range 1 240
+		default 240
 endmenu

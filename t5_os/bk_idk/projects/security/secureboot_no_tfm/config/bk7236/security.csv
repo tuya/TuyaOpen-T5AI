@@ -1,6 +1,7 @@
 Field,Value
 secureboot_en,FALSE
-flash_aes_type,NONE
+flash_aes_type,FIXED
+single_bin,FALSE
 flash_aes_key,73c7bf397f2ad6bf4e7403a7b965dc5ce0645df039c2d69c814ffb403183fb18
 root_key_type,ec256
 root_pubkey,root_ec256_pubkey.pem

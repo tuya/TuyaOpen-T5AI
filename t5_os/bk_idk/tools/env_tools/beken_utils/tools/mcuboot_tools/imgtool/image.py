@@ -112,7 +112,7 @@ class TLV():
         """
         Add a TLV record.  Kind should be a string found in TLV_VALUES above.
         """
-        print(f'mcuboot add TLV, type={kind}, value={payload.hex()}')
+        logging.debug(f'mcuboot add TLV, type={kind}, value={payload.hex()}')
         e = STRUCT_ENDIAN_DICT[self.endian]
         if isinstance(kind, int):
             buf = struct.pack(e + 'BBH', kind, 0, len(payload))
@@ -335,7 +335,7 @@ class Image():
                sw_type=None, custom_tlvs=None, encrypt_keylen=128, clear=False, action_type="sign", signature=None, hash_outfile=None, pubkeyfile=None):
         self.enckey = enckey
 
-        print(f'mcuboot create, privkey={key}, pubkey={pubkeyfile}, action_type={action_type}, signature={signature}, hash_outfile={hash_outfile}')
+        logging.debug(f'mcuboot create, privkey={key}, pubkey={pubkeyfile}, action_type={action_type}, signature={signature}, hash_outfile={hash_outfile}')
         # Calculate the hash of the public key
         if key is not None:
             pub = key.get_public_bytes()
@@ -347,7 +347,7 @@ class Image():
         pubbytes = sha.digest()
         #pubbytes = bytes(hashlib.sha256().digest_size)
 
-        print(f'mcuboot pubbytes={pubbytes.hex()}')
+        logging.debug(f'mcuboot pubbytes={pubbytes.hex()}')
         protected_tlv_size = 0
 
         if self.security_counter is not None:
@@ -459,8 +459,11 @@ class Image():
         tlv.add('SHA256', digest)
 
         if action_type == "hash":
-            print(f'mcuboot calculate bin hash only')
-            hex_digest = ''.join(format(byte, '02x') for byte in digest)
+            logging.debug(f'mcuboot calculate bin hash hash')
+            sha = hashlib.sha256()
+            sha.update(digest)
+            hash_hash = sha.digest()
+            hex_digest = ''.join(format(byte, '02x') for byte in hash_hash)
             self.save_bin_hash(hex_digest, hash_outfile)
             return
         elif action_type == "sign_from_sig":
@@ -471,7 +474,7 @@ class Image():
 
             sig = bytes.fromhex(signature)
             tlv.add('ECDSA256', sig)
-            print(f'mcuboot using existing signature={sig.hex()}')
+            logging.debug(f'mcuboot using existing signature={sig.hex()}')
         elif key is not None:
             if public_key_format == 'hash':
                 tlv.add('KEYHASH', pubbytes)
@@ -487,8 +490,8 @@ class Image():
             else:
                 sig = key.sign_digest(digest)
             tlv.add(key.sig_tlv(), sig)
-            print(f'mcuboot sign digest={digest.hex()}')
-            print(f'mcuboot sign result={sig.hex()}')
+            logging.debug(f'mcuboot sign digest={digest.hex()}')
+            logging.debug(f'mcuboot sign result={sig.hex()}')
 
         # At this point the image was hashed + signed, we can remove the
         # protected TLVs from the payload (will be re-added later)

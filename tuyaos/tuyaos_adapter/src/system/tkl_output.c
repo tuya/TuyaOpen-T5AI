@@ -7,8 +7,7 @@
  * @copyright Copyright 2020-2021 Tuya Inc. All Rights Reserved.
  *
  */
-#include <stdio.h>
-#include <stdarg.h>
+
 #include "tkl_output.h"
 #include <components/log.h>
 
@@ -31,8 +30,13 @@ void tkl_log_output(IN const char *str, ...)
     if (str == NULL) {
         return;
     }
-
+    extern void bk_printf(const char *fmt, ...);
     bk_printf(str);
+
+//    va_list args;
+//    va_start(args, str);
+//    bk_printf_port(BK_LOG_ERROR, MODE_NAME, str, args);
+//    va_end(args);
 }
 
 /**

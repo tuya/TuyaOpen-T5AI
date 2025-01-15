@@ -51,6 +51,7 @@ typedef enum {
     LCD_DEVICE_ILI9488, /**< 320X480 RGB */
     LCD_DEVICE_GC9503_BOE, /**< 480X854 RGB */
     LCD_DEVICE_T50P181CQ,
+    LCD_DEVICE_TUYA_COMMON,
 // Modified by TUYA End
 
 	LCD_DEVICE_ST7796S, /**< 320X480 MCU  */
@@ -210,6 +211,7 @@ typedef struct
 /** spi interface config param */
 typedef struct
 {
+	lcd_qspi_clk_t clk;
 	const lcd_qspi_init_cmd_t *init_cmd;
 	uint32_t device_init_cmd_len;
 } lcd_spi_t;

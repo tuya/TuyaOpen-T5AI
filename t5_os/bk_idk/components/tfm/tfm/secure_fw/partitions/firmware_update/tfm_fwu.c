@@ -10,6 +10,11 @@
 #include "tfm_platform_api.h"
 #include "tfm_fwu.h"
 #include "partitions.h"
+#include "flash_map_backend/flash_map_backend.h"
+#if CONFIG_OTA_CONFIRM_UPDATE
+#include "_ota.h"
+#include "flash_partition.h"
+#endif
 
 psa_status_t tfm_internal_fwu_initialize(psa_image_id_t image_id)
 {
@@ -110,6 +115,7 @@ psa_status_t tfm_internal_fwu_query(psa_image_id_t image_id,
 
 void tfm_internal_fwu_request_reboot(void)
 {
+    // aon_pmu_hal_set_ota_finish(1);
 #if CONFIG_DIRECT_XIP
     const struct flash_area *fap;
     uint32_t update_id = (flash_area_read_offset_enable() ^ 1);
@@ -126,3 +132,10 @@ psa_status_t tfm_internal_fwu_accept(psa_image_id_t image_id)
 
     return fwu_bootloader_mark_image_accepted(image_type);
 }
+
+#if CONFIG_OTA_CONFIRM_UPDATE
+void tfm_internal_fwu_confirm(uint8_t is_confirm)
+{
+    flash_write_confirm_dbus(is_confirm);
+}
+#endif

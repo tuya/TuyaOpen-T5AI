@@ -34,6 +34,10 @@ menu "Lwip_intf_v2_1"
 		bool "Enable IP FORWARD"
 		default n
 
+	config IP_FORWARD_ALLOW_TX_ON_RX_NETIF
+		bool "enable IP forward on rx interface"
+		default n
+
 	config IP_NAPT
 		bool "Enable IP NAPT"
 		default n
@@ -88,7 +92,7 @@ menu "Lwip_intf_v2_1"
 
 		config LWIP_MEMP_MEM_MALLOC
 			bool "memp_alloc() use mem_malloc/mem_free instead of the lwip pool allocator"
-			default n
+			default y
 
 		config LWIP_MEMP_STATS
 			bool "memp statistics"
@@ -103,6 +107,18 @@ menu "Lwip_intf_v2_1"
 			default n
 			help
 				open lwip debug log
+
+		config ICMP_ERR_RATELIMIT
+			bool "Enable ICMP rate limit"
+			default n
+
+		config ICMP_ERR_RATE_THRESHOLD
+			int "ICMP rate limit threshold"
+			default 10
+
+		config ARP_TABLE_SIZE
+			int "ARP table size"
+			default 10
 
 		#TODO optimize it
 		choice LWIP_MEM

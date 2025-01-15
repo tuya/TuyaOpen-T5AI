@@ -60,6 +60,11 @@ enum
 
 };
 
+typedef enum boot_flag_t {
+    BOOT_FLAG_INVALID  	= 0,
+    BOOT_FLAG_PRIMARY  	= 1,
+    BOOT_FLAG_SECONDARY = 2,
+}BOOT_FLAG;
 
 /**
  ****************************************************************************************
@@ -107,6 +112,19 @@ uint32_t ext_flash_erase_chip(uint8_t time_outs) ;//CHIP_ERASE_CMD
 
 
 u8 ext_flash_erase_one_sector(uint32_t address);
+
+uint32_t ext_flash_quickly_erase_section(uint32_t address, uint32_t size);
+
+#if CONFIG_RANDOM_AES_UPGRADE_BL2
+#define _CTRL_CTRL_MAGIC (0x4C725463)
+typedef struct _boot_ctrl_data_t {
+    uint32_t magic;
+    uint32_t boot_flag;
+} boot_ctrl_data_t;
+
+uint8_t hal_write_preferred_boot_flag(const BOOT_FLAG flag);
+uint8_t hal_read_preferred_boot_flag(BOOT_FLAG *flag);
+#endif
 /**
  ****************************************************************************************
  * @brief   Write a flash page.

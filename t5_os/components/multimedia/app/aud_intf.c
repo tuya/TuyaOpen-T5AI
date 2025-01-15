@@ -913,18 +913,29 @@ bk_err_t bk_aud_intf_voc_init(aud_intf_voc_setup_t setup)
 
 	//aud_tras_drv_setup.aud_trs_mode = demo_setup.mode;
 	aud_intf_info.voc_info.samp_rate = setup.samp_rate;
+    // Modified by TUYA Start
+	aud_intf_info.voc_info.spk_samp_rate = setup.spk_samp_rate;
+    // Modified by TUYA End
 	aud_intf_info.voc_info.aec_enable = setup.aec_enable;
 	aud_intf_info.voc_info.data_type = setup.data_type;
 	/* audio config */
 	aud_intf_info.voc_info.aud_setup.adc_gain = setup.mic_gain;	//default: 0x2d
 	aud_intf_info.voc_info.aud_setup.dac_gain = setup.spk_gain;	//default: 0x2d
-	if (aud_intf_info.voc_info.samp_rate == 16000) {
+    // Modified by TUYA Start
+    if (setup.aec_enable) {
+		if (aud_intf_info.voc_info.samp_rate == 16000) {
+			aud_intf_info.voc_info.aud_setup.mic_samp_rate_points = 320;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
+			aud_intf_info.voc_info.aud_setup.speaker_samp_rate_points = 320;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
+		} else {
+			aud_intf_info.voc_info.aud_setup.mic_samp_rate_points = 160;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
+			aud_intf_info.voc_info.aud_setup.speaker_samp_rate_points = 160;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
+		}
+    } else {
 		aud_intf_info.voc_info.aud_setup.mic_samp_rate_points = 320;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
 		aud_intf_info.voc_info.aud_setup.speaker_samp_rate_points = 320;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
-	} else {
-		aud_intf_info.voc_info.aud_setup.mic_samp_rate_points = 160;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
-		aud_intf_info.voc_info.aud_setup.speaker_samp_rate_points = 160;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
-	}
+    }
+    // Modified by TUYA End
+
 	aud_intf_info.voc_info.aud_setup.mic_frame_number = 2;
 	aud_intf_info.voc_info.aud_setup.speaker_frame_number = 2;
 	aud_intf_info.voc_info.aud_setup.spk_mode = setup.spk_mode;
@@ -1349,9 +1360,15 @@ static bk_err_t aud_intf_voc_write_spk_data(uint8_t *dac_buff, uint32_t size)
 			return BK_FAIL;
 		}
 		aud_intf_info.voc_info.rx_info.rx_buff_seq_tail += size/(aud_intf_info.voc_info.rx_info.frame_size);
+        // Modified by TUYA Start
+	    return BK_OK;
+        // Modified by TUYA End
 	}
 
-	return BK_OK;
+    // Modified by TUYA Start
+	// return BK_OK;
+    return BK_ERR_BUSY;
+    // Modified by TUYA End
 }
 
 /* write speaker data in general work mode */
@@ -1402,6 +1419,27 @@ bk_err_t bk_aud_intf_write_spk_data(uint8_t *dac_buff, uint32_t size)
 
 	return ret;
 }
+
+// Modified by TUYA Start
+bk_err_t bk_aud_intf_clean_spk_data(void)
+{
+	bk_err_t ret = BK_OK;
+
+	//LOGI("%s \n", __func__);
+
+	switch (aud_intf_info.drv_info.setup.work_mode) {
+		case AUD_INTF_WORK_MODE_VOICE:
+	        ring_buffer_clear(aud_intf_info.voc_info.rx_info.decoder_rb);
+			break;
+
+		default:
+			ret = BK_FAIL;
+			break;
+	}
+
+	return ret;
+}
+// Modified by TUYA End
 
 
 bk_err_t bk_aud_intf_voc_tx_debug(aud_intf_dump_data_callback dump_callback)

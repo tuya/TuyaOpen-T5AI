@@ -41,7 +41,7 @@ static bool s_fft_driver_is_init = false;
 static fft_driver_t driver_fft;
 
 static void fft_isr(void);
-extern void delay(int num);//TODO fix me
+extern void bk_delay(int num);//TODO fix me
 
 static __inline uint16_t fft_sat(uint16_t din)
 {

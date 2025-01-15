@@ -43,14 +43,15 @@ def pack_server_get_app_bin_hash(tool_path):
     run_cmd(cmd)
     save_cmd("Get APP bin HASH", cmd)
 
-    bl2_bin_hash = get_hash('manifest_hash.json')
+    bl2_bin_hash = get_hash('primary_manifest_hash.json')
+    bl2_b_bin_hash = get_hash('secondary_manifest_hash.json')
     app_bin_hash = get_hash('app_hash.json')
-    return [bl2_bin_hash, app_bin_hash]
+    return [bl2_bin_hash, bl2_b_bin_hash, app_bin_hash]
 
-def pack_server_sign_from_app_sig(tool_path, bl2_sig_s, bl2_sig_r, app_sig):
+def pack_server_sign_from_app_sig(tool_path, bl2_sig_r, bl2_sig_s, bl2_b_sig_r, bl2_b_sig_s, app_sig):
     logging.debug(f'')
     logging.debug(f'--------------------On pack server: create signed bin from signature--------------------')
-    cmd = f'{tool_path}/main.py steps sign_from_app_sig --bl2_sig_s {bl2_sig_s} --bl2_sig_r {bl2_sig_r} --app_sig {app_sig} --debug'
+    cmd = f'{tool_path}/main.py steps sign_from_app_sig --bl2_sig_r {bl2_sig_r} --bl2_sig_s {bl2_sig_s} --bl2_b_sig_r {bl2_b_sig_r} --bl2_b_sig_s {bl2_b_sig_s} --app_sig {app_sig} --debug'
     run_cmd(cmd)
     save_cmd("", cmd)
 

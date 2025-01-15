@@ -81,11 +81,12 @@ typedef struct
 } shell_dev_ipc_t;
 
 typedef int  (* shell_ipc_rx_t)(u16 cmd, void *data_buf, u16 cpu_id);
+typedef void  (* shell_ipc_tx_complete_t)(u16 cmd);
 
 typedef struct _shell_ipc_drv
 {
 	bool_t   (*init)(shell_dev_ipc_t * dev_ipc);
-	bool_t   (*open)(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callback);
+	bool_t   (*open)(shell_dev_ipc_t * dev_ipc, shell_ipc_rx_t rx_callback, shell_ipc_tx_complete_t tx_comptete);
 	u16      (*read)(shell_dev_ipc_t * dev_ipc, u8 * pBuf, u16 BufLen);
 	u16      (*write_cmd)(shell_dev_ipc_t * dev_ipc, mb_chnl_cmd_t * cmd_buf);
 	bool_t   (*io_ctrl)(shell_dev_ipc_t * dev_ipc, u8 cmd, void * param);
@@ -121,7 +122,10 @@ enum
 	MB_CMD_LOG_OUT_OK,
 	MB_CMD_USER_INPUT,
 	MB_CMD_ASSERT_OUT,
+	MB_CMD_LOG_UNBLOCK,
 } ;
+
+#define	ACK_STATE_BLOCK 0x10000       /* log alloc buffer fail, tansfer log to task, notify cpu1 to block log output. */
 
 extern shell_dev_ipc_t		shell_dev_ipc;
 

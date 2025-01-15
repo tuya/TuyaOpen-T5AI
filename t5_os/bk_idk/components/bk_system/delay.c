@@ -10,7 +10,7 @@
 #include "arch_delay.h"
 #include "timer_driver.h"
 
-void delay(INT32 num)
+void bk_delay(INT32 num)
 {
 	volatile INT32 i, j;
 

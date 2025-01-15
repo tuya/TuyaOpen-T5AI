@@ -62,6 +62,9 @@ typedef enum
     BK_PARTITION_OTA_FINA_EXECUTIVE = 8,
     BK_PARTITION_APPLICATION2 = 9,
     BK_PARTITION_EASYFLASH = 10,
+    BK_PARTITION_NVS = 11,
+    BK_PARTITION_NVS_KEY = 12,
+    BK_PARTITION_WIZ_MFR = 13,
     BK_PARTITION_MAX,
 }bk_partition_t;
 
@@ -102,6 +105,40 @@ bk_logic_partition_t *bk_flash_partition_get_info(bk_partition_t partition);
 bk_err_t bk_flash_partition_erase(bk_partition_t partition, uint32_t offset, uint32_t size);
 
 /**
+ * @brief   Erase an area on a Flash logical partition
+ *
+ * @note    Erase on an address will erase all data on a sector that the
+ *          address is belonged to, this function does not save data that
+ *          beyond the address area but in the affected sector, the data
+ *          will be lost.
+ *
+ * @param  label: The target flash logical partition which should be erased
+ * @param  offset: Start address of the erased flash area
+ * @param  size: Size of the erased flash area
+ *
+ * @return
+ *    - BK_OK: succeed
+ *    - others: other errors
+ */
+bk_err_t bk_flash_partition_erase_by_name(const char *label, uint32_t offset, uint32_t size);
+
+/**
+ * @brief   Erase an area on a Flash logical partition
+ *
+ * @note    Erase on an address will erase all data on a sector that the
+ *          address is belonged to, this function does not save data that
+ *          beyond the address area but in the affected sector, the data
+ *          will be lost.
+ *
+ * @param  label: The target flash logical partition which should be erased all
+ *
+ * @return
+ *    - BK_OK: succeed
+ *    - others: other errors
+ */
+bk_err_t bk_flash_partition_erase_all(const char *label);
+
+/**
  * @brief  Write data to an area on a Flash logical partition
  *
  * @param  partition: The target flash logical partition which should be written
@@ -116,6 +153,20 @@ bk_err_t bk_flash_partition_erase(bk_partition_t partition, uint32_t offset, uin
 bk_err_t bk_flash_partition_write(bk_partition_t partition, const uint8_t *buffer, uint32_t offset, uint32_t buffer_len);
 
 /**
+ * @brief  Write data to an area on a Flash logical partition
+ *
+ * @param  label: The target flash logical partition which should be written
+ * @param  buffer: Pointer to the data buffer that will be written to flash
+ * @param  off_set: The offset of write address
+ * @param  buffer_len: The length of the buffer
+ *
+ * @return
+ *    - BK_OK: succeed
+ *    - others: other errors
+ */
+bk_err_t bk_flash_partition_write_by_name(const char *label, const uint8_t *buffer, uint32_t offset, uint32_t buffer_len);
+
+/**
  * @brief    Read data from an area on a Flash to data buffer in RAM
  *
  * @param    partition: The target flash logical partition which should be read
@@ -128,6 +179,26 @@ bk_err_t bk_flash_partition_write(bk_partition_t partition, const uint8_t *buffe
  *    - others: other errors
  */
 bk_err_t bk_flash_partition_read(bk_partition_t partition, uint8_t *out_buffer, uint32_t offset, uint32_t buffer_len);
+
+/**
+ * @brief    Read data from an area on a Flash to data buffer in RAM
+ *
+ * @param    label: The target flash logical partition which should be read
+ * @param    out_buffer: Pointer to the data buffer that stores the data read from flash
+ * @param    offsets: The offset of read address
+ * @param    buffer_len: The length of the buffer
+ *
+ * @return
+ *    - BK_OK: succeed
+ *    - others: other errors
+ */
+bk_err_t bk_flash_partition_read_by_name(const char *label, uint8_t *out_buffer, uint32_t offset, uint32_t buffer_len);
+
+bk_err_t bk_flash_partition_read_enhanced(bk_partition_t partition, uint8_t *out_buffer, uint32_t offset, uint32_t buffer_len);
+bk_err_t bk_flash_partition_write_enhanced(bk_partition_t partition, const uint8_t *buffer, uint32_t offset, uint32_t buffer_len);
+bk_logic_partition_t * get_partition_info_by_name(const char *label);
+bk_logic_partition_t * get_partition_info(bk_partition_t partition);
+uint32_t get_partition_index(const bk_logic_partition_t* partition);
 
 /**
  * @brief     Write data to flash (only operating 4k flash space)
@@ -147,3 +218,4 @@ bk_err_t bk_spec_flash_write_bytes(bk_partition_t partition, const uint8_t *user
 #ifdef __cplusplus
 }
 #endif
+

@@ -48,8 +48,6 @@ bk_err_t bk_h264_soft_reset(void);
 
 bk_err_t bk_h264_config_reset(void);
 
-bk_err_t bk_h264_clk_check(void);
-
 bk_err_t bk_h264_get_fifo_addr(uint32_t *fifo_addr);
 
 bk_err_t bk_h264_register_isr(h264_isr_type_t type_id, h264_isr_t isr, void *param);
@@ -64,7 +62,7 @@ bk_err_t bk_h264_enc_lcd_dma_cpy(void *out, const void *in, uint32_t len, dma_id
 
 bk_err_t bk_h264_get_h264_base_config(h264_base_config_t *config);
 
-
+bk_err_t bk_h264_updata_encode_fps(uint32 fps);
 
 #ifdef __cplusplus
 }

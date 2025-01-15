@@ -167,6 +167,11 @@ static inline uint32_t flash_ll_read_status_reg(flash_hw_t *hw, uint8_t sr_width
 	return state_reg_data;
 }
 
+static inline uint32_t flash_ll_get_crc_err_num(flash_hw_t *hw)
+{
+	return (uint32_t)hw->state.crc_err_num;
+}
+
 static inline void flash_ll_enable_cpu_data_wr(flash_hw_t *hw)
 {
 	hw->config.cpu_data_wr_en = 1;
@@ -310,6 +315,16 @@ static inline void flash_ll_set_offset_enable(flash_hw_t *hw, bool value)
 static inline uint32_t flash_ll_read_offset_enable(flash_hw_t *hw)
 {
 	return hw->flash_ctrl.flash_offset_enable & 0x1;
+}
+
+static inline void flash_ll_set_volatile_status_write(flash_hw_t *hw)
+{
+	hw->cmd_cfg.wrsr_cmd_reg = 0x50;
+	hw->cmd_cfg.wrsr_cmd_sel = 0x1;
+	flash_ll_set_op_cmd(hw, FLASH_OP_CMD_WRSR);
+	while (flash_ll_is_busy(hw));
+	hw->cmd_cfg.wrsr_cmd_reg = 0x0;
+	hw->cmd_cfg.wrsr_cmd_sel = 0x0;
 }
 
 #ifdef __cplusplus

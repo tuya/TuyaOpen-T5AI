@@ -18,7 +18,7 @@ extern usb_slist_t hub_class_head;
 #ifdef __cplusplus
 extern "C" {
 #endif
-void usbh_roothub_thread_wakeup(uint8_t port);
+void usbh_roothub_thread_send_queue(uint8_t port, void *callback);
 void usbh_hub_register(struct usbh_hub *hub);
 void usbh_hub_unregister(struct usbh_hub *hub);
 int usbh_hub_initialize(void);

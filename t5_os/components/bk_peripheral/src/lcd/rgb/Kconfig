@@ -15,6 +15,11 @@ menu "RGB LCD"
 		depends on LCD
 		bool "Enable LCD_T50P181CQ API"
 		default n
+
+    config LCD_TUYA_COMMON_RGB
+		depends on LCD
+		bool "Enable LCD_TUYA_COMMON_RGB API"
+		default n
     # Modified by TUYA End
 
 	config LCD_GC9503V

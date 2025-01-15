@@ -73,6 +73,16 @@ static inline uint32_t aon_pmu_ll_get_r0_gpio_sleep(void) {
 	return r->gpio_sleep;
 }
 
+static inline void aon_pmu_ll_set_gpio_retention_bitmap(uint32_t v) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	r->gpio_retention_bitmap = v;
+}
+
+static inline uint32_t aon_pmu_ll_get_gpio_retention_bitmap(void) {
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	return r->gpio_retention_bitmap;
+}
+
 //reg r1:
 
 static inline void aon_pmu_ll_set_r1(uint32_t v) {

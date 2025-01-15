@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- 由 Microsoft Visio, SVG Export 生成 otp_layout.svg otp -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="6.29921in" height="4.72441in"
+		viewBox="0 0 453.543 340.157" xml:space="preserve" color-interpolation-filters="sRGB" class="st8">
+	<v:documentProperties v:langID="2052" v:metric="true" v:viewMarkup="false">
+		<v:userDefs>
+			<v:ud v:nameU="msvSubprocessMaster" v:prompt="" v:val="VT4(Rectangle)"/>
+			<v:ud v:nameU="msvNoAutoConnect" v:val="VT0(1):26"/>
+		</v:userDefs>
+	</v:documentProperties>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {fill:#ffffff;stroke:#000000;stroke-width:0.75}
+		.st2 {fill:#000000;font-family:Calibri;font-size:0.833336em}
+		.st3 {fill:none;stroke:none;stroke-width:0.25}
+		.st4 {fill:#000000;font-family:Calibri;font-size:1.00001em}
+		.st5 {visibility:visible}
+		.st6 {fill:none;filter:url(#filter_2);stroke:#5b9bd5;stroke-opacity:0.22}
+		.st7 {stroke:#000000;stroke-width:0.25}
+		.st8 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Filters">
+		<filter id="filter_2">
+			<feGaussianBlur stdDeviation="2"/>
+		</filter>
+	</defs>
+	<g v:mID="25" v:index="13" v:groupContext="foregroundPage">
+		<v:userDefs>
+			<v:ud v:nameU="msvThemeOrder" v:val="VT0(0):26"/>
+		</v:userDefs>
+		<title>otp</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<g id="shape1-1" v:mID="1" v:groupContext="shape" transform="translate(108.551,-170.079)">
+			<title>矩形</title>
+			<desc>Hardware (256 Bytes)</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="99.2126" cy="320.315" width="198.43" height="39.685"/>
+			<rect x="0" y="300.472" width="198.425" height="39.685" class="st1"/>
+			<text x="55.14" y="323.31" class="st2" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Hardware (256 Bytes)</text>		</g>
+		<g id="shape3-4" v:mID="3" v:groupContext="shape" transform="translate(108.551,-130.394)">
+			<title>矩形.3</title>
+			<desc>Security Engine (128 Bytes)</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="99.2126" cy="320.315" width="198.43" height="39.685"/>
+			<rect x="0" y="300.472" width="198.425" height="39.685" class="st1"/>
+			<text x="42.92" y="323.31" class="st2" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Security Engine  (128 Bytes)</text>		</g>
+		<g id="shape4-7" v:mID="4" v:groupContext="shape" transform="translate(108.551,-90.7087)">
+			<title>矩形.4</title>
+			<desc>Software Non-Security (128 Bytes)</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="99.2126" cy="320.315" width="198.43" height="39.685"/>
+			<rect x="0" y="300.472" width="198.425" height="39.685" class="st1"/>
+			<text x="29.37" y="323.31" class="st2" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Software Non-Security (128 Bytes)</text>		</g>
+		<g id="shape5-10" v:mID="5" v:groupContext="shape" transform="translate(108.551,-51.0236)">
+			<title>矩形.5</title>
+			<desc>Software Security (512 Bytes)</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="99.2126" cy="320.315" width="198.43" height="39.685"/>
+			<rect x="0" y="300.472" width="198.425" height="39.685" class="st1"/>
+			<text x="39.4" y="323.31" class="st2" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Software Security (512 Bytes)</text>		</g>
+		<g id="shape6-13" v:mID="6" v:groupContext="shape" transform="translate(63.1969,-198.268)">
+			<title>工作表.6</title>
+			<desc>0x400</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="7.08" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>0x400</text>		</g>
+		<g id="shape8-16" v:mID="8" v:groupContext="shape" transform="translate(63.1969,-121.732)">
+			<title>工作表.8</title>
+			<desc>0x580</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="7.08" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>0x580</text>		</g>
+		<g id="shape9-19" v:mID="9" v:groupContext="shape" transform="translate(63.1969,-80.7087)">
+			<title>工作表.9</title>
+			<desc>0x600</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="7.08" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>0x600</text>		</g>
+		<g id="shape10-22" v:mID="10" v:groupContext="shape" transform="translate(63.1969,-39.685)">
+			<title>工作表.10</title>
+			<desc>0x800</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="7.08" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>0x800</text>		</g>
+		<g id="shape11-25" v:mID="11" v:groupContext="shape" transform="translate(108.551,-209.764)">
+			<title>矩形.11</title>
+			<desc>UID (1024 Bits)</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="99.2126" cy="320.315" width="198.43" height="39.685"/>
+			<rect x="0" y="300.472" width="198.425" height="39.685" class="st1"/>
+			<text x="68.74" y="323.31" class="st2" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>UID (1024 Bits)</text>		</g>
+		<g id="shape12-28" v:mID="12" v:groupContext="shape" transform="translate(108.551,-249.449)">
+			<title>矩形.12</title>
+			<desc>Random Bits (1024 Bits)</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="99.2126" cy="320.315" width="198.43" height="39.685"/>
+			<rect x="0" y="300.472" width="198.425" height="39.685" class="st1"/>
+			<text x="50.66" y="323.31" class="st2" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Random Bits (1024 Bits)</text>		</g>
+		<g id="shape13-31" v:mID="13" v:groupContext="shape" transform="translate(64.0315,-239.449)">
+			<title>工作表.13</title>
+			<desc>0x380</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="7.08" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>0x380</text>		</g>
+		<g id="shape14-34" v:mID="14" v:groupContext="shape" transform="translate(64.8661,-276.299)">
+			<title>工作表.14</title>
+			<desc>0x300</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="7.08" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>0x300</text>		</g>
+		<g id="shape15-37" v:mID="15" v:groupContext="shape" transform="translate(63.1969,-158.74)">
+			<title>工作表.15</title>
+			<desc>0x500</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="7.08" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>0x500</text>		</g>
+		<g id="shape16-40" v:mID="16" v:groupContext="shape" transform="translate(306.976,-209.764)">
+			<title>右括号</title>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:prompt="" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<g id="shadow16-41" v:groupContext="shadow" v:shadowOffsetX="0.345598" v:shadowOffsetY="-1.97279" v:shadowType="1"
+					transform="matrix(1,0,0,1,0.345598,1.97279)" class="st5">
+				<path d="M0 340.16 A37.9502 13.2826 -180 0 0 14.17 332.22 L14.17 300.47 L28.35 300.47 L14.17 300.47 L14.17 268.72
+							 A37.9502 13.2826 -180 0 0 0 260.79" class="st6"/>
+			</g>
+			<path d="M0 340.16 A37.9502 13.2826 -180 0 0 14.17 332.22 L14.17 300.47 L28.35 300.47 L14.17 300.47 L14.17 268.72 A37.9502
+						 13.2826 -180 0 0 0 260.79" class="st7"/>
+		</g>
+		<g id="shape17-48" v:mID="17" v:groupContext="shape" transform="translate(335.323,-239.449)">
+			<title>工作表.17</title>
+			<desc>PUF</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="12.14" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>PUF</text>		</g>
+		<g id="shape18-51" v:mID="18" v:groupContext="shape" transform="translate(306.976,-51.0236)">
+			<title>右括号.18</title>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:prompt="" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<g id="shadow18-52" v:groupContext="shadow" v:shadowOffsetX="0.345598" v:shadowOffsetY="-1.97279" v:shadowType="1"
+					transform="matrix(1,0,0,1,0.345598,1.97279)" class="st5">
+				<path d="M0 340.16 A37.9502 26.5652 -180 0 0 14.17 324.28 L14.17 260.79 L28.35 260.79 L14.17 260.79 L14.17 197.29
+							 A37.9502 26.5652 -180 0 0 0 181.42" class="st6"/>
+			</g>
+			<path d="M0 340.16 A37.9502 26.5652 -180 0 0 14.17 324.28 L14.17 260.79 L28.35 260.79 L14.17 260.79 L14.17 197.29 A37.9502
+						 26.5652 -180 0 0 0 181.42" class="st7"/>
+		</g>
+		<g id="shape19-59" v:mID="19" v:groupContext="shape" transform="translate(335.323,-120.394)">
+			<title>工作表.19</title>
+			<desc>OTP</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="21.8425" cy="330.157" width="43.69" height="20"/>
+			<rect x="0" y="320.157" width="43.685" height="20" class="st3"/>
+			<text x="11.85" y="333.76" class="st4" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>OTP</text>		</g>
+	</g>
+</svg>

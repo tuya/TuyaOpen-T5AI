@@ -2,6 +2,7 @@
 #include "tuya_cloud_types.h"
 #include "tkl_flash.h"
 
+#include "tkl_output.h"
 #include <common/bk_typedef.h>
 #include "driver/flash.h"
 
@@ -12,6 +13,12 @@ typedef struct
     unsigned long   start;
     unsigned long   current;
 } TUYA_OS_STORAGE_TIMER;
+
+typedef struct {
+    char *uuid;
+    char *authkey;
+} tuya_iot_license_t;
+
 //flash 最大持续处理时间
 #define FLASH_MAX_HANDLE_KEEP_TIME 10000    //10s
 
@@ -25,9 +32,12 @@ extern void flash_unlock(void);
 // Name     Begin       End         Length
 // boot     0x0         0x11000     68k
 // cpu0     0x11000     0x20f000    2040k
-// cpu1     0x20f000    0x31f000    1088k
-// ota1     0x31f000    0x7cb000    4784k
-// ota0     0x7cb000    0x7cd000    8k
+// cpu1     0x20f000    0x3B8000    1700k
+// cpu2     0x3B8000    0x400000    288k   // resverd
+// ota_     0x400000    0x5FE000    2040k
+// ota      0x5FE000    0x600000    8k
+// fs       0x600000    0x7cb000    1836k
+// ef       0x7cb000    0x7cd000    8k
 // kvp      0x7cd000    0x7ce000    4k
 // res      0x7ce000    0x7dd000    60k
 // kv       0x7dd000    0x7ed000    64k
@@ -41,9 +51,9 @@ extern void flash_unlock(void);
 
 
 #define APPLICATION_START               0x10000
-#define APPLICATION_SIZE                (4784 * 1024)
+#define APPLICATION_SIZE                ((2040 + 1700 + 288 + 2040 + 8)* 1024)
 
-#define OTA_START                       0x7cb000
+#define OTA_START                       0x5fe000
 #define OTA_SIZE                        (8 * 1024)
 
 #if defined(KV_PROTECTED_ENABLE) && (KV_PROTECTED_ENABLE==1)
@@ -52,10 +62,7 @@ extern void flash_unlock(void);
 #endif
 
 #define TUYA_USER1                      0x7ce000
-#define TUYA_USER1_SIZE                 (32 * 1024)
-
-#define TUYA_USER2                      0x7d6000
-#define TUYA_USER2_SIZE                 (28 * 1024)
+#define TUYA_USER1_SIZE                 (60 * 1024)
 
 #define TUYA_KV                         0x7dd000
 #define TUYA_KV_SIZE                    (64 * 1024)
@@ -77,7 +84,7 @@ extern void flash_unlock(void);
  *
  * @return OPRT_OK
  */
-int tkl_flash_set_protect(const BOOL enable)
+OPERATE_RET tkl_flash_set_protect(const BOOL_T enable)
 {
     unsigned int  param;
 
@@ -141,25 +148,12 @@ static unsigned int __uni_flash_is_protect_all(void)
 */
 OPERATE_RET tkl_flash_write(uint32_t addr, const UCHAR_T *src, uint32_t size)
 {
-    unsigned int protect_flag;
-    unsigned int param;
-
     if (NULL == src) {
         return OPRT_INVALID_PARM;
     }
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
     flash_lock();
-
-#if 0
-    //解保护
-    protect_flag = __uni_flash_is_protect_all();
-
-    if (protect_flag) {
-        param = FLASH_PROTECT_HALF;
-        bk_flash_set_protect_type(param);
-    }
-#endif
 
     bk_flash_set_protect_type(FLASH_PROTECT_NONE);
     bk_flash_write_bytes(addr, (const uint8_t *)src, size);
@@ -185,25 +179,11 @@ OPERATE_RET tkl_flash_erase(uint32_t addr, uint32_t size)
 {
     unsigned short start_sec = (addr / PARTITION_SIZE);
     unsigned short end_sec = ((addr + size - 1) / PARTITION_SIZE);
-    // unsigned int status;
     unsigned int i = 0;
     unsigned int sector_addr;
-    // DD_HANDLE flash_handle;
-    unsigned int  param;
-    unsigned int protect_flag;
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
     flash_lock();
-
-    // TODO flash unprotect
-#if 0
-    //解保护
-    protect_flag = __uni_flash_is_protect_all();
-    if (protect_flag) {
-        param = FLASH_PROTECT_HALF;
-        bk_flash_set_protect_type(param);
-    }
-#endif
 
     bk_flash_set_protect_type(FLASH_PROTECT_NONE);
     for (i = start_sec; i <= end_sec; i++) {
@@ -211,15 +191,6 @@ OPERATE_RET tkl_flash_erase(uint32_t addr, uint32_t size)
         bk_flash_erase_sector(sector_addr);
     }
     bk_flash_set_protect_type(FLASH_UNPROTECT_LAST_BLOCK);
-
-#if 0
-    protect_flag = __uni_flash_is_protect_all();
-    if(protect_flag)
-    {
-        param = FLASH_PROTECT_ALL;
-        bk_flash_set_protect_type(param);
-    }
-#endif
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
     flash_unlock();
@@ -322,11 +293,6 @@ OPERATE_RET tkl_flash_get_one_type_info(TUYA_FLASH_TYPE_E type, TUYA_FLASH_BASE_
             info->partition[0].start_addr = TUYA_USER1;
             info->partition[0].size = TUYA_USER1_SIZE;
             break;
-        case TUYA_FLASH_TYPE_USER1:
-            info->partition_num = 1;
-            info->partition[0].block_size =  PARTITION_SIZE;
-            info->partition[0].start_addr = TUYA_USER2;
-            info->partition[0].size = TUYA_USER2_SIZE;
             break;
 
         default:
@@ -338,3 +304,16 @@ OPERATE_RET tkl_flash_get_one_type_info(TUYA_FLASH_TYPE_E type, TUYA_FLASH_BASE_
 
 }
 
+/**
+ * @brief tuya_iot_license_read
+ *
+ * @param[in] license: iot license struct pointer
+ *
+ * @note This API is used for read license .
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
+int tuya_iot_license_read(tuya_iot_license_t *license)
+{
+    return OPRT_NOT_SUPPORTED;
+}

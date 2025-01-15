@@ -948,13 +948,12 @@ void bk_usb_mailbox_sw_slave_init(void)
     // Modified by TUYA Start
 #ifdef CONFIG_TUYA_GPIO_MAP
         uint8_t usb_ldo, active_level;
-        tkl_vi_get_power_info(&usb_ldo, &active_level);
+        tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 		bk_usb_power_ops(usb_ldo, 1);
 #else
 		bk_usb_power_ops(CONFIG_USB_VBAT_CONTROL_GPIO_ID, 1);
 #endif // CONFIG_TUYA_GPIO_MAP
     // Modified by TUYA End
-
 		task_mb_chnl_write(USB_MAILBOX_CHNL, &callback_mb_cmd);
 #endif
 

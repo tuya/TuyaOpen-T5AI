@@ -64,4 +64,30 @@ menu "TUYA_SDK"
         bool "usd tuya gpio defines"
         default y
 
+    config TUYA_PAGE_TILEVIEW
+        bool "Config Tuya GUI Gesture"
+        default n
+
+    config TUYA_TEST_CLI
+        bool "tuya test"
+        default n
+
+    config VND_CAL_VERSION
+        int "cal file version"
+        range 1 3
+        default 1
+
+    config ENABLE_TUYA_LVGL_TEST_DEMO
+        int "enable tuya lvgl test demo"
+        range 0 1
+        default 0
+
+    config TUYA_ENABLE_QSPI_FLASH
+        bool "enable tuya qspi flash"
+        default n
+
+    config TUYA_QSPI_FLASH_TYPE
+        string "qspi flash type"
+        default "gd25q127c"
+
 endmenu

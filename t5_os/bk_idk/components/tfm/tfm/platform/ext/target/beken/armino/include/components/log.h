@@ -30,9 +30,10 @@ extern "C" {
 #define BK_LOG_NONE    0 /*!< No log output */
 #define BK_LOG_ERROR   1 /*!< Critical errors, software module can not recover on its own */
 #define BK_LOG_WARN    2 /*!< Error conditions from which recovery measures have been taken */
-#define BK_LOG_INFO    3 /*!< Information messages which describe normal flow of events */
-#define BK_LOG_DEBUG   4 /*!< Extra information which is not necessary for normal use (values, pointers, sizes, etc). */
-#define BK_LOG_VERBOSE 5 /*!< Extra information which is not necessary for normal use (values, pointers, sizes, etc). */
+#define BK_LOG_FORCE   3
+#define BK_LOG_INFO    4 /*!< Information messages which describe normal flow of events */
+#define BK_LOG_DEBUG   5 /*!< Extra information which is not necessary for normal use (values, pointers, sizes, etc). */
+#define BK_LOG_VERBOSE 6 /*!< Extra information which is not necessary for normal use (values, pointers, sizes, etc). */
 
 #if CONFIG_STDIO_PRINTF
 #define _OS_PRINTF printf
@@ -97,6 +98,12 @@ extern "C" {
 #define BK_LOGW(tag, format, ...) if (efuse_is_err_log_enabled()) _OS_PRINTF(BK_LOG_FORMAT(W, format), rtos_get_time(), tag, ## __VA_ARGS__)
 #else
 #define BK_LOGW(tag, format, ...) do { (void)sizeof(tag, format, ## __VA_ARGS__); } while (0)
+#endif
+
+#if (LOG_LEVEL >= BK_LOG_FORCE)
+#define BK_LOGF(tag, format, ...) if (efuse_is_err_log_enabled()) _OS_PRINTF(BK_LOG_FORMAT(F, format), rtos_get_time(), tag, ## __VA_ARGS__)
+#else
+#define BK_LOGF(tag, format, ...) do { (void)sizeof(tag, format, ## __VA_ARGS__); } while (0)
 #endif
 
 #if (LOG_LEVEL >= BK_LOG_INFO)

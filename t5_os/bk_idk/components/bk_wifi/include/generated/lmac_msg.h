@@ -1054,6 +1054,16 @@ enum mm_msg_tag
     MM_SET_ARP_TX_RATE_REQ,
     ///confirmation of arp tx rate
     MM_SET_ARP_TX_RATE_CFM,
+    ///set traffic detection parameters Request. msgid:132
+    MM_SET_TD_PARA_REQ,
+    ///set traffic detection parameters Confirmation. msgid:133
+    MM_SET_TD_PARA_CFM,
+    ///get traffic detection parameters Request. msgid:134
+    MM_GET_TD_PARA_REQ,
+    ///get traffic detection parameters Confirmation. msgid:135
+    MM_GET_TD_PARA_CFM,
+    /// Indication the CSA sta reported. msgid:136
+    MM_STA_CSA_REPORT_IND,
     #endif //BK_MAC, MM API messages please defined here
 
     // TODO: MM API messages please define above !
@@ -1814,6 +1824,14 @@ struct mm_csa_traffic_ind
     bool enable;
 };
 
+#if BK_MAC
+struct mm_sta_report_csa_ind
+{
+    uint8_t sta_csa_count;
+    uint16_t freq;
+};
+#endif
+
 /// Pointer to callback function
 typedef void (*cb_idle_func_ptr)(void);
 
@@ -2018,6 +2036,29 @@ struct mm_get_machw_mib_cfm
     uint32_t crc_error_count;
 };
 
+/// Structure containing the parameters of the @ref MM_SET_TD_PARA_REQ message.
+struct mm_set_td_para_req
+{
+    /// reset to default Traffic Detection parameters
+    uint8_t reset;
+    /// default Traffic Detection Interval, less than 100 TU
+    uint8_t td_default_intv_tu;
+    /// default DTIM10 Traffic Detection Interval,less than 100 TU
+    uint8_t dtim10_td_default_intv_tu;
+    /// default Traffic Reduction Detection Interval, shuld be less than dtim10_td_default_intv_tu
+    uint8_t td_reduce_intv_tu;
+};
+
+/// Structure containing the parameters of the @ref MM_GET_TD_PARA_CFM message.
+struct mm_get_td_para_cfm
+{
+    /// default Traffic Detection Interval, less than 100 TU
+    uint8_t td_default_intv_tu;
+    /// default DTIM10 Traffic Detection Interval,less than 100 TU
+    uint8_t dtim10_td_default_intv_tu;
+    /// default Traffic Reduction Detection Interval, shuld be less than dtim10_td_default_intv_tu
+    uint8_t td_reduce_intv_tu;
+};
 #endif
 
 void ps_set_prevent(UINT32 bit);
@@ -2319,6 +2360,8 @@ void *mac_vif_mgmt_next_vif(void *_vif);
 void *sta_mgmt_get_entry(uint8_t staid);
 uint8_t *sta_mgmt_get_mac_addr(void *_sta);
 int sta_mgmt_get_ctrl_port_state(void *_sta);
+uint8_t sta_mgmt_get_uapsd_queues(void *_sta);
+uint16_t sta_mgmt_get_uapsd_tids(void *_sta);
 uint8_t sta_mgmt_get_hwkeyidx(uint8_t vif_idx, uint8_t staid);
 uint8_t vif_mgmt_tx_get_staidx(uint8_t vif_idx, void *dstmac);
 bool mac_vif_mgmt_sta_list_empty(void *_vif);

@@ -52,6 +52,7 @@
 #include "bk_ps.h"
 #include "bk_phy_adapter.h"
 #include "sys_driver.h"
+#include "rwnx_debug.h"
 
 beken_thread_t init_thread_handle;
 beken_thread_t app_thread_handle;
@@ -478,7 +479,8 @@ int bmsg_tx_sender(struct pbuf *p, uint32_t vif_idx)
 	// if the left free heap size is less than threshold value, the new coming
 	// packets will be dropped and a buffer error will be feedbacked to upper layer
 	if (rtos_get_free_heap_size() < min_rsv_mem) {
-		RWNX_LOGW("tx failed mem:%d cnt:%d\n", rtos_get_free_heap_size(), skb_get_pending_cnt());
+		//RWNX_LOGW("tx failed mem:%d cnt:%d\n", rtos_get_free_heap_size(), skb_get_pending_cnt());
+		RWNX_MEM_STATS_INC(tx_err);
 		return BK_ERR_NO_MEM;
 	}
 	#endif

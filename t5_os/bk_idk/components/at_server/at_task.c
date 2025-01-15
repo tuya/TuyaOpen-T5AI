@@ -113,26 +113,14 @@ static cmd_line_t  cmd_line_buf;
 
 
 #if (CMD_DEV == DEV_UART)
-
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
-extern shell_dev_t	   shell_uart;
-static shell_dev_t * cmd_dev = &shell_uart;
-#else
-extern shell_dev_t	   atsvr_shell_uart;
-static shell_dev_t * cmd_dev = &atsvr_shell_uart;
-#endif
-#else // !CONFIG_TUYA_GPIO_MAP
 #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 extern shell_dev_t	   shell_uart;
 static shell_dev_t * cmd_dev = &shell_uart;
 #else
 extern shell_dev_t	   atsvr_shell_uart;
 static shell_dev_t * cmd_dev = &atsvr_shell_uart;
+
 #endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 #endif
 #if (CMD_DEV == DEV_MAILBOX)
 //#if (0 == CONFIG_DEFAULT_AT_PORT)
@@ -712,7 +700,7 @@ static void atsvr_task_init(void)
 
 	#if defined(FWD_CMD_TO_SLAVE) || defined(RECV_CMD_LOG_FROM_SLAVE)
 	ipc_dev->dev_drv->init(ipc_dev);
-	ipc_dev->dev_drv->open(ipc_dev, (shell_ipc_rx_t)atsvr_ipc_rx_indication);   /* register rx-callback to copy log data to buffer. */
+	ipc_dev->dev_drv->open(ipc_dev, (shell_ipc_rx_t)atsvr_ipc_rx_indication, NULL);   /* register rx-callback to copy log data to buffer. */
 	#endif
 
 	atsvr_init_ok = bTRUE;

@@ -525,24 +525,28 @@ static inline uint32_t uart_ll_wait_tx_over(void)
 {
 	uint32_t uart_wait_us;
 	uint32_t baudrate0;
-	uint32_t baudrate1;
 	uint32_t baudrate2;
 
 	uart_hw_t *hw0 = (uart_hw_t *)UART_LL_REG_BASE(0);
-	uart_hw_t *hw1 = (uart_hw_t *)UART_LL_REG_BASE(1);
 	uart_hw_t *hw2 = (uart_hw_t *)UART_LL_REG_BASE(2);
 
 	baudrate0 = UART_CLOCK / (hw0->config.clk_div + 1);
-	baudrate1 = UART_CLOCK / (hw1->config.clk_div + 1);
 	baudrate2 = UART_CLOCK / (hw2->config.clk_div + 1);
 
 	uart_wait_us = 1000000 * hw2->fifo_status.tx_fifo_count * 10 / baudrate2
-				 + 1000000 * hw1->fifo_status.tx_fifo_count * 10 / baudrate1
 				 + 1000000 * hw0->fifo_status.tx_fifo_count * 10 / baudrate0;
 
 	while (!hw2->fifo_status.tx_fifo_empty);
-	while (!hw1->fifo_status.tx_fifo_empty);
 	while (!hw0->fifo_status.tx_fifo_empty);
+
+#if CONFIG_SPE
+	uint32_t baudrate1;
+	uart_hw_t *hw1 = (uart_hw_t *)UART_LL_REG_BASE(1);
+	baudrate1 = UART_CLOCK / (hw1->config.clk_div + 1);
+	uart_wait_us += (1000000 * hw1->fifo_status.tx_fifo_count * 10 / baudrate1);
+
+	while (!hw1->fifo_status.tx_fifo_empty);
+#endif
 
 	return uart_wait_us;
 }

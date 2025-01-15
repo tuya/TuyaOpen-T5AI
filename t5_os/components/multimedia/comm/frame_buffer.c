@@ -384,7 +384,11 @@ void frame_buffer_fb_free(frame_buffer_t *frame, frame_module_t index)
 		LOGE("%s invalid mem_list: %p, %d\n", __func__, mem_list, index);
 		if (fb_info->modules[index].enable)
 		{
-			xEventGroupSetBits(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE);
+			long int HigherPriorityTaskWoken = 0;
+			if (!isr_context)
+				xEventGroupSetBits(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE);
+			else
+				xEventGroupSetBitsFromISR(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE, &HigherPriorityTaskWoken);
 		}
 
 		return;
@@ -407,8 +411,12 @@ void frame_buffer_fb_free(frame_buffer_t *frame, frame_module_t index)
 
 		if (fb_info->modules[index].enable)
 		{
+			long int HigherPriorityTaskWoken = 0;
 			LOGE("%s fb_mem_list disable: %p, %d\n", __func__, mem_list, index);
-			xEventGroupSetBits(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE);
+			if (!isr_context)
+				xEventGroupSetBits(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE);
+			else
+				xEventGroupSetBitsFromISR(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE, &HigherPriorityTaskWoken);
 		}
 
 		if (!isr_context)
@@ -457,7 +465,11 @@ void frame_buffer_fb_free(frame_buffer_t *frame, frame_module_t index)
 
 		if (fb_info->modules[index].enable)
 		{
-			xEventGroupSetBits(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE);
+			long int HigherPriorityTaskWoken = 0;
+			if (!isr_context)
+				xEventGroupSetBits(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE);
+			else
+				xEventGroupSetBitsFromISR(fb_info->modules[index].handle, FRAME_BUFFER_READ_COMPLETE, &HigherPriorityTaskWoken);
 		}
 
 		if (!isr_context)
@@ -846,7 +858,11 @@ void frame_buffer_fb_push(frame_buffer_t *frame)
 				if (mem_list->mode == FB_MEM_SHARED
 				    && fb_info->modules[i].plugin == false)
 				{
-					xEventGroupSetBits(fb_info->modules[i].handle, FRAME_BUFFER_READ_COMPLETE);
+					long int HigherPriorityTaskWoken = 0;
+					if (!isr_context)
+						xEventGroupSetBits(fb_info->modules[i].handle, FRAME_BUFFER_READ_COMPLETE);
+					else
+						xEventGroupSetBitsFromISR(fb_info->modules[i].handle, FRAME_BUFFER_READ_COMPLETE, &HigherPriorityTaskWoken);
 
 					fb_info->modules[i].plugin = true;
 				}

@@ -128,6 +128,8 @@ static void rwnx_txq_init(struct rwnx_txq *txq, int idx, u16 status,
 	txq->hwq = hwq;
 	txq->sta = sta;
 	txq->tid = tid;
+	txq->push_limit = 0;
+	txq->ps_id = LEGACY_PS_ID;
 	if (idx < NX_FIRST_VIF_TXQ_IDX) {
 		int sta_idx = mac_sta_mgmt_get_staid(sta);
 		int tid = idx - (sta_idx * NX_NB_TXQ_PER_STA);
@@ -269,10 +271,12 @@ void rwnx_txq_sta_init(STA_INF_PTR rwnx_sta, u16 status)
 	int tid, idx;
 
 	idx = rwnx_txq_sta_idx(rwnx_sta, 0);
+	uint16_t uapsd_tids = sta_mgmt_get_uapsd_tids(rwnx_sta);
 
 	foreach_sta_txq(rwnx_sta, txq, tid) {
 		rwnx_txq_init(txq, idx, status, &g_rwnx_hw.hwq[rwnx_tid2hwq[tid]], tid,
 					  rwnx_sta);
+		txq->ps_id = uapsd_tids & (1 << tid) ? UAPSD_ID : LEGACY_PS_ID;
 		idx++;
 	}
 }
@@ -978,6 +982,17 @@ static inline void skb_queue_extract(struct sk_buff_head *list,
 	head->prev = last;
 }
 
+static inline
+s8 rwnx_txq_get_credits(struct rwnx_txq *txq)
+{
+	s8 cred = txq->credits;
+	/* if destination is in PS mode, push_limit indicates the maximum
+	number of packet that can be pushed on this txq. */
+	if (txq->push_limit && (cred > txq->push_limit)) {
+		cred = txq->push_limit;
+	}
+	return cred;
+}
 
 /**
  * rwnx_txq_get_skb_to_push - Get list of buffer to push for one txq
@@ -1007,7 +1022,8 @@ bool rwnx_txq_get_skb_to_push(struct rwnx_hwq *hwq,
 							  struct sk_buff_head *sk_list_push)
 {
 	int nb_ready = skb_queue_len(&txq->sk_list);
-	int credits = txq->credits;
+	//int credits = txq->credits;
+	int credits = rwnx_txq_get_credits(txq);
 	bool res = false;
 
 	__skb_queue_head_init(sk_list_push);
@@ -1018,6 +1034,12 @@ bool rwnx_txq_get_skb_to_push(struct rwnx_hwq *hwq,
 		credits = nb_ready;
 	} else {
 		skb_queue_extract(&txq->sk_list, sk_list_push, credits);
+
+		/* When processing PS service period (i.e. push_limit != 0), no longer
+		process this txq if the buffers extracted will complete the SP for
+		this txq */
+		if (txq->push_limit && (credits == txq->push_limit))
+			res = true;
 	}
 
 	return res;

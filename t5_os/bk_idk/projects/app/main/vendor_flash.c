@@ -98,7 +98,7 @@ const bk_logic_partition_t bk_flash_partitions[BK_PARTITION_MAX_USER] = {
     {
         .partition_owner = BK_FLASH_EMBEDDED,
         .partition_description = "rf_firmware",
-        .partition_start_addr = 0x3fe000,
+        .partition_start_addr = 0x7fe000,
         .partition_length = 0x1000,
         .partition_options = PAR_OPT_EXECUTE_DIS | PAR_OPT_READ_EN | PAR_OPT_WRITE_DIS,
     },
@@ -106,7 +106,7 @@ const bk_logic_partition_t bk_flash_partitions[BK_PARTITION_MAX_USER] = {
     {
         .partition_owner = BK_FLASH_EMBEDDED,
         .partition_description = "net_param",
-        .partition_start_addr = 0x3ff000,
+        .partition_start_addr = 0x7ff000,
         .partition_length = 0x1000,
         .partition_options = PAR_OPT_EXECUTE_DIS | PAR_OPT_READ_EN | PAR_OPT_WRITE_DIS,
     },

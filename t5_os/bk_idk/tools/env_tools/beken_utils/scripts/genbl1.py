@@ -146,14 +146,17 @@ class Genbl1:
             s_key['mnft_sig_cfg']['mnft_pubkey'] = self.pubkey
             json.dump(s_key, f, indent=4, separators=(',', ':'))
 
-    def gen_manifest(self, security_counter, static_addr, load_addr="0x28040000", bin_name="bl2.bin", out_manifest_file="primary_manifest.json"):
+    def gen_manifest(self, security_counter, static_addr, load_addr="0x28040000", bin_name="bl2.bin", out_manifest_file="primary_manifest.json", bl2_ver=None):
         logging.debug(f'start to gen {out_manifest_file}')
         logging.debug(f'security_counter={security_counter}')
         logging.debug(f'static_addr={static_addr}')
         logging.debug(f'load_addr={load_addr}')
         logging.debug(f'bin_name={bin_name}')
+        logging.debug(f'bl2_ver={bl2_ver}')
         hex_security_counter = '0x%08x' %(int(security_counter))
         with open(out_manifest_file, 'w+') as f:
+            if bl2_ver != None:
+                s_man['mnft_desc_cfg']['fmt_ver'] = bl2_ver
             s_man['mnft_desc_cfg']['mnft_ver'] = hex_security_counter 
             s_man['mnft_desc_cfg']['sec_boot'] = self.is_sec_boot
             s_man['imgs'][0]['static_addr'] = static_addr

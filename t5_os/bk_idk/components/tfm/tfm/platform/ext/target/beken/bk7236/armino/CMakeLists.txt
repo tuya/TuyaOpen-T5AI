@@ -53,8 +53,10 @@ set(srcs
     ./driver/hal/gpio_ll.c
     ./driver/hal/flash_ll.c
     ./driver/hal/efuse_hal.c
+    ./driver/hal/wdt_hal.c
 )
 
+if(CONFIG_BUILD_TFM)
 set(s_srcs
         ${TFM_BEKEN}/armino/driver/bk_tfm_mpc.c
         ${TFM_BEKEN}/armino/driver/bk_tfm_log.c
@@ -147,6 +149,7 @@ if(CONFIG_INT_TARGET_NSC)
         PUBLIC
         CONFIG_INT_TARGET_NSC
     )
+endif()
 endif()
 
 if(CONFIG_AES_GCM_NSC)

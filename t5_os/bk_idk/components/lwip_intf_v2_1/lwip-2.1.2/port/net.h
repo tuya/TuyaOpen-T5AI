@@ -32,6 +32,7 @@ extern void eth_ip_start(void);
 extern void eth_ip_down(void);
 #endif
 #if CONFIG_BRIDGE
+extern void bridge_set_ip_start_flag(bool enable);
 extern void bridge_ip_start(void);
 extern void bridge_ip_stop(void);
 extern uint32_t bridge_ip_is_start(void);

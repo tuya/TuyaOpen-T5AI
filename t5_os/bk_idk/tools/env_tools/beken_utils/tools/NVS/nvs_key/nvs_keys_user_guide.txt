@@ -1,0 +1,21 @@
+0, generate random nvs_key
+  ./nvs_partition_gen.py generate-key
+  0.0 the script is at the folder:nvs_flash_5.1.1/nvs_partition_generator;
+  0.1 the execution result/key.bin is here:('\nCreated encryption keys: ===> ', '/homeb/wangzhilei/Desktop/delete/gitlab_bekencorp_nvs_flash_5.1.1/nvs_partition_generator/keys/keys-04-24_14-11.bin')
+
+1, encrypt the key binary file using flash aes key based on partition setting
+  1.0, obtain the flash aes key, that is provisioning flash aes key when enable flash Security_Data_Enable;
+       for example:73c7bf397f2ad6bf4e7403a7b965dc5ce0645df039c2d69c814ffb403183fb18
+  1.1, know the nvs_key partition physical address;
+       for instance: 0x3e2000
+  1.2, process the key bin file;
+       ./beken_aes encrypt -infile keys.bin -startaddress 0x3a7860  -keywords 73c7bf397f2ad6bf4e7403a7b965dc5ce0645df039c2d69c814ffb403183fb18 -outfile keys_enc.bin
+       Attention:
+                  startaddress is a virtual address;
+
+2, burn the processed key bin file, when provisioning;
+       Attention:
+                  2024/04/24 bkfil cannot write the key bin file successfully
+                  2024/04/24 bk_writer is okay;
+	
+

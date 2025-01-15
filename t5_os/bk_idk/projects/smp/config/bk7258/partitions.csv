@@ -1,8 +1,0 @@
-Name,Offset,Size,Execute,Read,Write
-primary_bootloader,0x0,68K,TRUE,TRUE,
-primary_cpu0_app,0x11000,2448K,TRUE,TRUE,
-ota,0x275000,1428K,,TRUE,
-usr_config,0x3da000,136K,,TRUE,
-easyflash,0x3fc000,8K,,TRUE,
-sys_rf,0x3fe000,4K,,TRUE,
-sys_net,0x3ff000,4K,,TRUE,

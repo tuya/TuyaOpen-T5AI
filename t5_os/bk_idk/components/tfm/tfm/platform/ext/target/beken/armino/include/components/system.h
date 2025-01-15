@@ -15,6 +15,7 @@
 #pragma once
 
 #include <common/bk_err.h>
+#include <sdkconfig.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,11 +36,31 @@ typedef enum {
     RESET_SOURCE_CRASH_PREFETCH_ABORT = 0x9,
     RESET_SOURCE_CRASH_DATA_ABORT = 0xa,
     RESET_SOURCE_CRASH_UNUSED = 0xb,
-    RESET_SOURCE_CRASH_ILLEGAL_INSTRUCTION  = 0xc,
+    RESET_SOURCE_CRASH_ILLEGAL_INSTRUCTION = 0xc,
     RESET_SOURCE_CRASH_MISALIGNED = 0xd,
     RESET_SOURCE_CRASH_ASSERT = 0xe,
 
-    RESET_SOURCE_UNKNOWN = 0xff,
+    RESET_SOURCE_SUPER_DEEP = 0xf,
+
+    RESET_SOURCE_NMI_WDT = 0x10,
+    RESET_SOURCE_HARD_FAULT = 0x11,
+    RESET_SOURCE_MPU_FAULT = 0x12,
+    RESET_SOURCE_BUS_FAULT = 0x13,
+    RESET_SOURCE_USAGE_FAULT = 0x14,
+    RESET_SOURCE_SECURE_FAULT = 0x15,
+    RESET_SOURCE_DEBUG_MONITOR_FAULT = 0x16,
+    RESET_SOURCE_DEFAULT_EXCEPTION = 0x17,
+    RESET_SOURCE_OTA_REBOOT = 0x18,
+    RESET_SOURCE_BROWN_OUT = 0x19,
+
+    RESET_SOURCE_BOOTLOADER_REBOOT = 0x1a,
+    RESET_SOURCE_BOOTLOADER_NMI_WDT = 0x1b,
+    RESET_SOURCE_BOOTLOADER_MPU_FAULT = 0x1c,
+    RESET_SOURCE_BOOTLOADER_BUS_FAULT = 0x1d,
+    RESET_SOURCE_BOOTLOADER_HARD_FAULT = 0x1e,
+    RESET_SOURCE_BOOTLOADER_UNKNOWN = 0x1f,
+
+    RESET_SOURCE_UNKNOWN = 0x7f,
 } RESET_SOURCE_STATUS;
 
 typedef enum {
@@ -47,6 +68,7 @@ typedef enum {
 	MAC_TYPE_STA,
 	MAC_TYPE_AP,
 	MAC_TYPE_BLUETOOTH,
+	MAC_TYPE_ETH,
 	MAC_MAX,
 } mac_type_t;
 
@@ -110,14 +132,72 @@ int bk_printf_deinit(void);
 void bk_set_printf_enable(uint8_t enable);
 void bk_set_printf_sync(uint8_t enable);
 int bk_get_printf_sync(void);
-void bk_buf_printf_sync(char *buf, int buf_len);
-void bk_printf_ex(int level, char * tag, const char *fmt, ...);
+
+/*  ========= !! NOTE !! =========  */
+/*          Obsoleted  API          */
+/* use bk_printf_ext(...) instead.  */
+void bk_buf_printf_sync(char *buf, int buf_len);  /* Obsoleted  API */
+
+/*  ========= !! NOTE !! =========  */
+/*          Obsoleted  API          */
+/* use bk_printf_ext(...) instead.  */
+void bk_printf_ex(int level, char * tag, const char *fmt, ...);  /* Obsoleted  API */
+
+void bk_printf_ext(int level, char * tag, const char *fmt, ...);
+void bk_printf_raw(int level, char * tag, const char *fmt, ...);
+
 void bk_disable_mod_printf(char *mod_name, uint8_t disable);
 char * bk_get_disable_mod(int * idx);
 void bk_set_printf_port(uint8_t port_num);
 int bk_get_printf_port(void);
 uint32_t bk_misc_get_reset_reason(void);
 void bk_misc_set_reset_reason(uint32_t type);
+
+#if (CONFIG_CPU_CNT > 1)
+//This callback function can be registered in cpu1, and will be called when cpu0 stops cpu1
+//Note: As the callback is called in mailbox ISR, remember to keep it simplify
+typedef bk_err_t (*stop_cpu1_notification)(void *);
+void stop_cpu1_register_notification(stop_cpu1_notification notification, void *param);
+void stop_cpu1_unregister_notification(stop_cpu1_notification notification);
+void stop_cpu1_handle_notifications();
+
+#if (CONFIG_CPU_CNT > 2)
+//which user is working in CPU2,it should vote to start/stop CPU2
+typedef enum{
+	CPU2_USER_USB = 0,
+	CPU2_USER_JPEG_SW_DEC,
+	CPU2_USER_MAX = 31,	//if the user id > 31, please help care about s_mutex_cpu2_users
+}cpu2_user_id_t;
+
+/**
+ * @brief	  Vote to start CPU2 CORE
+ *
+ * This API vote to start CPU2 CORE
+ *
+ * @attention
+ *
+ * @return
+ *	  - == user_id: The value is equal input user_id means user_id is the first owner to start CPU2 core
+ *	    -1: The user_id isn't the first owner to start CPU2 core.
+ */
+int32_t vote_start_cpu2_core(cpu2_user_id_t user_id);
+
+/**
+ * @brief	  Vote to stop CPU2 CORE
+ *
+ * This API vote to stop CPU2 CORE
+ *
+ * @attention
+ *
+ * @return
+ *	  - user_id: The value is equal input user_id means user_id is the last owner to stop CPU2 core
+ *	    -1: The user_id isn't the last owner to stop CPU2 CORE
+ */
+int32_t vote_stop_cpu2_core(cpu2_user_id_t user_id);
+#endif
+
+#endif
+
 
 #ifdef __cplusplus
 }

@@ -19,6 +19,6 @@ menu "H264_CONFIG"
 
 	config H264_P_FRAME_CNT
 		int "config h264 encode one I frame then output H264_P_FRAME_CNT p frame"
-		range 0 30
+		range 0 1023
 		default 5
 endmenu

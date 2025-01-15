@@ -18,6 +18,8 @@
 #include "bootutil/fault_injection_hardening.h"
 #endif /* CRYPTO_HW_ACCELERATOR */
 #include "driver/efuse.h"
+#include "bootutil/bootutil_log.h"
+#include "aon_pmu_ll.h"
 
 #define EFUSE_SECURBOOT_ADDR     0
 #define TAG "bl2_boot"
@@ -159,10 +161,10 @@ int32_t boot_platform_init(void)
 {
     int32_t result;
 
-    close_wdt();
+    aon_pmu_hal_back_and_clear_reset_reason();
 
 #if CONFIG_BL2_WDT
-    update_aon_wdt(0xFFFF);
+    aon_wdt_feed();
 #endif
 
 #if CONFIG_BL2_SECURE_DEBUG
@@ -177,24 +179,6 @@ int32_t boot_platform_init(void)
         return 1;
     }
 #endif /* FLASH_DEV_NAME */
-#ifdef FLASH_DEV_NAME_2
-    result = FLASH_DEV_NAME_2.Initialize(NULL);
-    if (result != ARM_DRIVER_OK) {
-        return 1;
-    }
-#endif /* FLASH_DEV_NAME_2 */
-#ifdef FLASH_DEV_NAME_3
-    result = FLASH_DEV_NAME_3.Initialize(NULL);
-    if (result != ARM_DRIVER_OK) {
-        return 1;
-    }
-#endif /* FLASH_DEV_NAME_3 */
-#ifdef FLASH_DEV_NAME_SCRATCH
-    result = FLASH_DEV_NAME_SCRATCH.Initialize(NULL);
-    if (result != ARM_DRIVER_OK) {
-        return 1;
-    }
-#endif /* FLASH_DEV_NAME_SCRATCH */
 
     flash_max_size = bk_flash_get_current_total_size();
 
@@ -232,6 +216,7 @@ void boot_platform_quit(struct boot_arm_vector_table *vt)
 #ifdef CRYPTO_HW_ACCELERATOR
     result = crypto_hw_accelerator_finish();
     if (result) {
+        BOOT_LOG_ERR("te200\r\n");
         while (1){}
     }
 #endif /* CRYPTO_HW_ACCELERATOR */
@@ -239,27 +224,10 @@ void boot_platform_quit(struct boot_arm_vector_table *vt)
 #ifdef FLASH_DEV_NAME
     result = FLASH_DEV_NAME.Uninitialize();
     if (result != ARM_DRIVER_OK) {
+        BOOT_LOG_ERR("flash\r\n");
         while(1) {}
     }
 #endif /* FLASH_DEV_NAME */
-#ifdef FLASH_DEV_NAME_2
-    result = FLASH_DEV_NAME_2.Uninitialize();
-    if (result != ARM_DRIVER_OK) {
-        while(1) {}
-    }
-#endif /* FLASH_DEV_NAME_2 */
-#ifdef FLASH_DEV_NAME_3
-    result = FLASH_DEV_NAME_3.Uninitialize();
-    if (result != ARM_DRIVER_OK) {
-        while(1) {}
-    }
-#endif /* FLASH_DEV_NAME_3 */
-#ifdef FLASH_DEV_NAME_SCRATCH
-    result = FLASH_DEV_NAME_SCRATCH.Uninitialize();
-    if (result != ARM_DRIVER_OK) {
-        while(1) {}
-    }
-#endif /* FLASH_DEV_NAME_SCRATCH */
 
     vt_cpy = vt;
 #if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__) \
@@ -276,6 +244,21 @@ void boot_platform_quit(struct boot_arm_vector_table *vt)
     __DSB();
     __ISB();
 
+    aon_pmu_hal_restore_reset_reason();
+
     BK_LOGD(TAG, "Jump to 1st app, msp=%p vector=%p\r\n", vt_cpy->msp, vt_cpy->reset);
     boot_jump_to_next_image(vt_cpy->reset);
+}
+
+void boot_show_version(void)
+{
+	uint8_t bootloader_version[4];
+	int ret;
+
+	ret = bk_flash_read_bytes(BOOT_VERSION_OFFSET, bootloader_version, 4);
+	if (0 == ret) {
+		BOOT_LOG_FORCE("bl2 %d.%d.%d", bootloader_version[0], bootloader_version[1], (bootloader_version[2] | (bootloader_version[3] << 8)));
+	} else {
+		BOOT_LOG_FORCE("bl2 unknown");
+	}
 }

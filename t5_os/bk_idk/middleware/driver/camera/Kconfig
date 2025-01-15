@@ -27,15 +27,6 @@ menu "CAMERA"
 		bool "Enable encode buffer dynamic malloc"
 		default n
 
-	config ENCODE_BUF_NOT_FREE
-		bool "encode buffer when repeate malloc and free, cannot malloc success, so not free, until close all vidoe function"
-		default n
-
-	config DVP_PCLK_72M
-		bool "current ip support 72M pclk"
-		default y if SOC_BK7236XX
-		default n if !SOC_BK7236XX
-
 	config UVC_CHECK_BULK_JPEG_HEADER
 		depends on USB_UVC
 		bool "Check JPEG (ff d8) header in bulk payload"
@@ -47,13 +38,15 @@ menu "CAMERA"
 		default 16
 
 	config JPEG_FRAME_SIZE
-		int "config a jpeg frame size unit(byte), range 0-200k, default 150k"
-		range 0 204800
+		int "config a jpeg frame size unit(byte), default 150k"
 		default 153600
 
 	config H264_FRAME_SIZE
-		int "config a h264 NALU size unit(byte), range 0-200k, default 64k"
-		range 0 204800
+		int "config a h264 NALU size unit(byte), default 64k"
 		default 65536
+
+	config JPEG_FRAME_CHECK_LENGTH
+		int "check jpeg frame effective length, check from frame end, until find 0xffd9"
+		default 1024
 
 endmenu

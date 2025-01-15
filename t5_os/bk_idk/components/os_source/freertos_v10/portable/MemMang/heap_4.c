@@ -149,6 +149,13 @@ uint8_t *ucHeap;
 #define CONFIG_MEM_DEBUG_TASK_NAME_LEN 8
 #endif
 
+/* Due to the dynamic memory allocation operations in the log output mechanism, 
+ * it is not recommended to add logs during the initialization, allocation, and free processes of dynamic memory management. 
+ * If logging is necessary during this process for debugg, it is advisable to use MEM_STATIC_LOGI.
+ * Using other logging API may lead to unstable situations.
+ */
+#define MEM_STATIC_LOGI( tag, format, ... ) bk_printf_static_block(BK_LOG_INFO, tag, format, ##__VA_ARGS__)
+
 typedef void * (*CALLOC_PTR)(size_t num, size_t size);
 
 /* Define the linked list structure.  This is used to link free blocks in order
@@ -265,7 +272,7 @@ __attribute__((section(".itcm_sec_code"))) void bk_psram_heap_init(void) {
 	xTotalHeapSize = PSRAM_HEAP_SIZE;
 	psram_ucHeap = PSRAM_START_ADDRESS;
 
-	BK_LOGI(TAG, "prvHeapInit-psram start addr:0x%x, size:%d\r\n", psram_ucHeap, xTotalHeapSize);
+	MEM_STATIC_LOGI(TAG, "psram:0x%x,size:%d\r\n", psram_ucHeap, xTotalHeapSize);
 
 	os_memset_word((uint32_t *)psram_ucHeap, 0x0, xTotalHeapSize);
 	// rtos_regist_plat_dump_hook((uint32_t)psram_ucHeap, xTotalHeapSize);
@@ -567,7 +574,7 @@ void *psram_malloc( size_t xWantedSize )
 		BlockLink_t *pxLink = (BlockLink_t *)((u8*)pvReturn - xHeapStructSize);
 		if(pvReturn && call_func_name) {
 #if CONFIG_MALLOC_STATIS
-			BK_LOGI(TAG, "m:%p,%d|%s,%d\r\n", pxLink, (pxLink->xBlockSize & ~xBlockAllocatedBit), call_func_name, line);
+			MEM_STATIC_LOGI(TAG, "m:%p,%d|%s,%d\r\n", pxLink, (pxLink->xBlockSize & ~xBlockAllocatedBit), call_func_name, line);
 #endif
 		}
 #if CONFIG_MEM_DEBUG
@@ -871,7 +878,7 @@ void *pvPortMalloc( size_t xWantedSize )
 		BlockLink_t *pxLink = (BlockLink_t *)((u8*)pvReturn - xHeapStructSize);
 		if(pvReturn && call_func_name) {
 #if CONFIG_MALLOC_STATIS
-			BK_LOGI(TAG, "m:%p,%d|%s,%d\r\n", pxLink, (pxLink->xBlockSize & ~xBlockAllocatedBit), call_func_name, line);
+			MEM_STATIC_LOGI(TAG, "m:%p,%d|%s,%d\r\n", pxLink, (pxLink->xBlockSize & ~xBlockAllocatedBit), call_func_name, line);
 #endif
 		}
 #if CONFIG_MEM_DEBUG
@@ -949,7 +956,7 @@ void vPortFree( void *pv )
 #if CONFIG_MALLOC_STATIS
                 if (call_func_name)
                 {
-                    BK_LOGI(TAG, "f:%p,%d|%s,%d\r\n", pxLink, pxLink->xBlockSize, call_func_name, line);
+                    MEM_STATIC_LOGI(TAG, "f:%p,%d|%s,%d\r\n", pxLink, pxLink->xBlockSize, call_func_name, line);
                 }
 #endif
 #if CONFIG_MEM_DEBUG
@@ -1280,7 +1287,7 @@ static void prvHeapInit( void )
 	xTotalHeapSize = configTOTAL_HEAP_SIZE;
 	#endif
 
-	BK_LOGI(TAG, "prvHeapInit-start addr:0x%x, size:%d\r\n", ucHeap, xTotalHeapSize);
+	MEM_STATIC_LOGI(TAG, "prvHeapInit-start addr:0x%x, size:%d\r\n", ucHeap, xTotalHeapSize);
 
 	/* Ensure the heap starts on a correctly aligned boundary. */
 	uxAddress = ( size_t ) ucHeap;

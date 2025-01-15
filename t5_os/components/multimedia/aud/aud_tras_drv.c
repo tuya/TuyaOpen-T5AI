@@ -2709,7 +2709,9 @@ static bk_err_t aud_tras_drv_voc_init(aud_intf_voc_config_t* voc_cfg)
 			err = BK_ERR_AUD_INTF_MEMY;
 			goto aud_tras_drv_voc_init_exit;
 		} else {
-			aud_tras_drv_info.voc_info.dac_config->samp_rate = voc_cfg->samp_rate;
+            // Modified by TUYA Start
+			aud_tras_drv_info.voc_info.dac_config->samp_rate = voc_cfg->spk_samp_rate;
+            // Modified by TUYA End
 			aud_tras_drv_info.voc_info.dac_config->dac_chl = AUD_DAC_CHL_L;
 			aud_tras_drv_info.voc_info.dac_config->work_mode = voc_cfg->aud_setup.spk_mode;
 			aud_tras_drv_info.voc_info.dac_config->dac_gain = voc_cfg->aud_setup.dac_gain;	//default 2D  3F  15
@@ -2720,20 +2722,31 @@ static bk_err_t aud_tras_drv_voc_init(aud_intf_voc_config_t* voc_cfg)
 
 	/* get ring buffer config */
 	//aud_tras_drv_info.voc_info.mode = setup->aud_trs_mode;
-	switch (voc_cfg->samp_rate) {
-		case 8000:
-			aud_tras_drv_info.voc_info.mic_samp_rate_points = 160;
-			aud_tras_drv_info.voc_info.speaker_samp_rate_points = 160;
-			break;
+    // Modified by TUYA Start
+    if (aud_tras_drv_info.voc_info.aec_enable) {
+		switch (voc_cfg->samp_rate) {
+			case 8000:
+				aud_tras_drv_info.voc_info.mic_samp_rate_points = 160;
+				aud_tras_drv_info.voc_info.speaker_samp_rate_points = 160;
+				break;
 
-		case 16000:
+			case 16000:
+				aud_tras_drv_info.voc_info.mic_samp_rate_points = 320;
+				aud_tras_drv_info.voc_info.speaker_samp_rate_points = 320;
+				break;
+
+			default:
+				break;
+		}
+    } else {
 			aud_tras_drv_info.voc_info.mic_samp_rate_points = 320;
 			aud_tras_drv_info.voc_info.speaker_samp_rate_points = 320;
-			break;
-
-		default:
-			break;
-	}
+    }
+    bk_printf("%s, %d: mic: %d, spk: %d, rate: %d %d\n", __func__, __LINE__,
+            voc_cfg->samp_rate, voc_cfg->spk_samp_rate,
+            aud_tras_drv_info.voc_info.mic_samp_rate_points,
+            aud_tras_drv_info.voc_info.speaker_samp_rate_points);
+    // Modified by TUYA End
 
 	aud_tras_drv_info.voc_info.mic_frame_number = voc_cfg->aud_setup.mic_frame_number;
 	aud_tras_drv_info.voc_info.speaker_frame_number = voc_cfg->aud_setup.speaker_frame_number;

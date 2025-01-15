@@ -40,6 +40,8 @@ static int register_cb_to_cb_list(struct list_head *cb_list, event_register_info
 		if (cb_node->event_cb == reg_info->event_cb) {
 			EVENT_LOGD("event <%d %d> cb exist\n", reg_info->event_module_id,
 					   reg_info->event_id);
+			if (cb_node->event_cb_arg != reg_info->event_cb_arg)
+				cb_node->event_cb_arg = reg_info->event_cb_arg;
 			return BK_ERR_EVENT_CB_EXIST;
 		}
 	}

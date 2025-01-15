@@ -28,7 +28,7 @@ if(BL2)
             ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/hal_pal/pal_mutex.c
             ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/hal_pal/pal_preempt.c
             ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/hal_pal/pal_semaphore.c
-            ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/hal_pal/pal_signal.c
+            #${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/hal_pal/pal_signal.c
             ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/hal_pal/pal_string.c
             ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/hal_pal/pal_time.c
     )
@@ -98,7 +98,7 @@ if(BL2)
             ${PLATFORM_DIR}/include
             ${MBEDCRYPTO_PATH}/library
             ${MBEDCRYPTO_PATH}/include
-            ${PLATFORM_DIR}/ext/target/beken/bk7236/armino/config
+            ${PLATFORM_DIR}/ext/target/${TFM_PLATFORM}/armino/config
             ${CMAKE_SOURCE_DIR}/interface/include
             ${CMAKE_BINARY_DIR}/generated/interface/include
             ${PLATFORM_DIR}/ext/cmsis
@@ -134,6 +134,7 @@ if(BL2)
 endif()
 
 ############################ Crypto Service ####################################
+if (CONFIG_BUILD_TFM)
 target_sources(crypto_service_crypto_hw
     PRIVATE
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_driver/src/common/dubhe_driver.c
@@ -182,7 +183,7 @@ target_sources(crypto_service_crypto_hw
 target_include_directories(crypto_service_crypto_hw
     PRIVATE
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_alt/inc
-        ${PLATFORM_DIR}/ext/target/beken/bk7236/armino/config
+        ${PLATFORM_DIR}/ext/target/${TFM_PLATFORM}/armino/config
         ${CMAKE_SOURCE_DIR}/interface/include
         ${CMAKE_BINARY_DIR}/generated/interface/include
 )
@@ -218,8 +219,8 @@ target_sources(crypto_service_crypto_hw
 
 target_include_directories(crypto_service_crypto_hw
     PRIVATE
-        ${PLATFORM_DIR}/ext/target/beken/bk7236
-        ${PLATFORM_DIR}/ext/target/beken/bk7236/cmsis_core
+        ${PLATFORM_DIR}/ext/target/${TFM_PLATFORM}
+        ${PLATFORM_DIR}/ext/target/${TFM_PLATFORM}/cmsis_core
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/spe/inc
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/spe/inc/hal
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/spe/inc/pal
@@ -258,6 +259,7 @@ target_compile_definitions(crypto_service_crypto_hw
         ARM_CE_DUBHE_HASH
         ARM_CE_DUBHE_ACA
 )
+endif()
 
 if (NOT BL2)
 target_compile_definitions(crypto_service_crypto_hw
@@ -267,6 +269,7 @@ target_compile_definitions(crypto_service_crypto_hw
 )
 endif()
 
+if (CONFIG_BUILD_TFM)
 target_include_directories(crypto_service_mbedcrypto
     PUBLIC
         ${TFM_BEKEN}/accelerator/
@@ -287,6 +290,7 @@ target_compile_definitions(crypto_service_mbedcrypto
         ARM_CE_DUBHE_ACA
         DUBHE_FOR_RUNTIME
 )
+endif()
 
 if(TEST_NS)
 target_sources(test_ns_crypto_hw
@@ -337,7 +341,7 @@ target_sources(test_ns_crypto_hw
 target_include_directories(test_ns_crypto_hw
     PRIVATE
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/dubhe_alt/inc
-        ${PLATFORM_DIR}/ext/target/beken/bk7236/armino/config
+        ${PLATFORM_DIR}/ext/target/${TFM_PLATFORM}/armino/config
         ${CMAKE_SOURCE_DIR}/interface/include
         ${CMAKE_BINARY_DIR}/generated/interface/include
 )
@@ -373,8 +377,8 @@ target_sources(test_ns_crypto_hw
 
 target_include_directories(test_ns_crypto_hw
     PRIVATE
-        ${PLATFORM_DIR}/ext/target/beken/bk7236
-        ${PLATFORM_DIR}/ext/target/beken/bk7236/cmsis_core
+        ${PLATFORM_DIR}/ext/target/${TFM_PLATFORM}
+        ${PLATFORM_DIR}/ext/target/${TFM_PLATFORM}/cmsis_core
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/spe/inc
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/spe/inc/hal
         ${PLATFORM_DIR}/ext/target/beken/common/hal/accelerator/spe/inc/pal

@@ -121,7 +121,30 @@ static char *misc_get_start_type_str(uint32_t start_type)
 	case RESET_SOURCE_OTA_REBOOT:
 		return "ota reboot";
 
+	case RESET_SOURCE_BROWN_OUT:
+		return "brown out";
+
 	case RESET_SOURCE_UNKNOWN:
+		return "unknown";
+
+	case RESET_SOURCE_BOOTLOADER_NMI_WDT:
+		return "bl2 nmi watchdog";
+
+	case RESET_SOURCE_BOOTLOADER_HARD_FAULT:
+		return "bl2 hard fault";
+
+	case RESET_SOURCE_BOOTLOADER_MPU_FAULT:
+		return "bl2 mpu fault";
+
+	case RESET_SOURCE_BOOTLOADER_BUS_FAULT:
+		return "bl2 bus fault";
+
+	case RESET_SOURCE_BOOTLOADER_REBOOT:
+		return "bl2 reboot";
+
+	case RESET_SOURCE_BOOTLOADER_UNKNOWN:
+		return "bl2 unknown";
+
 	default:
 		// Chip power on the value of start address may not always be 0
 		// return "unknown";
@@ -134,18 +157,20 @@ static char *misc_get_start_type_str(uint32_t start_type)
 
 void show_reset_reason(void)
 {
-	BK_LOGI(TAG, "reason - %s\r\n", misc_get_start_type_str(s_start_type));
+	// Modified by TUYA Start
+	BK_LOGW(TAG, "reason - %s\r\n", misc_get_start_type_str(s_start_type));
 	if(RESET_SOURCE_DEEPPS_GPIO == s_start_type)
 	{
 #if CONFIG_DEEP_PS
-		BK_LOGI(TAG, "by gpio - %d\r\n", bk_misc_wakeup_get_gpio_num());
+		BK_LOGW(TAG, "by gpio - %d\r\n", bk_misc_wakeup_get_gpio_num());
 #else
 #ifdef CONFIG_GPIO_DYNAMIC_WAKEUP_SUPPORT
-		BK_LOGI(TAG, "by gpio - %d\r\n", bk_gpio_get_wakeup_gpio_id());
+		BK_LOGW(TAG, "by gpio - %d\r\n", bk_gpio_get_wakeup_gpio_id());
 #endif
 #endif
 	}
-	BK_LOGI(TAG, "regs - %x, %x, %x\r\n", s_start_type, s_misc_value_save, s_mem_value_save);
+	BK_LOGW(TAG, "regs - %x, %x, %x\r\n", s_start_type, s_misc_value_save, s_mem_value_save);
+	// Modified by TUYA End
 }
 
 #if (CONFIG_SOC_BK7231N) || (CONFIG_SOC_BK7236A)
@@ -243,12 +268,12 @@ uint32_t reset_reason_init(void)
 		return s_start_type;
 	}
 
-	misc_value = aon_pmu_ll_get_r7a();
+	misc_value = aon_pmu_ll_get_r7b();
 	misc_value = ((misc_value >> 24) & 0x7f);
 
 	s_start_type = misc_value;
 	s_misc_value_save = misc_value;
-	bk_misc_set_reset_reason(RESET_SOURCE_POWERON);
+	bk_misc_set_reset_reason(RESET_SOURCE_UNKNOWN);
 
 	return s_start_type;
 }

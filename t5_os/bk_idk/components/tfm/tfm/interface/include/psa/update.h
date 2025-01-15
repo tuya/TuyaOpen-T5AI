@@ -259,7 +259,9 @@ psa_status_t psa_fwu_set_manifest(psa_image_id_t image_id,
                                   size_t manifest_size,
                                   psa_hash_t *manifest_dependency);
 
-
+#if CONFIG_OTA_CONFIRM_UPDATE
+void psa_fwu_confirm(const uint8_t is_confirm);
+#endif
 #ifdef __cplusplus
 }
 #endif

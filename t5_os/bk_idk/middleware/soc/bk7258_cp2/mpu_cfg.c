@@ -55,7 +55,7 @@ ARM_MPU_Region_t mpu_regions[] = {
     	iram_ns: 0x1800 0000-----------0x1809 FFFF
      */
     { ARM_MPU_RBAR(0x08000000UL, ARM_MPU_SH_NON, 1, 1, 0),
-      ARM_MPU_RLAR(0x0809FFE0UL, 4) },                     /* SRAM, for RO-code/RO-data. WT-RA */
+      ARM_MPU_RLAR(0x0809FFE0UL, 1) },                     /* SRAM, for RO-code/RO-data. WT-RA */
 
     /* MPU region 3
     	dtcm_s:  0x2000 0000-----------0x2000 3FFF

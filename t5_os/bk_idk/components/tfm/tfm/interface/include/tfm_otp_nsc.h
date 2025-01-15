@@ -27,8 +27,9 @@ extern "C" {
 
 bk_err_t bk_otp_read_nsc(uint32_t item);
 bk_err_t bk_otp_update_nsc(uint8_t map_id, uint32_t item, uint8_t* buf, uint32_t size);
-bk_err_t bk_otp_read_permission_nsc(uint8_t map_id, uint32_t item, uint32_t* permission);
-bk_err_t bk_otp_write_permission_nsc(uint8_t map_id, uint32_t item, uint32_t permission);
+bk_err_t bk_otp_read_permission_nsc(uint8_t map_id, uint32_t item, otp_privilege_t* permission);
+bk_err_t bk_otp_write_permission_nsc(uint8_t map_id, uint32_t item, otp_privilege_t permission);
+bk_err_t bk_otp_write_mask_nsc(uint8_t map_id, uint32_t item, otp_privilege_t permission);
 
 #ifdef __cplusplus
 }

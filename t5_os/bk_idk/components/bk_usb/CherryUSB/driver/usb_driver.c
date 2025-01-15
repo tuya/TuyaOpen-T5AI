@@ -197,7 +197,7 @@ bk_err_t bk_usb_driver_deinit(void)
 
 static void bk_analog_layer_usb_sys_related_ops(uint32_t usb_mode, bool ops)
 {
-	extern void delay(INT32 num);
+	extern void bk_delay(INT32 num);
 
 #if 0
 	sys_drv_usb_analog_phy_en(ops, NULL);
@@ -206,7 +206,7 @@ static void bk_analog_layer_usb_sys_related_ops(uint32_t usb_mode, bool ops)
 #endif
 	if(ops){
 		sys_drv_usb_clock_ctrl(true, NULL);
-		delay(100);
+		bk_delay(100);
 #if 0
 		sys_drv_usb_analog_deepsleep_en(false);
 #endif
@@ -220,7 +220,7 @@ static void bk_analog_layer_usb_sys_related_ops(uint32_t usb_mode, bool ops)
 		if(usb_mode == USB_HOST_MODE) {
 			REG_USB_USR_708 = 0x0;
 			REG_USB_USR_710 &= ~(0x1<< 7);
-			delay(100);
+			bk_delay(100);
 
 			REG_USB_USR_710 |= (0x1<<15);
 			//REG_USB_USR_710 |= (0x1<<14);
@@ -251,7 +251,7 @@ static void bk_analog_layer_usb_sys_related_ops(uint32_t usb_mode, bool ops)
 					break;
 				} else {
 					USB_DRIVER_LOGI("70c_reg:0x%x\r\n", reg);
-					delay(10000);
+					bk_delay(10000);
 				}
         	}
 			REG_USB_PHY_00   &= ~0x08;     
@@ -284,6 +284,9 @@ static void bk_analog_layer_usb_sys_related_ops(uint32_t usb_mode, bool ops)
 	}
 }
 
+// Modified by TUYA Start
+#include "tuya_cloud_types.h"
+// Modified by TUYA End
 static void bk_usb_phy_register_refresh()
 {
 #if CONFIG_USB_HOST
@@ -291,7 +294,8 @@ static void bk_usb_phy_register_refresh()
     // Modified by TUYA Start
 #ifdef CONFIG_TUYA_GPIO_MAP
     uint8_t usb_ldo, active_level;
-    tkl_vi_get_power_info(&usb_ldo, &active_level);
+    extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
+    tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	bk_gpio_set_output_low(usb_ldo);
 #else
 	bk_gpio_set_output_low(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
@@ -320,7 +324,16 @@ void bk_usb_enum_fail_all_reg_reset()
 {
 #if CONFIG_USB_HOST
 	sys_drv_int_disable(USB_INTERRUPT_CTRL_BIT);
+    // Modified by TUYA Start
+#ifdef CONFIG_TUYA_GPIO_MAP
+    uint8_t usb_ldo, active_level;
+    extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
+    tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
+	bk_gpio_set_output_low(usb_ldo);
+#else
 	bk_gpio_set_output_low(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
+#endif // CONFIG_TUYA_GPIO_MAP
+    // Modified by TUYA End
 	rtos_delay_milliseconds(10);
 	bk_analog_layer_usb_sys_related_ops(USB_HOST_MODE, false);
 	rtos_delay_milliseconds(10);
@@ -329,7 +342,12 @@ void bk_usb_enum_fail_all_reg_reset()
 	extern int usb_hc_mhdrc_register_init(void);
 	usb_hc_mhdrc_register_init();
 	sys_drv_int_enable(USB_INTERRUPT_CTRL_BIT);
+#ifdef CONFIG_TUYA_GPIO_MAP
+	bk_gpio_set_output_high(usb_ldo);
+#else
 	bk_gpio_set_output_high(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
+#endif // CONFIG_TUYA_GPIO_MAP
+    // Modified by TUYA End
 #endif
 
 }
@@ -896,7 +914,8 @@ static bk_err_t usb_driver_sw_init()
     // Modified by TUYA Start
 #ifdef CONFIG_TUYA_GPIO_MAP
     uint8_t usb_ldo, active_level;
-    tkl_vi_get_power_info(&usb_ldo, &active_level);
+    extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
+    tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	bk_gpio_set_output_high(usb_ldo);
 #else
 	bk_gpio_set_output_high(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
@@ -969,10 +988,15 @@ static bk_err_t usb_driver_sw_deinit()
 	return BK_OK;
 }
 
+// Modified by TUYA Start
+uint8_t is_usb_opened = 0;
+// Modified by TUYA End
+
 bk_err_t bk_usb_open(uint32_t usb_mode)
 {
 	USB_DRIVER_LOGD("[+]%s\r\n", __func__);
 #if !CONFIG_USB_MAILBOX
+	bk_pm_module_vote_cpu_freq(PM_DEV_ID_USB_1, PM_CPU_FRQ_480M);
 	if((s_usbh_device_connect_flag != false) && (s_usb_driver_ops != NULL)) {
 		for(E_USB_DEVICE_T dev = USB_UVC_DEVICE; dev < USB_DEVICE_MAX; dev++)
 		{
@@ -1010,6 +1034,9 @@ bk_err_t bk_usb_open(uint32_t usb_mode)
 
 	USB_DRIVER_LOGD("[-]%s\r\n", __func__);
 
+// Modified by TUYA Start
+    is_usb_opened = 1;
+// Modified by TUYA End
 	return BK_OK;
 }
 
@@ -1036,6 +1063,9 @@ bk_err_t bk_usb_close(void)
 		wait_close_finish_count++;
 	}
 #endif
+// Modified by TUYA Start
+    is_usb_opened = 0;
+// Modified by TUYA End
 	return ret;
 
 }

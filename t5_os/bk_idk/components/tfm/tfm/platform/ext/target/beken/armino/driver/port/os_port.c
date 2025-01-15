@@ -5,7 +5,6 @@
 #include <os/os.h>
 #include <os/mem.h>
 #include <components/system.h>
-#include "bk_fake_clock.h"
 #include "bk_arch.h"
 
 static volatile uint32_t s_sema_cnt = 0;

@@ -11,6 +11,7 @@ set(CROSS_COMPILE                       arm-none-eabi CACHE STRING  "Cross-compi
 
 set(BL1                                 OFF         CACHE BOOL      "Whether to build BL1")
 set(BL2                                 ON          CACHE BOOL      "Whether to build BL2")
+set(JUMP                                ON          CACHE BOOL      "Whether to build JUMP")
 set(NS                                  ON          CACHE BOOL      "Whether to build NS app")
 
 set(TEST_S                              OFF         CACHE BOOL      "Whether to build S regression tests")

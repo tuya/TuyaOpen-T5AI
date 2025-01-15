@@ -43,11 +43,11 @@ OPERATE_RET tkl_rtc_time_get(TIME_T *time_sec)
 
 OPERATE_RET tkl_rtc_time_set(TIME_T time_sec)
 {
-    uint32_t id = 0;
-    uint32_t tick = 0;
-    bool period = true;
+    //uint32_t id = 0;
+    //uint32_t tick = 0;
+    //bool period = true;
 
-    tick = time_sec * TICK_CNT_PER_MS * 1000;
+    //tick = time_sec * TICK_CNT_PER_MS * 1000;
 
     bk_aon_rtc_driver_init();
 //    bk_aon_rtc_create(id, tick, period);

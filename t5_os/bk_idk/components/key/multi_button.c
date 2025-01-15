@@ -13,6 +13,7 @@
 static BUTTON_S *head_handle = NULL;
 extern beken_mutex_t g_key_mutex;
 
+extern beken2_timer_t g_key_timer;
 /**
   * @brief  Initializes the button struct handle.
   * @param  handle: the button handle strcut.
@@ -212,12 +213,21 @@ BUTTON_S *button_find_with_user_data(void *user_data)
   * @param  None.
   * @retval None
   */
-void button_ticks(void *param)
+void button_ticks(void *param1, void *param2)
 {
+	bk_err_t result;
+
 	BUTTON_S *target;
 	rtos_lock_mutex(&g_key_mutex);
 	for (target = head_handle; target; target = target->next)
 		button_handler(target);
 	rtos_unlock_mutex(&g_key_mutex);
+
+	result = rtos_start_oneshot_timer(&g_key_timer);
+	if(kNoErr != result)
+	{
+		os_printf("rtos_start_timer fail\r\n");
+		return;
+	}
 }
 #endif

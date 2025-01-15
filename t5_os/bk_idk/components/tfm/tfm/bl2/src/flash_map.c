@@ -15,6 +15,7 @@
 #include "sys_driver.h"
 #include "bk_tfm_mpc.h"
 #include <components/log.h>
+#include <driver/flash.h>
 
 #define TAG "flash_map"
 #define FLASH_PROGRAM_UNIT    TFM_HAL_FLASH_PROGRAM_UNIT
@@ -117,6 +118,12 @@ int flash_area_read(const struct flash_area *area, uint32_t off, void *dst,
     uint32_t fa_off = area->fa_off;
     if(area->fa_id == 0){
         fa_off = FLASH_PHY2VIRTUAL(CEIL_ALIGN_34(fa_off));
+#if CONFIG_DBUS_CHECK_CRC
+        if (check_crc(fa_off + off,len) == false) {
+            BOOT_LOG_ERR("addr = %#x,len=%#x,crc16 fail", fa_off + off, len);
+            return -1;
+        }
+#endif
         bk_flash_read_cbus(fa_off + off,dst,len);
         return 0;
     }
@@ -267,7 +274,24 @@ uint32_t flash_area_update_dbus(const struct flash_area *area, uint32_t off,
     SYS_UNLOCK();
     return 0;
 }
-
+#if CONFIG_OTA_CONFIRM_UPDATE
+void flash_write_confirm_dbus(uint8_t is_confirm)
+{
+    uint32_t phy_area_size = partition_get_phy_size(PARTITION_OTA_CONTROL);
+    uint32_t phy_area_offset = partition_get_phy_offset(PARTITION_OTA_CONTROL);
+    uint32_t status = OVERWRITE_CONFIRM;
+    SYS_LOCK_DECLARATION();
+    SYS_LOCK();
+    if (is_confirm == true) {
+        uint32_t confirm_offset = phy_area_size + phy_area_offset - 4;
+        flash_area_erase_fast(phy_area_offset, phy_area_size);
+        bk_flash_write_bytes(confirm_offset, (uint8_t*)&(status), 4);
+    } else if(is_confirm == false) {
+        flash_area_erase_fast(phy_area_offset, phy_area_size);
+    }
+    SYS_UNLOCK();
+}
+#endif
 /* Writes `len` bytes of flash memory at `off` from the buffer at `src`.
  * `off` and `len` can be any alignment.
  */

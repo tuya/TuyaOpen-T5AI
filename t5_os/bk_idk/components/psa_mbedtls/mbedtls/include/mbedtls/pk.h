@@ -219,8 +219,6 @@ typedef struct mbedtls_pk_debug_item {
  */
 typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 
-typedef uint32_t mbedtls_svc_key_id_t;
-
 #define MBEDTLS_PK_MAX_EC_PUBKEY_RAW_LEN \
     PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
 /**
@@ -834,43 +832,6 @@ static inline mbedtls_ecp_keypair *mbedtls_pk_ec(const mbedtls_pk_context pk)
 
 #if defined(MBEDTLS_PK_PARSE_C)
 /** \ingroup pk_module */
-#if CONFIG_PSA_MBEDTLS_FORWARD_COMPATIBILITY
-/**
- * \brief           Parse a private key in PEM or DER format
- *
- * \note            If #MBEDTLS_USE_PSA_CRYPTO is enabled, the PSA crypto
- *                  subsystem must have been initialized by calling
- *                  psa_crypto_init() before calling this function.
- *
- * \param ctx       The PK context to fill. It must have been initialized
- *                  but not set up.
- * \param key       Input buffer to parse.
- *                  The buffer must contain the input exactly, with no
- *                  extra trailing material. For PEM, the buffer must
- *                  contain a null-terminated string.
- * \param keylen    Size of \b key in bytes.
- *                  For PEM data, this includes the terminating null byte,
- *                  so \p keylen must be equal to `strlen(key) + 1`.
- * \param pwd       Optional password for decryption.
- *                  Pass \c NULL if expecting a non-encrypted key.
- *                  Pass a string of \p pwdlen bytes if expecting an encrypted
- *                  key; a non-encrypted key will also be accepted.
- *                  The empty password is not supported.
- * \param pwdlen    Size of the password in bytes.
- *                  Ignored if \p pwd is \c NULL.
- *
- * \note            On entry, ctx must be empty, either freshly initialised
- *                  with mbedtls_pk_init() or reset with mbedtls_pk_free(). If you need a
- *                  specific key type, check the result with mbedtls_pk_can_do().
- *
- * \note            The key is also checked for correctness.
- *
- * \return          0 if successful, or a specific PK or PEM error code
- */
-int mbedtls_pk_parse_key(mbedtls_pk_context *ctx,
-                         const unsigned char *key, size_t keylen,
-                         const unsigned char *pwd, size_t pwdlen);
-#else
 /**
  * \brief           Parse a private key in PEM or DER format
  *
@@ -909,7 +870,7 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *ctx,
                          const unsigned char *key, size_t keylen,
                          const unsigned char *pwd, size_t pwdlen,
                          int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
-#endif
+
 /** \ingroup pk_module */
 /**
  * \brief           Parse a public key in PEM or DER format

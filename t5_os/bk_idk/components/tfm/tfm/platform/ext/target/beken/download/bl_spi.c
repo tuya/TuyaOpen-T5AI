@@ -319,7 +319,7 @@ uint8_t spi_write_read_4K_R(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint3
 
 	//	bl_printf("%s\r\n",__func__);
 
-		bl_memset(empty_txbuf,0,SPI_FIFO_LEN);
+		memset(empty_txbuf,0,SPI_FIFO_LEN);
 
 		max_len = (w_size > (r_size + r_offset)) ? w_size : (r_size + r_offset);
 		w_total = max_len;
@@ -518,7 +518,7 @@ uint8_t spi_write_read_4K_R_for_crc(uint8_t *wbuf, uint32_t w_size, uint8_t *rbu
 
 
 	//	bl_printf("%s\r\n",__func__);
-		bl_memset(empty_txbuf,0,SPI_FIFO_LEN);
+		memset(empty_txbuf,0,SPI_FIFO_LEN);
 
 		max_len = (w_size > (r_size + r_offset)) ? w_size : (r_size + r_offset);
 		w_total = max_len;
@@ -716,7 +716,7 @@ uint8_t spi_write_read(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint32_t r
 
 		uint8_t empty_rxbuf[SPI_FIFO_LEN] = {0};
 
-		bl_memset(empty_txbuf,0,SPI_FIFO_LEN);
+		memset(empty_txbuf,0,SPI_FIFO_LEN);
 
 		max_len = (w_size > (r_size + r_offset)) ? w_size : (r_size + r_offset);
 
@@ -786,14 +786,14 @@ uint8_t spi_write_read(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint32_t r
 		{
 			if(w_size > 0)
 			{
-				bl_memcpy(empty_txbuf,wbuf,w_size);
+				memcpy(empty_txbuf,wbuf,w_size);
 				status = spi_writeByte1(empty_txbuf,max_len);
 
 
 				status = spi_readByte1(empty_rxbuf,max_len);
 				if(r_size > 0)
 				{
-					bl_memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
+					memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
 				}
 
 			}else
@@ -804,7 +804,7 @@ uint8_t spi_write_read(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint32_t r
 
 				if(r_size > 0)
 				{
-					bl_memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
+					memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
 				}
 
 
@@ -837,7 +837,7 @@ uint8_t spi_write_read_no_cs(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint
 
 		uint8_t empty_rxbuf[SPI_FIFO_LEN] = {0};
 
-		bl_memset(empty_txbuf,0,SPI_FIFO_LEN);
+		memset(empty_txbuf,0,SPI_FIFO_LEN);
 
 		max_len = (w_size > (r_size + r_offset)) ? w_size : (r_size + r_offset);
 
@@ -907,14 +907,14 @@ uint8_t spi_write_read_no_cs(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint
 		{
 			if(w_size > 0)
 			{
-				bl_memcpy(empty_txbuf,wbuf,w_size);
+				memcpy(empty_txbuf,wbuf,w_size);
 				status = spi_writeByte1(empty_txbuf,max_len);
 
 
 				status = spi_readByte1(empty_rxbuf,max_len);
 				if(r_size > 0)
 				{
-					bl_memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
+					memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
 				}
 
 			}else
@@ -925,7 +925,7 @@ uint8_t spi_write_read_no_cs(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint
 
 				if(r_size > 0)
 				{
-					bl_memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
+					memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
 				}
 
 
@@ -957,7 +957,7 @@ uint8_t spi_write_read_4K_W(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint3
 
 		uint8_t empty_rxbuf[SPI_FIFO_LEN] = {0};
 
-		bl_memset(empty_txbuf,0,SPI_FIFO_LEN);
+		memset(empty_txbuf,0,SPI_FIFO_LEN);
 
 		max_len = (w_size > (r_size + r_offset)) ? w_size : (r_size + r_offset);
 
@@ -1027,14 +1027,14 @@ uint8_t spi_write_read_4K_W(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint3
 		{
 			if(w_size > 0)
 			{
-				bl_memcpy(empty_txbuf,wbuf,w_size);
+				memcpy(empty_txbuf,wbuf,w_size);
 				status = spi_writeByte1(empty_txbuf,max_len);
 
 
 				status = spi_readByte1(empty_rxbuf,max_len);
 				if(r_size > 0)
 				{
-					bl_memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
+					memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
 				}
 
 			}else
@@ -1045,7 +1045,7 @@ uint8_t spi_write_read_4K_W(uint8_t *wbuf, uint32_t w_size, uint8_t *rbuf, uint3
 
 				if(r_size > 0)
 				{
-					bl_memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
+					memcpy(rbuf,&(empty_rxbuf[r_offset]),r_size);
 				}
 
 

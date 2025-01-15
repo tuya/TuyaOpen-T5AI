@@ -16,132 +16,87 @@
 #include "aon_pmu_hal.h"
 #include "aon_pmu_ll.h"
 #include "system_hw.h"
+#include "sys_types.h"
+#include "modules/pm.h"
 
-bk_err_t aon_pmu_hal_init(void)
-{
-	return BK_OK;
-}
-
-int aon_pmu_hal_set_sleep_parameters(uint32_t value)
-{
-	aon_pmu_ll_set_r40(value);
-	return 0;
-}
-
-void aon_pmu_hal_set_wakeup_source_reg(uint32_t value)
-{
-	//TODO fix it
-	aon_pmu_ll_set_r41(value);
-}
-
-uint32_t aon_pmu_hal_get_wakeup_source_reg(void)
-{
-	return aon_pmu_ll_get_r41();
-}
+#define AON_PMU_LOGI(...) 
+//#define AON_PMU_LOGI printf
 
 uint32_t aon_pmu_hal_get_chipid(void)
 {
 	return aon_pmu_ll_get_r7c_id();
 }
 
-void aon_pmu_hal_clear_wakeup_source(wakeup_source_t value)
-{
-	uint32_t wakeup_source = 0;
-	wakeup_source = aon_pmu_ll_get_r41_wakeup_ena();
-	wakeup_source &= ~(0x1 << value);
-	aon_pmu_ll_set_r41_wakeup_ena(wakeup_source);
+void aon_pmu_hal_r0_latch_to_r7b(void) {
+	aon_pmu_ll_set_r25(0x424B55AA);
+	aon_pmu_ll_set_r25(0xBDB4AA55);
 }
 
-void aon_pmu_hal_set_wakeup_source(wakeup_source_t value)
-{
-	uint32_t wakeup_source = 0;
-	wakeup_source = aon_pmu_ll_get_r41_wakeup_ena();
-	wakeup_source |= (0x1 << value);
-	aon_pmu_ll_set_r41_wakeup_ena(wakeup_source);
+uint32_t aon_pmu_hal_get_reset_reason(void) {
+	return aon_pmu_ll_get_r7b_reset_reason();
 }
 
-void aon_pmu_hal_usbplug_int_en(uint32_t value)
-{
-	uint32_t int_state = 0;
-	int_state = aon_pmu_ll_get_r1_usbplug_int_en();
-	int_state |= value;
-	aon_pmu_ll_set_r1_usbplug_int_en(int_state);
+void aon_pmu_hal_set_reset_reason(uint32_t value, bool write_immediately) {
+	if (write_immediately) {
+		uint32_t r0 = aon_pmu_ll_get_r0();
+		uint32_t r7b = aon_pmu_ll_get_r7b();
+		aon_pmu_ll_set_r0(r7b);
+		aon_pmu_ll_set_r0_reset_reason(value);
+		aon_pmu_hal_r0_latch_to_r7b();
+		aon_pmu_ll_set_r0(r0);
+		aon_pmu_ll_set_r0_reset_reason(value);
+	} else {
+		aon_pmu_ll_set_r0_reset_reason(value);
+	}
 }
 
-void aon_pmu_hal_touch_int_en(uint32_t value)
+static uint32_t s_reset_reason = 0;
+
+void aon_pmu_hal_back_and_clear_reset_reason(void)
 {
-	uint32_t int_state = 0;
-	int_state = aon_pmu_ll_get_r1_touch_int_en();
-	int_state |= value;
-	aon_pmu_ll_set_r1_touch_int_en(int_state);
+        AON_PMU_LOGI("before clear, sram_reset_reason=%x, r0=%x, r7b=%x, reason=%x, r7a=%x\r\n",
+		s_reset_reason, aon_pmu_ll_get_r0(), aon_pmu_ll_get_r7b(), aon_pmu_hal_get_reset_reason(), aon_pmu_ll_get_r7a());
+        s_reset_reason = aon_pmu_hal_get_reset_reason();
+        aon_pmu_hal_set_reset_reason(RESET_SOURCE_BOOTLOADER_UNKNOWN, true);
+        AON_PMU_LOGI("after clear, sram_reset_reason=%x, r0=%x, r7b=%x, reason=%x, r7a=%x\r\n",
+		s_reset_reason, aon_pmu_ll_get_r0(), aon_pmu_ll_get_r7b(), aon_pmu_hal_get_reset_reason(), aon_pmu_ll_get_r7a());
 }
 
-uint32_t aon_pmu_hal_get_touch_int_status(void)
+void aon_pmu_hal_restore_reset_reason(void)
 {
-	return aon_pmu_ll_get_reg73_mul_touch_int();
+        AON_PMU_LOGI("before restore, sram_reset_reason=%x, r0=%x, r7b=%x, reason=%x, r7a=%x\r\n",
+		s_reset_reason, aon_pmu_ll_get_r0(), aon_pmu_ll_get_r7b(), aon_pmu_hal_get_reset_reason(), aon_pmu_ll_get_r7a());
+        aon_pmu_hal_set_reset_reason(s_reset_reason, true);
+        AON_PMU_LOGI("after restore, sram_reset_reason=%x, r0=%x, r7b=%x, reason=%x, r7a=%x\r\n",
+		s_reset_reason, aon_pmu_ll_get_r0(), aon_pmu_ll_get_r7b(), aon_pmu_hal_get_reset_reason(), aon_pmu_ll_get_r7a());
 }
 
-uint32_t aon_pmu_hal_get_cap_cal(void)
+uint32_t aon_pmu_hal_get_reset_reason_from_sram(void)
 {
-	return aon_pmu_ll_get_reg73_cap_cal();
+	return s_reset_reason;
 }
 
-uint32_t aon_pmu_hal_get_touch_state(void)
+#if CONFIG_AON_PMU_HAL_TEST
+static void aon_pmu_hal_test(uint32_t reset_reason)
 {
-	return aon_pmu_ll_get_reg73_mul_touch_int();
+	AON_PMU_LOGI("test reset_reason=%d\r\n", reset_reason);
+	aon_pmu_hal_set_reset_reason(reset_reason, true);
+	aon_pmu_hal_back_and_clear_reset_reason();
+	AON_PMU_LOGI("get sram reset_reason=%x\r\n", reset_reason);
+	aon_pmu_hal_restore_reset_reason();
 }
 
-uint32_t aon_pmu_hal_get_adc_cal()
+void aon_pmu_hal_test_all(void)
 {
-	return aon_pmu_ll_get_r7d_adc_cal();
+	for (int i=0; i<=0xF; i++) {
+		aon_pmu_hal_test(i);
+	}
 }
 
-void aon_pmu_hal_reg_set(pmu_reg_e reg, uint32_t value)
+void trigger_bl2_cbus_wdt_reset(void)
 {
-    pmu_address_map_t pmu_addr_map[] = PMU_ADDRESS_MAP;
-    pmu_address_map_t *pmu_addr = &pmu_addr_map[reg];
-
-    uint32_t pmu_reg_addr = pmu_addr->reg_address;
-
-	REG_WRITE(pmu_reg_addr, value);
-}
-uint32_t aon_pmu_hal_reg_get(pmu_reg_e reg)
-{
-    pmu_address_map_t pmu_addr_map[] = PMU_ADDRESS_MAP;
-    pmu_address_map_t *pmu_addr = &pmu_addr_map[reg];
-
-    uint32_t pmu_reg_addr = pmu_addr->reg_address;
-
-	return REG_READ(pmu_reg_addr);
+	AON_PMU_LOGI("Trigger CBUS CRC WDT reset\r\n");
+	*(volatile uint32_t *)(0x02010f00) = 1;
 }
 
-
-void aon_pmu_hal_wdt_rst_dev_enable()
-{
-	uint32_t aon_pmu_r2 = 0;
-	aon_pmu_r2 = aon_pmu_ll_get_r2();
-	aon_pmu_r2 |= 0x1ff;
-
-	aon_pmu_ll_set_r2(aon_pmu_r2);
-}
-
-void aon_pmu_hal_lpo_src_set(uint32_t lpo_src)
-{
-	aon_pmu_ll_set_r41_lpo_config(lpo_src);
-}
-
-uint32_t aon_pmu_hal_lpo_src_get()
-{
-	return aon_pmu_ll_get_r41_lpo_config();
-}
-
-uint32_t aon_pmu_hal_bias_cal_get()
-{
-	return aon_pmu_ll_get_r7e_cbcal();
-}
-
-uint32_t aon_pmu_hal_get_reset_reason()
-{
-	uint32_t value = aon_pmu_ll_get_r7a();
-	return ( value >> 24 & 0x7F );
-}
+#endif

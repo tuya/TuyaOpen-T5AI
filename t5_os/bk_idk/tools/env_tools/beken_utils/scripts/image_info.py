@@ -70,6 +70,9 @@ class Image:
                 print()
 
     def parse_ota_image(self, file_path):
+        ota_global_hdr_len = 32
+        ota_image_hdr_len = 32
+        sign_version_offset = 20
         with open(self.file_path, 'rb') as f:
             # parsing globle header
             self.global_header['magic'] = f.read(8)
@@ -100,6 +103,12 @@ class Image:
                 print("  flash_offset: 0x{:08x}".format(sub_image['flash_offset']))
                 print("  flags: 0x{:08x}".format(sub_image['flags']))
                 print()
+
+            f.seek(ota_global_hdr_len + (n+1) * ota_image_hdr_len + sign_version_offset)
+            iv_major = struct.unpack('B', f.read(1))[0]
+            iv_minor = struct.unpack('B', f.read(1))[0]
+            iv_revision = struct.unpack('<H', f.read(2))[0]
+            print(f'app_version:{iv_major}.{iv_minor}.{iv_revision}\r\n')
 
     def parse_normal_image(self, file_path):
         with open(self.file_path, 'rb') as f:

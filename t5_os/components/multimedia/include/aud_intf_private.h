@@ -202,6 +202,9 @@ typedef struct {
 typedef struct {
 	//audio_tras_drv_mode_t aud_trs_mode;
 	uint32_t samp_rate;
+    // Modified by TUYA Start
+	uint32_t spk_samp_rate;		/**< speaker transfer sample rate */
+    // Modified by TUYA End
 	aud_intf_aud_config_t aud_setup;
 	bool aec_enable;
 	aec_config_t *aec_setup;

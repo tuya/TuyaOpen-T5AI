@@ -613,15 +613,9 @@ static int bkreg_run_command_implement(const char *content, int cnt)
 	break;
 
 	case BEKEN_TEST_UDP: {
-// Modified by TUYA Start
-#if (CONFIG_TUYA_OS_ADAPTER == 1)
-		manual_cal_show_txpwr_tab();
-#else
-#if CONFIG_MANUAL_CALI
-		manual_cal_show_txpwr_tab();
-//Modified by TUYA End
-#endif // CONFIG_MANUAL_CALI
-#endif // CONFIG_TUYA_OS_ADAPTER == 1
+#if CONFIG_BKREG_SHOW_CALI
+		manual_cal_show_txpwr_tab_simple();
+#endif
 	}
 	break;
 

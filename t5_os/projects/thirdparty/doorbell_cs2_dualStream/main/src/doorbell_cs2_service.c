@@ -243,7 +243,6 @@ void doorbell_cs2_img_h264_record_map(bool is_I_frame)
 void doorbell_cs2_h264_down_drop_level(uint32_t cur_drop_level,bool recovery,bool is_I_frame)
 {
 	uint32_t status_avg_size;
-	bool down_drop_level;
 	int32_t avg_drop_level;
 
 	LOGD("[dec] cur_drop_level %d recovery %d is_I_frame %d\n", cur_drop_level, recovery, is_I_frame);
@@ -255,17 +254,18 @@ void doorbell_cs2_h264_down_drop_level(uint32_t cur_drop_level,bool recovery,boo
 	}
 
 	status_avg_size = (s_h264_drop_info.status_total_size * 1024) / s_h264_drop_info.status_cnt;
-	down_drop_level = (status_avg_size < MEDIA_H264_START_DROP_THD) ? true : false;
 
-	LOGD("status_avg_size %d down_drop_level %d\n",status_avg_size,down_drop_level);
+	LOGD("status_avg_size %d\n", status_avg_size);
 
-	if (down_drop_level)
+	if (status_avg_size < MEDIA_H264_START_DROP_THD)
 	{
 		s_h264_drop_info.drop_level = recovery ? 0 : cur_drop_level;
 	}
 	else
 	{
 		avg_drop_level = (status_avg_size - MEDIA_H264_START_DROP_THD) / MEDIA_H264_DROP_LEVEL_INTERVAL + 1;
+		if (avg_drop_level >= MEDIA_H264_MAX_DROP_LEVEL)
+			avg_drop_level = MEDIA_H264_MAX_DROP_LEVEL - 1;
 		s_h264_drop_info.drop_level = (avg_drop_level > cur_drop_level) ? avg_drop_level : cur_drop_level;
 		LOGD("[dec] avg_drop_level %d drop_level %d\n",avg_drop_level,s_h264_drop_info.drop_level);
 	}
@@ -299,7 +299,7 @@ bool doorbell_cs2_img_h264_drop_level_check(uint32_t pre_size,UINT32 WriteSize,b
 
 	if (s_h264_drop_info.drop_period)
 	{
-		s_h264_drop_info.status_total_size = WriteSize / 1024;
+		s_h264_drop_info.status_total_size += WriteSize / 1024;
 		s_h264_drop_info.status_cnt++;
 	}
 
@@ -307,8 +307,10 @@ bool doorbell_cs2_img_h264_drop_level_check(uint32_t pre_size,UINT32 WriteSize,b
 	{
 		cur_drop_level = (cur_size - MEDIA_H264_START_DROP_THD) / MEDIA_H264_DROP_LEVEL_INTERVAL + 1;
 
-		if (cur_drop_level > MEDIA_H264_MAX_DROP_LEVEL)
-			cur_drop_level = MEDIA_H264_MAX_DROP_LEVEL;
+		if (cur_drop_level >= MEDIA_H264_MAX_DROP_LEVEL)
+		{
+			cur_drop_level = MEDIA_H264_MAX_DROP_LEVEL - 1;
+		}
 
 		if (s_h264_drop_info.drop_level > cur_drop_level)
 		{
@@ -334,8 +336,10 @@ bool doorbell_cs2_img_h264_drop_level_check(uint32_t pre_size,UINT32 WriteSize,b
 		if((s_h264_drop_info.drop_level >= MEDIA_H264_MAX_DROP_LEVEL) && (s_h264_drop_info.I_num == MEDIA_H264_I_FRAME_MAX_NUM))
 		{
 			LOGD("Drop cur I frame\n");
+			s_h264_drop_info.I_frame_droped = true;
 			return true;
 		}
+		s_h264_drop_info.I_frame_droped = false;
 	}
 	else
 	{
@@ -367,13 +371,13 @@ bool doorbell_cs2_img_h264_drop_check(frame_buffer_t *frame,uint32_t count, uint
 		{
 			s_h264_drop_info.check_type = true;
 			s_h264_drop_info.support_type = (media_config.p_frame_cnt == MEDIA_H264_SUPPORT_MAX_P_FRAME_NUM) ? true : false;
-			LOGD("check support cnt %d support type %d\n",media_config.p_frame_cnt,s_h264_drop_info.support_type);
+			LOGI("check support cnt %d support type %d\n",media_config.p_frame_cnt,s_h264_drop_info.support_type);
 		}
 	}
 
 	if (frame == NULL || !s_h264_drop_info.support_type)
 	{
-		LOGD("frame %d support_type %d\n",frame,s_h264_drop_info.support_type);
+		LOGE("frame %d support_type %d\n",frame,s_h264_drop_info.support_type);
 		return false;
 	}
 
@@ -398,15 +402,10 @@ bool doorbell_cs2_img_h264_drop_check(frame_buffer_t *frame,uint32_t count, uint
 
 	doorbell_cs2_img_h264_record_map(is_NAL_I_frame);
 
-	if (drop_other_gop_frame)
-	{
-		LOGD("GOP Drop frame[%s]\n", is_NAL_I_frame?"I":"P");
-		return true;
-	}
 
 	Check_ret = PPCS_Check_Buffer(s_current_sessionid, IMG_P2P_CHANNEL, &WriteSize, NULL);
 
-	// st_debug("ThreadWrite PPCS_Check_Buffer: Session=%d,CH=%d,WriteSize=%d,ret=%d %s\n", 
+	// st_debug("ThreadWrite PPCS_Check_Buffer: Session=%d,CH=%d,WriteSize=%d,ret=%d %s\n",
 	//    SessionID, Channel, WriteSize, Check_ret, get_p2p_error_code_info(Check_ret));
 	if (0 > Check_ret)
 	{
@@ -414,6 +413,19 @@ bool doorbell_cs2_img_h264_drop_check(frame_buffer_t *frame,uint32_t count, uint
 			s_current_sessionid, IMG_P2P_CHANNEL, WriteSize, Check_ret, get_p2p_error_code_info(Check_ret));
 		drop_other_gop_frame = false;
 		return false;
+	}
+
+	//Recovery send frame immditely when write size is less than THD/2 and one gop no drop I frame
+	if(!s_h264_drop_info.I_frame_droped && drop_other_gop_frame && (WriteSize < MEDIA_H264_START_DROP_THD / 2))
+	{
+		LOGD("[drop] restore p frame\r\n");
+		drop_other_gop_frame = false;
+	}
+
+	if (drop_other_gop_frame)
+	{
+		LOGD("GOP Drop frame[%s]\n", is_NAL_I_frame ? "I" : "P");
+		return true;
 	}
 
 	pre_size = frame->length + count * (ext_size + sizeof(db_trans_head_t));
@@ -630,7 +642,7 @@ static void doorbell_cs2_get_time(time_info_t *pt)
 		pt->min = stm.tm_min;
 		pt->sec = stm.tm_sec;
 		pt->msec = (int)(tmv.tv_usec / 1000);
-		pt->tick_sec = tmv.tv_sec; // 1970年1月1日0点至今的秒数。
+		pt->tick_sec = tmv.tv_sec; // 1970�?1�?1�?0点至今的秒数�?
 		pt->tick_msec = ((unsigned long long)tmv.tv_sec) * 1000 + tmv.tv_usec / 1000; // ->ms
 		os_memset(pt->date, 0, sizeof(pt->date));
 		snprintf(pt->date, sizeof(pt->date) - 1, "%04d-%02d-%02d %02d:%02d:%02d.%03d", pt->year, pt->mon, pt->day, pt->hour, pt->min, pt->sec, pt->msec);
@@ -921,7 +933,7 @@ static int cs2_p2p_listen(const char *did, const char *APILicense, unsigned long
 	int SessionID = -99;
 
 	unsigned int TimeOut_Sec = 120;
-	unsigned short UDP_Port = 0;// PPCS_Listen 端口填 0 让底层自动分配。
+	unsigned short UDP_Port = 0;// PPCS_Listen 端口�? 0 让底层自动分配�??
 	char bEnableInternet = 2;
 
 #ifdef TIME_SHOW
@@ -974,8 +986,8 @@ static int cs2_p2p_listen(const char *did, const char *APILicense, unsigned long
 	}
 	else //// ret >= 0, Listen OK, new client connect in.
 	{
-		SessionID = ret; // 每个 >=0 的 SessionID 都是一个正常的连接，本 sample 是单用户连接范例，多用户端连接注意要保留区分每一个 PPCS_Listen >=0 的 SessionID, 当连接断开或者 SessionID 不用时，必须要调 PPCS_Close(SessionID)/PPCS_ForceClose(SessionID) 关闭连线释放资源。
-//		PPCS_Share_Bandwidth(0); // 当有连接进来，关闭设备转发功能。
+		SessionID = ret; // 每个 >=0 �? SessionID 都是�?个正常的连接，本 sample 是单用户连接范例，多用户端连接注意要保留区分每一�? PPCS_Listen >=0 �? SessionID, 当连接断�?或�?? SessionID 不用时，必须要调 PPCS_Close(SessionID)/PPCS_ForceClose(SessionID) 关闭连线释放资源�?
+//		PPCS_Share_Bandwidth(0); // 当有连接进来，关闭设备转发功能�??
 
 		LOGI("PPCS_Share_Bandwidth(0) is Called!!\n");
 	}
@@ -1013,7 +1025,7 @@ static int32_t doorbell_cs2_p2p_write(int SessionID, uint8_t Channel, uint8_t *b
 	do
 	{
 		uint32_t will_write_size = ((size - write_index < write_per_count_thr) ? (size - write_index) : write_per_count_thr);
-		// 在调用 PPCS_Write 之前一定要调用 PPCS_Check_Buffer 检测写缓存还有多少数据尚未发出去，需控制在一个合理范围，一般控制在 128KB/256KB 左右。
+		// 在调�? PPCS_Write 之前�?定要调用 PPCS_Check_Buffer �?测写缓存还有多少数据尚未发出去，�?控制在一个合理范围，�?般控制在 128KB/256KB 左右�?
 		Check_ret = PPCS_Check_Buffer(SessionID, Channel, &WriteSize, NULL);
 
 		// st_debug("ThreadWrite PPCS_Check_Buffer: Session=%d,CH=%d,WriteSize=%d,ret=%d %s\n", SessionID, Channel, WriteSize, Check_ret, get_p2p_error_code_info(Check_ret));
@@ -1034,8 +1046,8 @@ static int32_t doorbell_cs2_p2p_write(int SessionID, uint8_t Channel, uint8_t *b
 			write_not_send_thr = CS2_AUD_MAX_TX_BUFFER_THD;
 		}
 
-		// 写缓存的数据大小超过128KB/256KB，则需考虑延时缓一缓。
-		// 如果发现 wsize 越来越大，可能网络状态很差，需要考虑一下丢帧或降码率，这是一个动态调整策略，非常重要!!
+		// 写缓存的数据大小超过128KB/256KB，则�?考虑延时缓一缓�??
+		// 如果发现 wsize 越来越大，可能网络状态很差，�?要�?�虑�?下丢帧或降码率，这是�?个动态调整策略，非常重要!!
 		// On device, Recommended CHECK_WRITE_THRESHOLD_SIZE == (128 or 256) * 1024 Byte. this sample set 1MB.
 
 		if (WriteSize <= write_not_send_thr)
@@ -1146,7 +1158,7 @@ static void doorbell_cs2_session_close(void)
 
 	doorbell_cs2_get_time(&t1);
 
-	PPCS_ForceClose(s_current_sessionid);// PPCS_Close(SessionID);// 不能多线程对同一个 SessionID 做 PPCS_Close(SessionID)/PPCS_ForceClose(SessionID) 的动作，否则可能导致崩溃。
+	PPCS_ForceClose(s_current_sessionid);// PPCS_Close(SessionID);// 不能多线程对同一�? SessionID �? PPCS_Close(SessionID)/PPCS_ForceClose(SessionID) 的动作，否则可能导致崩溃�?
 
 	doorbell_cs2_get_time(&t2);
 
@@ -1348,7 +1360,7 @@ READ_ERR:
 
 			session = -1;
 
-			rtos_delay_milliseconds(300); // 两次 PPCS_Listen 之间需要保持间隔。
+			rtos_delay_milliseconds(300); // 两次 PPCS_Listen 之间�?要保持间隔�??
 
 			continue;
 		}
@@ -1425,7 +1437,7 @@ static int doorbell_cs2_p2p_interface_init(p2p_cs2_key_t *key)
 		LOGI("[%s] PPCS_Initialize1(%s) ...\n", t1.date, InitJsonString);
 
 
-		// 如果Parameter 不是正确的JSON字串则会被当成InitString[:P2PKey]来处理, 如此以兼容旧版.
+		// 如果Parameter 不是正确的JSON字串则会被当成InitString[:P2PKey]来处�?, 如此以兼容旧�?.
 		ret = PPCS_Initialize((char *)InitJsonString);
 
 		doorbell_cs2_get_time(&t2);

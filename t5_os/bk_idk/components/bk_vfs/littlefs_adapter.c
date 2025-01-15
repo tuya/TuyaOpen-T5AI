@@ -1,3 +1,4 @@
+#include "sdkconfig.h"
 #include <common/bk_include.h>
 
 #if CONFIG_LITTLEFS
@@ -168,7 +169,6 @@ static int setup_lfs_config(struct lfs_config *config, const struct bk_little_fs
 			free(config->context);
 			return -1;
 		}
-        bk_printf("---- trace %s %d \r\n", __func__, __LINE__);
 		config->read = lfs_qspi_flashbd_read;
 		config->prog = lfs_qspi_flashbd_prog;
 		config->erase = lfs_qspi_flashbd_erase;
@@ -179,13 +179,24 @@ static int setup_lfs_config(struct lfs_config *config, const struct bk_little_fs
 		return -1;
 	}
 
-	config->read_size = 64;
-	config->prog_size = 64;
-	config->block_size = 64*2048;
-	config->block_count = part->part_flash.size / config->block_size;
-	config->cache_size = 64;
-	config->lookahead_size = 64;
+// Modified by TUYA Start
+	config->read_size = part->part_flash.page_size;
+	config->prog_size = part->part_flash.page_size;
+	config->block_size = part->part_flash.block_size;
+	config->block_count = part->part_flash.size / part->part_flash.block_size;
+	config->cache_size = 4096;
+	config->lookahead_size = 4096;
 	config->block_cycles = 500;
+
+	bk_printf("fs flash conf:\r\n");
+	bk_printf("\tread_size: %d\r\n", config->read_size);
+	bk_printf("\tprog_size: %d\r\n", config->prog_size);
+	bk_printf("\tblock_size: %d\r\n", config->block_size);
+	bk_printf("\tblock_count: %d\r\n", config->block_count);
+	bk_printf("\tcache_size: %d\r\n", config->cache_size);
+	bk_printf("\tlookahead_size: %d\r\n", config->lookahead_size);
+	bk_printf("\tblock_cycles: %d\r\n", config->block_cycles);
+// Modified by TUYA End
 
 	ret = lfs_flashbd_createcfg(config, &defaults);
 	if (ret) {
@@ -214,7 +225,6 @@ static int _bk_lfs_mkfs(const char *partition_name, const void *data) {
 	lfs_t lfs;
 	int ret;
 
-    bk_printf("---- trace %s %d \r\n", __func__, __LINE__);
 	part = (const struct bk_little_fs_partition *)data;
 
 	memset(&lfs, 0, sizeof(lfs_t));
@@ -225,15 +235,12 @@ static int _bk_lfs_mkfs(const char *partition_name, const void *data) {
 		return -1;
 	}
 
-    bk_printf("---- trace %s %d \r\n", __func__, __LINE__);
 	ret = lfs_format(&lfs, &config);
 	if (ret) {
-        bk_printf("---- trace %s %d %d\r\n", __func__, __LINE__, ret);
 		teardown_lfs_config(&config);
 		return -1;
 	}
 
-    bk_printf("---- trace %s %d \r\n", __func__, __LINE__);
 	return 0;
 }
 
@@ -262,7 +269,9 @@ static int _bk_lfs_mount(struct bk_filesystem *fs, unsigned long mount_flags, co
 	if (ret) {
 		teardown_lfs_config(config);
 		free(lfs);
+		// Modified by TUYA Start
 		return ret;
+		// Modified by TUYA End
 	}
 
 	fs->fs_data = lfs;

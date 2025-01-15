@@ -5235,9 +5235,7 @@ static int ecp_mod_p255(mbedtls_mpi *N)
 #define P448_WIDTH      (448 / 8 / sizeof(mbedtls_mpi_uint))
 
 /* Number of limbs fully occupied by 2^224 (max), and limbs used by it (min) */
-#ifndef DIV_ROUND_UP
 #define DIV_ROUND_UP(X, Y) (((X) + (Y) -1) / (Y))
-#endif
 #define P224_SIZE        (224 / 8)
 #define P224_WIDTH_MIN   (P224_SIZE / sizeof(mbedtls_mpi_uint))
 #define P224_WIDTH_MAX   DIV_ROUND_UP(P224_SIZE, sizeof(mbedtls_mpi_uint))

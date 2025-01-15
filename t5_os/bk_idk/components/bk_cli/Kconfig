@@ -129,6 +129,13 @@ menu "Bk_cli"
 			help
 				Enable Shell and Async log optimize
 				
+		config DYM_LOG_MEM_MAX
+			depends on SHELL_ASYNCLOG
+			hex "Limit Of Log Dynamic Memory"
+			default 0x2000
+			help
+				Dynamic Log Memory Maximum
+
 		config UART_RING_BUFF
 			depends on SHELL_ASYNCLOG
 			bool "Enable uart ring buffer"

@@ -272,6 +272,7 @@ int hapd_intf_sta_add(struct prism2_hostapd_param *param, int len)
 	add_sta.sta_addr = param->sta_addr;
 	add_sta.capability = param->u.add_sta.capability;
 	add_sta.tx_supp_rates = param->u.add_sta.tx_supp_rates;
+	add_sta.qos_info = param->u.add_sta.qos_info;
 	add_sta.flags = param->u.add_sta.flags;
 
 	ret = rw_msg_send_me_sta_add(&add_sta, cfm);

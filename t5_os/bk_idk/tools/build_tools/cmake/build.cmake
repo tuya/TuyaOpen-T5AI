@@ -147,9 +147,7 @@ function(__build_set_default_build_specifications)
         # list(APPEND compile_definitions "-DCFG_LOG_LEVEL=3")
     else()
         list(APPEND compile_definitions "-DCONFIG_RELEASE_VERSION=1")
-        # Modified by TUYA Start
-        list(APPEND compile_definitions "-DCFG_LOG_LEVEL=3")
-        # Modified by TUYA End
+        list(APPEND compile_definitions "-DCFG_LOG_LEVEL=2")
     endif()
 
     armino_build_get_property(soc_path SOC_PATH)

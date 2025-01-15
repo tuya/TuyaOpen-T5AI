@@ -673,6 +673,7 @@ bk_err_t bk_usb_open (uint32_t usb_mode)
 	USB_RETURN_NOT_POWERED_ON();
 	USB_RETURN_NOT_CLOSE();
 
+	bk_pm_module_vote_cpu_freq(PM_DEV_ID_USB_1, PM_CPU_FRQ_480M);
 	bk_pm_module_vote_sleep_ctrl(PM_SLEEP_MODULE_NAME_USB_1, 0x0, 0x0);
 
     mb_chnl_cmd_t mb_cmd;

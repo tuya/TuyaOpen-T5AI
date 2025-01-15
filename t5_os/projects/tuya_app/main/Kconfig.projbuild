@@ -6,5 +6,7 @@ menu "TUYA_APP"
     config TUYA_APP_PARAM2
         bool "TUYA_APP_PARAM2"
         default n
-
+	config SUPPORTED_IMAGE_MAX_720P
+		bool "Supported image max 720P"
+        default n
 endmenu

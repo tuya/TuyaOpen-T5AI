@@ -47,7 +47,7 @@
 #define CONST_DIV_48K		(0x043B5554)
 
 
-extern void delay(int num);
+extern void bk_delay(int num);
 bk_err_t bk_aud_dac_dacl_disable_int(void);
 bk_err_t bk_aud_dac_dacr_disable_int(void);
 
@@ -188,7 +188,7 @@ bk_err_t bk_aud_dac_set_samp_rate(uint32_t samp_rate)
 		}
 		sys_drv_apll_config_set(0xC2A0AE86);
 		sys_drv_apll_spi_trigger_set(1);
-		delay(10);
+		bk_delay(10);
 		sys_drv_apll_spi_trigger_set(0);
 	}
 #endif

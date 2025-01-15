@@ -27,10 +27,10 @@ typedef struct
 {
 	beken_semaphore_t   event_semaphore;  // will release from ISR.
 	u32       event_flag;
-	u32       event_inited;
 } rtos_event_ext_t;
 
 bk_err_t rtos_init_event_ex(rtos_event_ext_t * event);
+bk_err_t rtos_deinit_event_ex(rtos_event_ext_t * event);
 
 
 /* this API may be called from ISR. */

@@ -18,7 +18,7 @@
  * @param[in] pNext the next node
  * @return void
  */
-STATIC void __list_add(IN const P_LIST_HEAD pNew, IN const P_LIST_HEAD pPrev,\
+static void __list_add(IN const P_LIST_HEAD pNew, IN const P_LIST_HEAD pPrev,\
                        IN const P_LIST_HEAD pNext)
 {
     pNext->prev = pNew;
@@ -34,7 +34,7 @@ STATIC void __list_add(IN const P_LIST_HEAD pNew, IN const P_LIST_HEAD pPrev,\
  * @param[in] pNext the next node
  * @return void
  */
-STATIC void __list_del(IN const P_LIST_HEAD pPrev, IN const P_LIST_HEAD pNext)
+static void __list_del(IN const P_LIST_HEAD pPrev, IN const P_LIST_HEAD pNext)
 {
     pNext->prev = pPrev;
     pPrev->next = pNext;

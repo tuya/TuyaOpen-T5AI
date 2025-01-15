@@ -12,4 +12,8 @@ menu "OTP"
 		default n
 		help
 			Use OTP to save rfcali data
+
+	config OTP_SLEEP
+		bool "Enable OTP sleep"
+		default n
 endmenu

@@ -85,6 +85,29 @@ int bk_feature_ap_statype_limit_enable(void);
  */
 int bk_feature_tcp_protect_enable(void);
 
+
+/**
+ * @brief     Interface for customer to Enable/Disable beacon tx tim
+ *
+ * @attention 1 Controled by middleware/soc/bk72xx.defconfig
+ *
+ * @return
+ *    - 1: enable
+ *    - 0: disable
+ */
+int bk_feature_tx_tim_enable(void);
+
+/**
+ * @brief     Interface for customer to Enable/Disable AP_PS
+ *
+ * @attention 1 Controled by middleware/soc/bk72xx.defconfig
+ *
+ * @return
+ *    - 1: enable
+ *    - 0: disable
+ */
+int bk_feature_ap_ps_enable(void);
+
 /**
  * @brief     Interface for customer to Enable/Disable temp detect functionality
  *

@@ -92,7 +92,11 @@ def main():
         files = ['security.csv', 'root_ec256_pubkey.pem', 'root_ec256_privkey.pem']
         copy_file_list(f'{idk_path}/build/{project_base}/bk7236/_build', f'{sign_path}/immutable', files)
 
+        copy_file(f'{idk_path}/build/{project_base}/bk7236/_build/otp_efuse_config.json', f'{pack_path}/_tmp')
+        copy_file(f'{idk_path}/build/{project_base}/bk7236/_build/ota_vmin_signed.bin', f'{pack_path}/_tmp')
+        copy_file(f'{idk_path}/build/{project_base}/bk7236/_build/jump.bin', f'{pack_path}/_tmp')
         copy_file(f'{idk_path}/build/{project_base}/bk7236/_build/bl2.bin', f'{pack_path}/_tmp')
+        copy_file(f'{idk_path}/build/{project_base}/bk7236/_build/bl2_B.bin', f'{pack_path}/_tmp')
         copy_file(f'{idk_path}/build/{project_base}/bk7236/_build/tfm_s.bin', f'{pack_path}/_tmp')
         copy_file(f'{idk_path}/build/{project_base}/bk7236/_build/cpu0_app.bin', f'{pack_path}/_tmp')
 
@@ -103,10 +107,10 @@ def main():
     bin_hash_list = pack_server_get_app_bin_hash(tool_path)
 
     os.chdir(f'{sign_path}/_tmp')
-    bin_sig_list = sign_server_sign_app_bin_hash(tool_path, bin_hash_list[0], bin_hash_list[1])
+    bin_sig_list = sign_server_sign_app_bin_hash(tool_path, bin_hash_list[0], bin_hash_list[1], bin_hash_list[2])
 
     os.chdir(f'{pack_path}/_tmp')
-    pack_server_sign_from_app_sig(tool_path, bin_sig_list[0], bin_sig_list[1], bin_sig_list[2])
+    pack_server_sign_from_app_sig(tool_path, bin_sig_list[0], bin_sig_list[1], bin_sig_list[2], bin_sig_list[3], bin_sig_list[4])
     ota_bin_hash = pack_server_get_ota_bin_hash(tool_path)
 
     os.chdir(f'{sign_path}/_tmp')

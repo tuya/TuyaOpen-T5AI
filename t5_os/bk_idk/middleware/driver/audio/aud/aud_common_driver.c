@@ -127,7 +127,7 @@ static aud_module_init_sta_t s_aud_module_init_sta = {0};
 static aud_isr_handle_t s_aud_isr = {NULL};
 #endif
 static void aud_isr(void);
-extern void delay(int num);
+extern void bk_delay(int num);
 
 #if CONFIG_SOC_BK7236XX
 static uint32_t ana_reg18_value_cal(void)
@@ -245,7 +245,7 @@ bk_err_t bk_aud_clk_config(aud_clk_t clk)
 		sys_drv_apll_cal_val_set(0x8973CA6F);
 		sys_drv_apll_config_set(0xC2A0AE86);
 		sys_drv_apll_spi_trigger_set(1);
-		delay(10);
+		bk_delay(10);
 		sys_drv_apll_spi_trigger_set(0);
 		/* selet apll */
 		aud_hal_set_audio_config_apll_sel(1);

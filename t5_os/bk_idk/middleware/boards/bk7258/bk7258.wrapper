@@ -45,17 +45,22 @@ def run_cmd_with_ret(cmd):
 		print(err)
 		exit(1)
 
-def move_file(bin_name, src_dir, dst_dir):
-	logging.debug(f'move {bin_name} from {src_dir}')
-	logging.debug(f'to {dst_dir}')
-	if os.path.exists(f'{src_dir}/{bin_name}') == True:
-		shutil.move(f'{src_dir}/{bin_name}', f'{dst_dir}')
+def low_level_copy(src, dst):
+	try:
+		if os.path.exists(src) == True:
+			shutil.copy(src, dst)
+	except Exception as e:
+		if os.path.exists(dst):
+			logging.debug(f'Copy {src} to {dst} failed, but {dst} exists, skip failure')
+		else:
+			logging.error(f'Copy {src} to {dst} failed, {dst} not exists, abort')
+			exit(1)
 
 def copy_file(src, dst):
 	logging.debug(f'copy {src} to {dst}')
 	logging.debug(f'to {dst}')
 	if os.path.exists(f'{src}') == True:
-		shutil.copy(f'{src}', f'{dst}')
+		low_level_copy(f'{src}', f'{dst}')
 
 def copy_files(postfix, src_dir, dst_dir):
 	logging.debug(f'copy *{postfix} from {src_dir}')
@@ -63,7 +68,7 @@ def copy_files(postfix, src_dir, dst_dir):
 	for f in os.listdir(src_dir):
 		if f.endswith(postfix):
 			if os.path.isfile(f'{src_dir}/{f}'):
-				shutil.copy(f'{src_dir}/{f}', f'{dst_dir}/{f}')
+				low_level_copy(f'{src_dir}/{f}', f'{dst_dir}/{f}')
 
 def partition_csv_is_valid(partition_csv):
 	try:
@@ -104,7 +109,7 @@ def install_configs(cfg_dir, install_dir, is_wait_partitions=False):
 				continue;
 
 			if os.path.isfile(f'{cfg_dir}/{f}'):
-				shutil.copy(f'{cfg_dir}/{f}', f'{install_dir}/{f}')
+				low_level_copy(f'{cfg_dir}/{f}', f'{install_dir}/{f}')
 
 	if os.path.exists(f'{cfg_dir}/key') == True:
 		copy_files('.pem', f'{cfg_dir}/key', install_dir)
@@ -114,11 +119,14 @@ def install_configs(cfg_dir, install_dir, is_wait_partitions=False):
 		copy_files('.csv', f'{cfg_dir}/regs', install_dir)
 
 	if is_wait_partitions:
+		# wait for 1s in case partitions table was outdated.
+		if os.path.isfile(f'{cfg_dir}/partitions.csv'):
+			time.sleep(1)
 		# try 5 sec wait partitions.csv
 		for tmp_cnt in range(5):
 			if os.path.isfile(f'{cfg_dir}/partitions.csv'):
 				try:
-					shutil.copy(f'{cfg_dir}/partitions.csv', f'{install_dir}/partitions.csv')
+					low_level_copy(f'{cfg_dir}/partitions.csv', f'{install_dir}/partitions.csv')
 
 					is_valid = False
 					for validate_cnt in range(3):

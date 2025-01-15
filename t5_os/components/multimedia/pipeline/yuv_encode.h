@@ -159,6 +159,8 @@ bool check_uvc_status(void);
 void rotate_set_dma2d_cb(void);
 void sw_dec_set_dma2d_cb(void);
 
+bk_err_t yuv_frame_rotate_handle(uint32_t param);
+
 #ifdef __cplusplus
 }
 #endif

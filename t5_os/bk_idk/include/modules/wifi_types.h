@@ -479,10 +479,16 @@ typedef struct {
 	char  password[WIFI_PASSWORD_LEN]; /**< Passord of AP the BK STA is connected */
 } wifi_link_status_t;
 
+
+enum {
+	SCAN_TYPE_CC = 0x1,
+};
+
 typedef struct {
 	char ssid[WIFI_SSID_STR_LEN];     /**< SSID to be scaned */
 	u8 scan_type;     /**< 0: active scan; 1: passive scan*/
 	u8 chan_cnt;     /**< scan channel cnt*/
+	u8 flag;
 	u8 chan_nb[WIFI_2BAND_MAX_CHAN_NUM];     /**< scan channel number 2.4g+5g*/
 	u32 duration;     /**< scan duration,ms*/
 } wifi_scan_config_t;
@@ -757,6 +763,8 @@ typedef enum
 
     WIFI_STANDARD_MAX
 } wifi_standard;
+
+typedef bk_err_t (*wifi_beacon_cc_rxed_t)(void *ctxt, uint8_t *cc, uint8_t cc_len);
 
 /**
  * @}

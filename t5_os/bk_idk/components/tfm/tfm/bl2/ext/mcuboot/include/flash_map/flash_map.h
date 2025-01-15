@@ -106,6 +106,11 @@ struct flash_area {
      * This area's size, in bytes.
      */
     uint32_t fa_size;
+
+    /**
+     * This area's phy size, in bytes.
+     */
+    uint32_t fa_phy_size;
 };
 
 /**
@@ -181,6 +186,10 @@ int flash_area_get_sectors(int fa_id, uint32_t *count,
  */
 __attribute__((deprecated))
 int flash_area_to_sectors(int idx, int *cnt, struct flash_area *ret);
+
+int flash_map_init(void);
+uint32_t get_flash_map_offset(uint32_t index);
+uint32_t get_flash_map_size(uint32_t index);
 
 #ifdef __cplusplus
 }

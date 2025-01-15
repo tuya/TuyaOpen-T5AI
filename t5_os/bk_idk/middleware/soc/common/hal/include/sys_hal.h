@@ -3271,6 +3271,9 @@ void sys_hal_set_ana_gadc_cmp_ictrl(uint32_t value);
 void sys_hal_set_ana_pwd_gadc_buf(uint32_t value);
 void sys_hal_set_ana_vref_sel(uint32_t value);
 void sys_hal_set_ana_cb_cal_manu(uint32_t value);
+// Modified by TUYA Start
+void sys_hal_set_ana_adc_div(uint32_t value);
+// Modified by TUYA End
 void sys_hal_set_ana_cb_cal_trig(uint32_t value);
 UINT32 sys_hal_get_ana_cb_cal_manu_val(void);
 void sys_hal_set_ana_cb_cal_manu_val(uint32_t value);
@@ -3319,6 +3322,7 @@ void sys_hal_enter_low_analog(void);
 void sys_hal_exit_low_analog(void);
 void sys_hal_set_7816_int_en(uint32_t value);
 void sys_hal_set_scr_clk(uint32_t value);
+void sys_hal_set_ota_finish(uint32_t value);
 
 #ifdef __cplusplus
 }

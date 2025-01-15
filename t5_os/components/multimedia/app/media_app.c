@@ -191,6 +191,10 @@ bk_err_t media_app_camera_open(media_camera_device_t *device)
 	{
 		media_modules_state->cam_state = CAMERA_STATE_ENABLED;
 	}
+	else
+	{
+		bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_OFF);
+	}
 
 	LOGI("%s complete\n", __func__);
 
@@ -872,9 +876,27 @@ bk_err_t media_app_get_uvc_camera_status(void)
 	return camera_status;
 }
 
+// Modified by TUYA Start
+bk_err_t media_app_get_usb_connect_status(void)
+{
+	uint32_t camera_status = 0;
+	bk_err_t ret;
+	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_ON);
+	ret = media_send_msg_sync_return_param(EVENT_GET_USB_STATUS_IND, 0, &camera_status);
+	if (ret != BK_OK)
+	{
+		LOGE("%s error\n", __func__);
+	}
+	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_OFF);
+	return camera_status;
+}
+// Modified by TUYA End
+
 bk_err_t media_app_lcd_open(void *lcd_open)
 {
 	int ret = kNoErr;
+// Modified by TUYA Start
+#if 0
 	lcd_open_t *ptr = NULL;
 
 	ptr = (lcd_open_t *)os_malloc(sizeof(lcd_open_t));
@@ -883,15 +905,20 @@ bk_err_t media_app_lcd_open(void *lcd_open)
 		return kGeneralErr;
 	}
 	os_memcpy(ptr, (lcd_open_t *)lcd_open, sizeof(lcd_open_t));
+#endif
 
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_ON);
 
-	ret = media_send_msg_sync(EVENT_LCD_OPEN_IND, (uint32_t)ptr);
+	// ret = media_send_msg_sync(EVENT_LCD_OPEN_IND, (uint32_t)ptr);
+	ret = media_send_msg_sync(EVENT_LCD_OPEN_IND, (uint32_t)lcd_open);
 
+#if 0
 	if (ptr) {
 		os_free(ptr);
 		ptr =NULL;
 	}
+#endif
+// Modified by TUYA End
 
 	LOGI("%s complete %x\n", __func__, ret);
 
@@ -1420,6 +1447,24 @@ bk_err_t media_app_pipeline_mem_leak(void)
 }
 #endif
 
+void media_app_save_yuv_data_handle(uint32_t param)
+{
+	int ret = BK_OK;
+	media_mailbox_msg_t *msg = (media_mailbox_msg_t *)param;
+
+	frame_buffer_t *yuv = (frame_buffer_t *)msg->param;
+	char file_name[20] = {0};
+
+	if (yuv != NULL)
+	{
+		os_snprintf(file_name, 20, "%d.yuv", yuv->sequence);
+
+		storage_mem_to_sdcard(file_name, yuv->frame, yuv->size);
+	}
+
+	msg_send_rsp_to_media_app_mailbox(msg, ret);
+}
+
 bk_err_t media_app_send_msg(media_msg_t *msg)
 {
 	bk_err_t ret;
@@ -1460,6 +1505,10 @@ static void media_app_message_handle(void)
 						else
 							uvc_device_info_cb((bk_uvc_device_brief_info_t *)msg.param, UVC_DISCONNECT_ABNORMAL);
 					}
+					break;
+
+				case EVENT_JPEG_DEC_SAVE_IND:
+					media_app_save_yuv_data_handle(msg.param);
 					break;
 
 				case EVENT_MEDIA_APP_EXIT_IND:

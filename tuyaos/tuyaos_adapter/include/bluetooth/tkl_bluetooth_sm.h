@@ -1,36 +1,49 @@
+/**
+ * @file tkl_bluetooth_sm.h
+ * @brief This is tkl_bluetooth_sm file
+ * @version 1.0
+ * @date 2024-08-15
+ *
+ * @copyright Copyright 2024-2024 Tuya Inc. All Rights Reserved.
+ *
+ */
+
 #ifndef __TKL_BLUETOOTH_SM_H__
 #define __TKL_BLUETOOTH_SM_H__
-
-#include "tkl_bluetooth_def.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*********************************************[Option][Bluetooth SecurityManager]********************************************/
+#include "tkl_bluetooth_def.h"
+#if defined(TUYA_BLE_HS_SM_SC) && (TUYA_BLE_HS_SM_SC == 1)
 
+/***********************************************************************
+ ********************* constant ( macro and enum ) *********************
+ **********************************************************************/
+// TUYA_BLE_SM_IO_CAPS
 #define TUYA_BLE_SM_IO_CAPS_DISPLAY_ONLY      0x00          /**< Display Only. */
 #define TUYA_BLE_SM_IO_CAPS_DISPLAY_YESNO     0x01          /**< Display and Yes/No entry. */
 #define TUYA_BLE_SM_IO_CAPS_KEYBOARD_ONLY     0x02          /**< Keyboard Only. */
 #define TUYA_BLE_SM_IO_CAPS_NONE              0x03          /**< No I/O capabilities. */
 #define TUYA_BLE_SM_IO_CAPS_KEYBOARD_DISPLAY  0x04          /**< Keyboard and Display. */
 
+// TUYA_BLE_SM_AUTH_KEY
 #define TUYA_BLE_SM_AUTH_KEY_TYPE_NONE        0x00          /**< No key (may be used to reject). */
 #define TUYA_BLE_SM_AUTH_KEY_TYPE_PASSKEY     0x01          /**< 6-digit Passkey. */
 #define TUYA_BLE_SM_AUTH_KEY_TYPE_OOB         0x02          /**< Out Of Band data. */
 
 typedef enum {
     TUYA_BLE_SM_CONN_SEC_START = 0x01,                      /**< [Info Event] A security procedure has started on a link, initiated either locally or remotely. no action is needed for the procedure to proceed.*/
-
     TUYA_BLE_SM_CONN_SEC_SUCCEEDED,                         /**< A link has been encrypted, Will report the identified Address and the keys of the peer */
-
     TUYA_BLE_SM_CONN_SEC_FAILED,                            /**< A pairing or encryption procedure has failed. */
-
     TUYA_BLE_SM_PASSKEY_DISPLAY,                            /**< Request to display a passkey to the user.*/
-
     TUYA_BLE_SM_AUTH_KEY_REQUEST,                           /**< Request to provide an authentication key. */
 } TUYA_BLE_SM_EVT_TYPE_E;
 
+/***********************************************************************
+ ********************* struct ******************************************
+ **********************************************************************/
 typedef struct {
     uint8_t                             bond      : 1;      /**< Perform bonding. */
     uint8_t                             mitm      : 1;      /**< Enable Man In The Middle protection. */
@@ -87,86 +100,96 @@ typedef struct {
 
 typedef void(*TUYA_BLE_SM_FUNC_CB)(TUYA_BLE_SM_PARAMS_EVT_T *p_event);
 
+/***********************************************************************
+ ********************* variable ****************************************
+ **********************************************************************/
+
+
+/***********************************************************************
+ ********************* function ****************************************
+ **********************************************************************/
+
 /**
- * @brief   [Optional][SM Required] Init the Security Manager And Post The Correct Parameters
- * 
- * @param   [in] p_security_parameter   the pointer of security parameters.
- * @return  SUCCESS
- *          ERROR   Must have either IO capabilities or OOB if MITM.
- * */ 
+ * @brief [Optional][SM Required] Init the Security Manager And Post The Correct Parameters, Must have either IO capabilities or OOB if MITM.
+ *
+ * @param[in] p_security_parameter: the pointer of security parameters.
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
 OPERATE_RET tkl_ble_security_manager_init(TUYA_BLE_SM_PARAMS_T const *p_security_parameter);
 
 /**
- * @brief   [Optional][SM Required] Register the Callback While Using Security Manager.
- * 
- * @param   [in] security_callback      the callback of security event, @ref TUYA_BLE_SM_PARAMS_EVT_T
- * @return  SUCCESS
- *          ERROR
- * */ 
+ * @brief [Optional][SM Required] Register the Callback While Using Security Manager.
+ *
+ * @param[in] security_callback: the callback of security event, @ref TUYA_BLE_SM_PARAMS_EVT_T
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
 OPERATE_RET tkl_ble_security_callback_register(const TUYA_BLE_SM_FUNC_CB security_callback);
 
 /**
- * @brief   [Optional][SM Required][Ble Peripheral/Central] Security Request, Function For Initiate the GAP Authentication procedure.
- * In the central role, this function will send an SMP Pairing Request (or an SMP Pairing Failed if rejected),
- * Otherwise in the peripheral role, an SMP Security Request will be sent. 
- * 
- * @param   [in] conn_handle    Connection handle.
- * @return  SUCCESS
- *          ERROR
- * */ 
+ * @brief [Optional][SM Required][Ble Peripheral/Central] Security Request, Function For Initiate the GAP Authentication procedure.
+ *          In the central role, this function will send an SMP Pairing Request (or an SMP Pairing Failed if rejected),
+ *          Otherwise in the peripheral role, an SMP Security Request will be sent.
+ *
+ * @param[in] conn_handle: conn_handle
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
 OPERATE_RET tkl_ble_security_request(USHORT_T conn_handle);
 
 /**
- * @brief   [Optional][Ble Central] Encryption Request, Function For Initiate GAP Encryption procedure
- * In the central role, this function will initiate the encryption procedure using the encryption information provided.
- * 
- * @param   [in] conn_handle    Connection handle.
- * @return  SUCCESS
- *          ERROR
- * */ 
+ * @brief [Optional][Ble Central] Encryption Request, Function For Initiate GAP Encryption procedure
+ *          In the central role, this function will initiate the encryption procedure using the encryption information provided.
+ *
+ * @param[in] conn_handle: conn_handle
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
 OPERATE_RET tkl_ble_encryption_request(USHORT_T conn_handle);
 
 /**
- * @brief   [Optional][SM Required][Ble Peripheral] Reply with an authentication key. Function Using During Authentication Procedures
- * Check the Key Type During Repling the info, if key_type = 0 @def TUYA_BLE_SM_AUTH_KEY , Will Reject this Auth Request
- * 
- * @param   [in] conn_handle    Connection handle.
- * @param   [in] key_type       key type for this event @ref TUYA_BLE_SM_AUTH_KEY_REQUEST+ @param request_key_type
- * @param   [in] p_key          If key type is @ref TUYA_BLE_SM_AUTH_KEY_TYPE_NONE, then NULL.
- *                              If key type is @ref TUYA_BLE_SM_AUTH_KEY_TYPE_PASSKEY, then a 6-byte ASCII string (digit 0..9 only, no NULL termination)
- *                              or NULL when confirming LE Secure Connections Numeric Comparison.
- *                              If key type is @ref TUYA_BLE_SM_AUTH_KEY_TYPE_OOB, then a 16-byte OOB key value in little-endian format.
- * @return  SUCCESS
- *          ERROR
+ * @brief [Optional][SM Required][Ble Peripheral] Reply with an authentication key. Function Using During Authentication Procedures
+ *          Check the Key Type During Repling the info, if key_type = 0 @def TUYA_BLE_SM_AUTH_KEY , Will Reject this Auth Request
+ *
  * @note    Please Check the key_type and p_key, will reject this procedure if key_type = TUYA_BLE_SM_AUTH_KEY_TYPE_NONE or p_key = NULL
  * 
- * */ 
+ * @param[in] conn_handle: conn_handle
+ * @param[in] key_type: key type for this event @ref TUYA_BLE_SM_AUTH_KEY_REQUEST+ @param request_key_type
+ * @param[in] p_key:    If key type is @ref TUYA_BLE_SM_AUTH_KEY_TYPE_NONE, then NULL.
+ *                      If key type is @ref TUYA_BLE_SM_AUTH_KEY_TYPE_PASSKEY, then a 6-byte ASCII string (digit 0..9 only, no NULL termination)
+ *                      or NULL when confirming LE Secure Connections Numeric Comparison.
+ *                      If key type is @ref TUYA_BLE_SM_AUTH_KEY_TYPE_OOB, then a 16-byte OOB key value in little-endian format.
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
 OPERATE_RET tkl_ble_security_key_reply(USHORT_T conn_handle, uint8_t key_type, uint8_t const *p_key);
 
 /**
- * @brief   [Optional] Get the Bonding Information.
- * 
- * @param   [in] peer_index     The Peer Index for bonding information.
- * @param   [out] p_info_get    The information for one peer.
- * 
- * @return  SUCCESS
- *          ERROR
- * */ 
+ * @brief [Optional] Get the Bonding Information.
+ *
+ * @param[in] source_id: The Peer Index for bonding information.
+ * @param[in] p_info_get: The information for one peer.
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
 OPERATE_RET tkl_ble_security_info_get(TUYA_BLE_SM_SOURCE_ID_T *source_id, TUYA_BLE_SM_INFO_PARAM_T *p_info_get);
 
 /**
- * @brief   [Optional] Delete the Bonding Information.
- * 
- * @param   [in] peer_index     The Peer Index for bonding information.
- * 
- * @return  SUCCESS
- *          ERROR
- * */ 
+ * @brief [Optional] Delete the Bonding Information.
+ *
+ * @param[in] source_id: The Peer Index for bonding information.
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
 OPERATE_RET tkl_ble_security_info_delete(TUYA_BLE_SM_SOURCE_ID_T *source_id);
+
+#endif /* TUYA_BLE_HS_SM_SC */
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* __TKL_BLUETOOTH_SM_H__ */
 

@@ -30,6 +30,7 @@
 #if CONFIG_AON_RTC
 #include <driver/aon_rtc.h>
 #endif
+#include <gpio_driver.h>
 
 typedef struct {
 	wdt_hal_t hal;
@@ -275,7 +276,12 @@ void bk_wdt_force_reboot(void)
 	GLOBAL_INT_DISABLE();
 	wdt_hal_force_reboot();
 #if CONFIG_GPIO_RETENTION_SUPPORT
-	sys_hal_gpio_state_switch(true);
+	// lock gpio if retention map is set up
+	// Attention: hot-flash-write will not work if gpio locked
+	if (0 != gpio_retention_map_get())
+	{
+		sys_hal_gpio_state_switch(true);
+	}
 #endif
 	while(1);
 	GLOBAL_INT_RESTORE();

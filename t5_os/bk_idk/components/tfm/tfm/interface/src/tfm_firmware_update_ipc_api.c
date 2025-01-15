@@ -103,6 +103,31 @@ psa_status_t psa_fwu_abort(const psa_image_id_t image_id)
 
     return status;
 }
+#include <stdio.h>
+void psa_fwu_confirm(const uint8_t is_confirm)
+{
+    psa_status_t status;
+    psa_handle_t handle;
+
+    psa_invec in_vec[] = {
+        { .base = &is_confirm, .len = sizeof(is_confirm) }
+    };
+    handle = psa_connect(TFM_FWU_CONFIRM_SID, TFM_FWU_CONFIRM_VERSION);
+    if (!PSA_HANDLE_IS_VALID(handle)) {
+        return;
+    }
+
+    status = psa_call(handle, PSA_IPC_CALL, in_vec, IOVEC_LEN(in_vec), NULL,
+                      0);
+
+    psa_close(handle);
+
+    if (status == (psa_status_t)TFM_ERROR_INVALID_PARAMETER) {
+        return;
+    }
+
+    return;
+}
 
 psa_status_t psa_fwu_query(const psa_image_id_t image_id, psa_image_info_t *info)
 {

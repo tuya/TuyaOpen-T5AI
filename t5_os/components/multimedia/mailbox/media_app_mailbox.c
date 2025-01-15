@@ -503,6 +503,12 @@ static void media_app_mailbox_msg_handle(media_mailbox_msg_t *msg)
 				transfer_app_event_handle(msg);
 				break;
 
+			case EVENT_JPEG_DEC_SAVE_IND:
+				media_msg.event = msg->event;
+				media_msg.param = (uint32_t)msg;
+				media_app_send_msg(&media_msg);
+				break;
+
 			case EVENT_USB_DATA_NOTIFY:
 				usb_app_event_handle(msg);
 				break;

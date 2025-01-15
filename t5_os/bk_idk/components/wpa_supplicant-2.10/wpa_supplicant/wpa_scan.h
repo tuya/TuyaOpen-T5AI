@@ -92,5 +92,6 @@ int wpa_add_scan_freqs_list(struct wpa_supplicant *wpa_s,
 			    enum hostapd_hw_mode band,
 			    struct wpa_driver_scan_params *params,
 			    bool is_6ghz);
+void wpa_supplicant_scan(void *eloop_ctx, void *timeout_ctx);
 
 #endif /* SCAN_H */

@@ -25,14 +25,7 @@
 
 
 static bool s_printf_init = false;
-
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-static uint8_t s_print_port = CONFIG_TUYA_UART_PRINT_PORT;
-#else
 static uint8_t s_print_port = CONFIG_UART_PRINT_PORT;
-#endif
-// Modified by TUYA End
 
 bool printf_is_init(void)
 {

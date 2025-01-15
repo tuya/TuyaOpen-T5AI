@@ -20,6 +20,7 @@
 #include <driver/mb_chnl_buff.h>
 #include "mb_ipc_cmd.h"
 #include "driver/dma.h"
+#include "driver/flash.h"
 
 #if CONFIG_CACHE_ENABLE
 #include "cache.h"
@@ -475,6 +476,7 @@ extern void shell_set_log_cpu(u8 req_cpu);
 #if (CONFIG_SYS_CPU0)
 static void mb_ipc_power_on_notify(void);
 static void mb_ipc_heartbeat_notify(void);
+static void mb_ipc_dump_notify(u32 dump);
 #endif
 
 static u32 ipc_cmd_handler(ipc_chnl_cb_t *chnl_cb, mb_chnl_ack_t *ack_buf)
@@ -583,6 +585,7 @@ static u32 ipc_cmd_handler(ipc_chnl_cb_t *chnl_cb, mb_chnl_ack_t *ack_buf)
 				ipc_rsp->rsp_data_len = 0;
 				result = ACK_STATE_COMPLETE;
 
+				mb_ipc_dump_notify(1);
 				/* no params, no returns. */
 				#if (CONFIG_SHELL_ASYNCLOG)
 				shell_set_log_cpu(MAILBOX_CPU1);
@@ -595,6 +598,7 @@ static u32 ipc_cmd_handler(ipc_chnl_cb_t *chnl_cb, mb_chnl_ack_t *ack_buf)
 				ipc_rsp->rsp_data_len = 0;
 				result = ACK_STATE_COMPLETE;
 
+				mb_ipc_dump_notify(0);
 				/* no params, no returns. */
 				#if (CONFIG_SHELL_ASYNCLOG)
 				shell_set_log_cpu(CONFIG_CPU_CNT);
@@ -769,7 +773,33 @@ static u32 ipc_cmd_handler(ipc_chnl_cb_t *chnl_cb, mb_chnl_ack_t *ack_buf)
 			}
 			break;
 		#endif
+		case IPC_FLASH_VOTE_LINE_MODE:
+#if !CONFIG_SYS_CPU2
+			if(chnl_cb->cmd_len >= sizeof(u8))
+			{
+				u8    v_line_mode = *((u8 *)chnl_cb->cmd_buf);
 
+				ipc_rsp->rsp_data_len = sizeof(u32);
+
+				u32 * ret_line_mode = (u32 *)ipc_rsp->rsp_buff;
+
+				uint32_t ret = 0;
+				extern bk_err_t bk_flash_set_line_mode(flash_line_mode_t line_mode);
+				ret = bk_flash_set_line_mode(v_line_mode);
+				if(ret != BK_OK) {
+					*ret_line_mode = ret;
+				} else {
+					*ret_line_mode = v_line_mode;
+				}
+				result = ACK_STATE_COMPLETE;
+			}
+			else
+			{
+				ipc_rsp->rsp_data_len = 0;
+				result = ACK_STATE_FAIL;
+			}
+#endif
+			break;
 		default:
 			{
 				ipc_rsp->rsp_data_len = 0;
@@ -801,9 +831,10 @@ enum
 static rtos_event_ext_t		mb_ipc_heart_event;
 static u32             cpu1_heartbeat_timestamp = 0;
 static volatile u8     cpu1_state = CORE_POWER_OFF;
+static volatile u8     cpu1_dump = 0;
 
-void start_cpu1_core(void);
-void stop_cpu1_core(void);
+//void start_cpu1_core(void);
+//void stop_cpu1_core(void);
 
 void mb_ipc_reset_notify(u32 power_on)
 {
@@ -832,6 +863,11 @@ static void mb_ipc_power_on_notify(void)
 	rtos_set_event_ex(&mb_ipc_heart_event, MB_IPC_POWER_UP_FLAG);
 }
 
+static void mb_ipc_dump_notify(u32 dump)
+{
+	cpu1_dump = (dump != 0);
+}
+
 static int mb_ipc_heartbeat_timeout(void)
 {
 	u32   cur_time;
@@ -842,7 +878,7 @@ static int mb_ipc_heartbeat_timeout(void)
 	{
 		return 0;
 	}
-	if(cpu1_state == CORE_STARTING)
+	if((cpu1_state == CORE_STARTING) || (cpu1_dump != 0))
 	{
 		cpu1_heartbeat_timestamp = cur_time;
 		return 0;
@@ -866,10 +902,12 @@ static int mb_ipc_heartbeat_timeout(void)
 	return 1;
 }
 
+static volatile uint32_t cpu1_retry_cnt = 0;
 static void mb_ipc_task( void *para )
 {
 	bk_err_t	ret_val;
 	u32    events;
+	u32    check_time = BEKEN_WAIT_FOREVER;
 	
 	ret_val = rtos_init_event_ex(&mb_ipc_heart_event);
 
@@ -881,7 +919,13 @@ static void mb_ipc_task( void *para )
 
 	while(1)
 	{
-		events = rtos_wait_event_ex(&mb_ipc_heart_event, MB_IPC_ALL_FLAGS, true, BEKEN_WAIT_FOREVER);
+		events = rtos_wait_event_ex(&mb_ipc_heart_event, MB_IPC_ALL_FLAGS, true, check_time);
+
+		if(events == 0)
+		{
+			// timeout, so check heartbeat.
+			events = MB_IPC_HEARTBEAT_FLAG;
+		}
 
 		if(events & MB_IPC_STOP_CORE_FLAG)  // process this event at first!!!!
 		{
@@ -903,6 +947,7 @@ static void mb_ipc_task( void *para )
 				{
 					if(cpu1_state == CORE_STARTING)
 					{
+						cpu1_retry_cnt = 0;
 						cpu1_state = CORE_POWER_ON;
 						break;  // cpu1 power on. 
 					}
@@ -911,15 +956,16 @@ static void mb_ipc_task( void *para )
 				{
 					if(retry_cnt > 0)
 					{
-						BK_LOGE(MOD_TAG, "IPC retry to start core1\r\n");
-						stop_cpu1_core();
+						cpu1_retry_cnt++;
+						BK_LOGE(MOD_TAG, "IPC core1 start timeout\r\n");
+						//stop_cpu1_core();
 						rtos_delay_milliseconds(6);
-						start_cpu1_core();
+						//start_cpu1_core();
 						break;
 					}
 					else
 					{
-						events = rtos_wait_event_ex(&mb_ipc_heart_event, MB_IPC_POWER_UP_FLAG, true, 500);
+						events = rtos_wait_event_ex(&mb_ipc_heart_event, MB_IPC_POWER_UP_FLAG, true, 2000);//2s
 					}
 				}
 
@@ -933,15 +979,42 @@ static void mb_ipc_task( void *para )
 		{
 			if(mb_ipc_heartbeat_timeout())
 			{
-				BK_LOGE(MOD_TAG, "IPC restart core1\r\n");
-				stop_cpu1_core();
-				rtos_delay_milliseconds(6);
-				start_cpu1_core();
+				BK_LOGE(MOD_TAG, "IPC core1 timeout\r\n");
+				/*when cpu1 heartbeat timeout, then system reboot*/
+				BK_ASSERT(false);
 			}
 		}
 
+		if(cpu1_state == CORE_POWER_OFF)
+		{
+			check_time = BEKEN_WAIT_FOREVER;
+		}
+		else
+		{
+			check_time = CONFIG_INT_WDT_PERIOD_MS;
+		}
+
+        if (cpu1_retry_cnt >= 3) {
+
+            cpu1_retry_cnt = 0;
+
+            BK_ASSERT(0);
+
+        }
+
 	}
 }
+
+int mb_ipc_cpu_is_power_on(u32 cpu_id)
+{
+	if(cpu1_state == CORE_POWER_ON)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 #endif
 
 #if (CONFIG_SYS_CPU1)
@@ -1128,6 +1201,21 @@ u32 ipc_send_dma_chnl_user(u8 chnl_id)
 
 	return user_id;
 }
+
+u32 ipc_vote_flash_line_mode(u32 v_line_mode)
+{
+	bk_err_t	ret_val = BK_FAIL;
+	u32 ret_line_mode = -1;
+
+	ret_val = ipc_send_cmd(&ipc_chnl_cb, IPC_FLASH_VOTE_LINE_MODE, \
+						(u8 *)&v_line_mode, sizeof(v_line_mode), (u8 *)&ret_line_mode, sizeof(ret_line_mode));
+
+	if(ret_val != BK_OK)
+		return (u32)(-1);
+
+	return ret_line_mode;
+}
+
 #endif
 
 #endif

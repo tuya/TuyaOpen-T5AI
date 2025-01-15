@@ -408,13 +408,12 @@ bk_err_t bk_psram_free_write_through_channel(psram_write_through_area_t area);
 /**
  * @brief     Enable and config PSRAM write through area
  *
- * This API enables PSRAM write through area. Each time the DMA2D writes
- * the area with write through enabled, the PSRAM hardware will always flush
+ * This API enables PSRAM write through area. The PSRAM hardware will always flush
  * it's internal cache-line, without considering whether the cache line is full
  * or not, thus to improve the writing performance.
  *
- * @attention 1. The write through area is used for DMA2D accessing only, do not use it for CPU
- *               accessing PSRAM
+ * @attention 1. The write through area must only one master access, and the write length
+ * must integer multiples 32bytes, you can write by cpu/dma/dma2d.
  *
  * @param area PSRAM write through area
  * @param start PSRAM write through area start address, should be 32 bytes aligned

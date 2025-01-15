@@ -31,6 +31,21 @@ def gen_otp_map_file():
 
     f.write("\n#include <stdint.h>\n")
 
+    f.write("#define BK_ERR_OTP_READ_BUFFER_NULL   (BK_ERR_OTP_BASE - 1) /**< The pointed buff is NULL */\n")
+    f.write("#define BK_ERR_OTP_ADDR_OUT_OF_RANGE  (BK_ERR_OTP_BASE - 2) /**< OTP address is out of range */\n")
+    f.write("#define BK_ERR_NO_READ_PERMISSION     (BK_ERR_OTP_BASE - 3) /**< Not have read privilege  */\n")
+    f.write("#define BK_ERR_NO_WRITE_PERMISSION    (BK_ERR_OTP_BASE - 4) /**< Not have write privilege */\n")
+    f.write("#define BK_ERR_OTP_PERMISSION_WRONG   (BK_ERR_OTP_BASE - 5) /**< OTP permission value error*/\n")
+    f.write("#define BK_ERR_OTP_NOT_EMPTY          (BK_ERR_OTP_BASE - 6) /**< try to write area already has value*/\n")
+    f.write("#define BK_ERR_OTP_UPDATE_NOT_EQUAL   (BK_ERR_OTP_BASE - 7) /**< after update not equal to expected*/\n")
+    f.write("#define BK_ERR_OTP_OPERATION_ERROR    (BK_ERR_OTP_BASE - 8) /**< otp operation error*/\n")
+    f.write("#define BK_ERR_OTP_OPERATION_WARNING  (BK_ERR_OTP_BASE - 9) /**< otp operation warning*/\n")
+    f.write("#define BK_ERR_OTP_OPERATION_WRONG    (BK_ERR_OTP_BASE - 10) /**< otp operation wrong*/\n")
+    f.write("#define BK_ERR_OTP_OPERATION_FORBID   (BK_ERR_OTP_BASE - 11)/**< otp operation forbid*/\n")
+    f.write("#define BK_ERR_OTP_OPERATION_FAIL     (BK_ERR_OTP_BASE - 12)/** otp operation other error*/\n")
+    f.write("#define BK_ERR_OTP_INIT_FAIL          (BK_ERR_OTP_BASE - 13)/** otp init fail*/\n")
+    f.write("#define BK_ERR_OTP_INDEX_WRONG        (BK_ERR_OTP_BASE - 14) /**< OTP item index error*/\n")
+
     f.write("\ntypedef enum{\n")
     f.write("    OTP_READ_WRITE = 0,\n")
     f.write("    OTP_READ_ONLY = 0x3,\n")
@@ -58,6 +73,7 @@ def gen_otp_map_file():
             max_row = len(otp.data)
         for id,item in otp.data.items():
             f.write('    ' + item['name'] + ','+ '\n')
+        f.write('    ' + 'OTP' + otp.index + '_MAX_ID' + ','+ '\n')
         f.write(f"}} otp{otp.index}_id_t;\n")
 
     f.write(f"\nextern const otp_item_t otp_map[][{max_row}];\n")

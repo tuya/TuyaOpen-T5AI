@@ -80,7 +80,7 @@ extern "C" {
 #define CLI_CFG_GPIO        0
 #endif
 #define CLI_CFG_OS          1
-#if ((CONFIG_OTA_TFTP) || (CONFIG_OTA_HTTP)) && (CONFIG_SYS_CPU0)
+#if ((CONFIG_OTA_TFTP) || (CONFIG_OTA_HTTP) || (CONFIG_OTA_HTTPS)) && (CONFIG_SYS_CPU0)
 #define CLI_CFG_OTA         1
 #else
 #define CLI_CFG_OTA         0

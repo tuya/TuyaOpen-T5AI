@@ -138,11 +138,8 @@ extern fih_int FIH_FAILURE;
 __attribute__((noinline)) __attribute__((used)) void fih_panic_loop(void);
 #define FIH_PANIC fih_panic_loop()
 #else /* FIH_ENABLE_GLOBAL_FAIL */
-#define FIH_PANIC  \
-        do { \
-            FIH_LABEL("FAILURE_LOOP"); \
-            while (1) {} \
-        } while (0)
+void wdt_reboot(void);
+#define FIH_PANIC  wdt_reboot()
 #endif  /* FIH_ENABLE_GLOBAL_FAIL */
 
 /*

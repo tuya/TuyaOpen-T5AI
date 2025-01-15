@@ -397,7 +397,7 @@ bk_err_t bk_gpio_unregister_lowpower_keep_status(gpio_id_t gpio_id);
  * @param
  * -module:gpio ctrl ldo module name
  * -gpio_id:gpio id
- * -value:gpio output state
+ * -value:gpio output state 
  * @return
  *  - BK_OK: succeed
  *  - others: other errors.
@@ -498,6 +498,17 @@ bk_err_t bk_gpio_wakeup_config_set(gpio_id_t id, gpio_int_type_t type);
  *    - BK_FAIL: the input gpio index not supported by GPIO_RETENTION_MAP and you should modify that at first
  */
 bk_err_t bk_gpio_retention_set(gpio_id_t gpio_id, gpio_output_state_e gpio_output_state);
+
+/**
+ * @brief Clear GPIO retention config
+ *
+ * This API clear the input GPIO retention index.
+ *
+ * @return
+ *    - BK_OK: succeed
+ *    - BK_FAIL: the input gpio index not supported by GPIO_RETENTION_MAP and you should modify that at first
+ */
+bk_err_t bk_gpio_retention_clr(gpio_id_t gpio_id);
 #endif
 
 #ifdef __cplusplus

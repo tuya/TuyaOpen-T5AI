@@ -117,6 +117,9 @@ struct ieee802_11_elems {
 	const u8 *sae_pk;
 	const u8 *s1g_capab;
 	const u8 *pasn_params;
+#if BK_SUPPLICANT
+	const u8 *bk_vsie;
+#endif
 
 	u8 ssid_len;
 	u8 supp_rates_len;
@@ -171,6 +174,9 @@ struct ieee802_11_elems {
 	u8 short_ssid_list_len;
 	u8 sae_pk_len;
 	u8 pasn_params_len;
+#if BK_SUPPLICANT
+	u8 bk_vsie_len;
+#endif
 
 	struct mb_ies_info mb_ies;
 	struct frag_ies_info frag_ies;

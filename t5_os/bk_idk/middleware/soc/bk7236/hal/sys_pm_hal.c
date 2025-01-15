@@ -438,21 +438,11 @@ static inline void sys_hal_set_power_parameter(uint8_t sleep_mode)
  	 **/
 	if (sleep_mode == PM_MODE_DEEP_SLEEP)
 	{
-#if CONFIG_SPE
 		aon_pmu_ll_set_r40(0x4E1116EE);//using the external 32k , it need more wake delay time
-#else
-		// OTP need more delay to recovery voltage
-		aon_pmu_ll_set_r40(0x4E1116EE);
-#endif
 	}
 	else if (sleep_mode == PM_MODE_SUPER_DEEP_SLEEP)
 	{
-#if CONFIG_SPE
 		aon_pmu_ll_set_r40(0x5E1116EE);//using the external 32k , it need more wake delay time
-#else
-		// OTP need more delay to recovery voltage
-		aon_pmu_ll_set_r40(0x5E1116EE);
-#endif
 	}
 	else
 	{
@@ -690,6 +680,12 @@ __attribute__((section(".itcm_sec_code"))) void sys_hal_enter_deep_sleep(void *p
 		aon_pmu_ll_set_r3_sd_en(1);
 	}
 
+#if !CONFIG_SPE
+	aon_pmu_ll_set_r0_fast_boot(1);
+	aon_pmu_ll_set_r25(0x424B55AA);
+	aon_pmu_ll_set_r25(0xBDB4AA55);
+#endif
+
 /*-----enter deep sleep-------*/
 	arch_deep_sleep();
 }
@@ -705,8 +701,17 @@ static inline void sys_hal_set_low_voltage(volatile uint32_t *ana_r8, volatile u
 	sys_ll_set_ana_reg8_r_vanaldosel(0);//tenglong20230417(need modify setting value)
 
 	sys_ll_set_ana_reg9_vlden(1);//0x1: coreldo low voltage enable
-	sys_ll_set_ana_reg9_vdd12lden(1);//0x1: digldo low voltage enable
-
+	#if CONFIG_DIGLDO_LOW_VOLTAGE_ENABLE
+	if(sys_ll_get_ana_reg9_vdd12lden() != 0x1)
+	{
+		sys_ll_set_ana_reg9_vdd12lden(1);//0x1: digldo low voltage enable
+	}
+	#else
+	if(sys_ll_get_ana_reg9_vdd12lden() != 0x0)
+	{
+		sys_ll_set_ana_reg9_vdd12lden(0);//0x0: digldo low voltage disable
+	}
+	#endif
 	sys_ll_set_ana_reg8_ioldo_lp(1);
 	sys_ll_set_ana_reg8_aloldohp(0);
 
@@ -1326,7 +1331,7 @@ void sys_hal_low_power_hardware_init()
 
 #if CONFIG_GPIO_RETENTION_SUPPORT
 	// must before gpio state unlock
-	gpio_retention_sync();
+	gpio_retention_sync(true);
 #endif
 
 	/*gpio state unlock for shutdown wakeup*/
@@ -1334,7 +1339,13 @@ void sys_hal_low_power_hardware_init()
 
 	/*set memery bypass*/
 	aon_pmu_ll_set_r0_memchk_bps(1);
+#if CONFIG_SPE
 	aon_pmu_ll_set_r0_fast_boot(1);
+#else
+	aon_pmu_ll_set_r0_fast_boot(0);
+	aon_pmu_ll_set_r25(0x424B55AA);
+	aon_pmu_ll_set_r25(0xBDB4AA55);
+#endif
 
 	/*set wakeup source*/
 	aon_pmu_ll_set_r41_wakeup_ena(0x23);//enable wakeup source: int_touched,int_rtc,int_gpio,wifi wake(bt or wifi wakeup source enable when bt or wifi sleep)
@@ -1353,11 +1364,23 @@ void sys_hal_low_power_hardware_init()
 	sys_hal_power_config_default();
 
 	/*set the lp voltage*/
-	sys_hal_lp_vol_set(0x3); // core 0.525V
+	sys_hal_lp_vol_set(CONFIG_LP_VOL);
 
 	/*set rosc calib trig once*/
 	sys_hal_rosc_calibration(3, 0);
 
 	/*dco cali*/
 	sys_hal_dco_cali(DCO_CALIB_SPEED_240M);
+}
+
+void sys_hal_set_ota_finish(uint32_t value)
+{
+	aon_pmu_ll_set_r0_ota_finish(value);
+        aon_pmu_ll_set_r25(0x424B55AA);
+        aon_pmu_ll_set_r25(0xBDB4AA55);
+}
+
+uint32_t sys_hal_get_ota_finish(void)
+{
+	return aon_pmu_ll_get_r0_ota_finish();
 }

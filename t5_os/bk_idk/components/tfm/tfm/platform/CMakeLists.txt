@@ -44,7 +44,7 @@ target_include_directories(platform_common_interface
 )
 
 #========================= Platform Secure ====================================#
-
+if (CONFIG_BUILD_TFM)
 target_include_directories(platform_s
     PUBLIC
         $<$<BOOL:${CRYPTO_HW_ACCELERATOR}>:${CMAKE_CURRENT_SOURCE_DIR}/ext/accelerator/interface>
@@ -147,6 +147,7 @@ target_compile_options(platform_ns
     PUBLIC
         ${COMPILER_CP_FLAG}
 )
+endif()
 
 #========================= Platform BL2 =======================================#
 if(BL2)

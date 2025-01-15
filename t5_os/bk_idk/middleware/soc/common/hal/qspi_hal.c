@@ -37,9 +37,10 @@ bool qspi_hal_is_cur_sw_op_read_data(void)
 
 bk_err_t qspi_hal_command(qspi_hal_t *hal, const qspi_cmd_t *cmd)
 {
+	qspi_ll_enable(hal->hw);   //enable io
 	s_current_sw_op = cmd->op;
 	qspi_ll_init_command(hal->hw, cmd);
-
+	qspi_ll_disable(hal->hw);  //release io
 	return BK_OK;
 }
 

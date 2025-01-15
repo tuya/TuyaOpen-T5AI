@@ -15,8 +15,8 @@ static void __cmd_usage(void)
 }
 void cli_wifi_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    if (argc == 0 || argv == NULL) {
-        bk_printf("[%s %d] parameter failed\r\n", __func__, __LINE__);
+    if (argc < 2) {
+        bk_printf("parameter error\r\n");
         __cmd_usage();
         return;
     }
@@ -28,12 +28,13 @@ void cli_wifi_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **arg
         if (argv[2] != NULL) {
             bk_printf("station connect ssid: %s pwd: %s\r\n", argv[2], argv[3]);
             tkl_wifi_set_work_mode(WWM_STATION);
+            tkl_system_sleep(1000);
             tkl_wifi_station_connect(argv[2], argv[3]);
         } else {
             __cmd_usage();
         }
     } else if (!os_strcmp(argv[1], "ap")) {
-        bk_printf("TODO: ap test\r\n");
+        bk_printf("not support ap test\r\n");
     }
 }
 

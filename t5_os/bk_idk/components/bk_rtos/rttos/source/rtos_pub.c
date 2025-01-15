@@ -705,9 +705,20 @@ bool rtos_is_in_interrupt_context(void)
         return platform_is_in_interrupt_context();
 }
 
+bool rtos_local_irq_disabled(void)
+{
+    return platform_local_irq_disabled();
+}
+
 uint32_t rtos_disable_int(void)
 {
 	return rt_hw_interrupt_disable();
+}
+
+bool rtos_is_scheduler_suspended(void)
+{
+	// TODO
+	return 0;
 }
 
 void rtos_enable_int(uint32_t int_level)

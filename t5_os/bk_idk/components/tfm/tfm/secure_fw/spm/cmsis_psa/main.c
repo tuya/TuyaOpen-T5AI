@@ -18,6 +18,7 @@
 #include "tfm_plat_otp.h"
 #include "tfm_plat_provisioning.h"
 #include "sys_hal.h"
+#include "aon_pmu_ll.h"
 
 /*
  * Avoids the semihosting issue
@@ -153,6 +154,25 @@ void update_aon_wdt(uint32_t val)
         REG_WRITE(SOC_AON_WDT_REG_BASE, 0xA50000 | val);
 }
 
+static inline uint32_t wakeup_gpio_clear_analog_gpio_sleep(void)
+{
+	uint32_t r0 = aon_pmu_ll_get_r0();
+	uint32_t r7b = aon_pmu_ll_get_r7b();
+
+	r7b &= ~BIT(31);
+	aon_pmu_ll_set_r0(r7b);
+	aon_pmu_ll_set_r25(0x424B55AA);
+	aon_pmu_ll_set_r25(0xBDB4AA55);
+
+	return r0;
+}
+
+static inline void wakeup_gpio_clear_digital_gpio_sleep(uint32_t r0)
+{
+	r0 &= ~BIT(31);
+	aon_pmu_ll_set_r0(r0);
+}
+
 
 void tfm_enable_swd(void);
 int main(void)
@@ -160,6 +180,7 @@ int main(void)
     STARTUP_PERF(13);
     fih_int fih_rc = FIH_FAILURE;
 
+    uint32_t r0 = wakeup_gpio_clear_analog_gpio_sleep();
     close_wdt();
 #if CONFIG_BL2_WDT
     update_aon_wdt(CONFIG_BL2_WDT_PERIOD);
@@ -207,5 +228,6 @@ int main(void)
     /* Move to handler mode for further SPM initialization. */
     tfm_core_handler_mode();
 
+    wakeup_gpio_clear_digital_gpio_sleep(r0);
     return 0;
 }

@@ -317,6 +317,10 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       LWIP_ASSERT("pbuf_alloc: erroneous type", 0);
       return NULL;
   }
+#if CONFIG_BRIDGE
+  p->sn = 0; 
+  p->elfags = 0; 
+#endif
   LWIP_DEBUGF(PBUF_DEBUG | LWIP_DBG_TRACE, ("pbuf_alloc(length=%"U16_F") == %p\n", length, (void *)p));
 #if PBUF_LIFETIME_DBG
       p->tx_alc_tick = 0;

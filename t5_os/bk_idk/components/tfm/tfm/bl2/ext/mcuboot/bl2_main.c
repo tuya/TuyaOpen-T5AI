@@ -27,7 +27,6 @@
 #include "bootutil/boot_record.h"
 #include "bootutil/fault_injection_hardening.h"
 #include "flash_map_backend/flash_map_backend.h"
-#include "boot_hal.h"
 #include "uart_stdout.h"
 #include "tfm_plat_otp.h"
 #include "tfm_plat_provisioning.h"
@@ -35,6 +34,9 @@
 #include "partitions_gen.h"
 #include "flash_partition.h"
 #include "aon_pmu_hal.h"
+#include "sleep.h"
+#include "wdt_hal.h"
+#include "flash_map/flash_map.h"
 
 #ifdef TEST_BL2
 #include "mcuboot_suites.h"
@@ -51,8 +53,6 @@ __asm("  .global __ARM_use_no_argv\n");
 #else
 #define BL2_MBEDTLS_MEM_BUF_LEN 0x2000
 #endif
-
-#define HDR_SZ                  0x1000
 
 /* Static buffer to be used by mbedtls for memory allocation */
 static uint8_t mbedtls_mem_buf[BL2_MBEDTLS_MEM_BUF_LEN];
@@ -112,12 +112,12 @@ static void do_boot(struct boot_rsp *rsp)
 extern uint32_t sys_is_enable_fast_boot(void);
 extern uint32_t sys_is_running_from_deep_sleep(void);
 
-
+#if 0 //which deep_sleep reset should be kept? another in sleep.h
 static void deep_sleep_reset(void)
 {
     struct boot_arm_vector_table *vt;
 
-    if (sys_is_running_from_deep_sleep() && sys_is_enable_fast_boot()) {
+    if (sys_is_running_from_deep_sleep() && sys_is_enable_fast_boot() && (!sys_is_running_from_ota())) {
         BOOT_LOG_INF("deep sleep fastboot");
         extern uint32_t get_flash_map_offset(uint32_t index);
         uint32_t phy_offset  = get_flash_map_offset(0);
@@ -128,25 +128,43 @@ static void deep_sleep_reset(void)
         uint32_t candidate_slot = 0;
         uint32_t reg = aon_pmu_ll_get_r7b();
         aon_pmu_ll_set_r0(reg);
-        candidate_slot = !!(reg & BIT(2));
+        candidate_slot = !!(reg & BIT(3));
         extern void flash_set_excute_enable(int enable);
         flash_set_excute_enable(candidate_slot);
 #endif
         boot_platform_quit(vt);
     }
 }
+#endif
+#if CONFIG_RANDOM_AES_UPGRADE_BL2
+extern uint8_t g_cur_bl2;
+void *get_pc(void)
+{
+    void *pc = (void *)&get_pc;
+    if (pc > (SOC_FLASH_DATA_BASE + CONFIG_BL2_VIRTUAL_CODE_START + CONFIG_BL2_VIRTUAL_CODE_START)) {
+        g_cur_bl2 = 2;
+    } else {
+        g_cur_bl2 = 1;
+    }
+    return pc;
+}
+#endif
 
 int main(void)
 {
     struct boot_rsp rsp;
     fih_int fih_rc = FIH_FAILURE;
+#if (CONFIG_PLATFORM_DEFAULT_OTP || TFM_PROVISIONING)
     enum tfm_plat_err_t plat_err;
+#endif
 
-
+#if CONFIG_BL2_VALIDATE_ENABLED_BY_EFUSE
     bk_efuse_init();
-#if 1//CONFIG_BL2_SECURE_DEBUG
+#endif
+
+#if CONFIG_BL2_SECURE_DEBUG
     extern void hal_secure_debug(void);
-    hal_secure_debug(); 
+    hal_secure_debug();
 #endif
 
 #if CONFIG_DOWNLOAD_LOG
@@ -160,15 +178,18 @@ int main(void)
     }
 
 #if CONFIG_BL2_DOWNLOAD
-    // sys_drv_early_init();
+#if CONFIG_RANDOM_AES_UPGRADE_BL2
+    get_pc();
+#endif
     sys_hal_dpll_cpu_flash_time_early_init();
+#endif
     if (efuse_is_secure_download_enabled()) {
         flash_switch_to_line_mode_two();
         bk_flash_cpu_write_enable();
         enable_dcache(0);
         void legacy_boot_main(void);
         legacy_boot_main();
-       enable_dcache(1);
+        enable_dcache(1);
         bk_flash_cpu_write_disable();
         flash_restore_line_mode();
     }
@@ -176,13 +197,11 @@ int main(void)
     sys_hal_flash_set_clk_div(0x0);
     sys_hal_ctrl_vdddig_h_vol(0xD);
     sys_hal_switch_freq(0x3, 0x0, 0x0);
-#endif
 
-    close_wdt();
+    nmi_wdt_stop();
 #if CONFIG_BL2_WDT
-    update_aon_wdt(CONFIG_BL2_WDT_PERIOD);
+    aon_wdt_feed(CONFIG_BL2_WDT_PERIOD);
 #endif
-
 
     /* Initialise the mbedtls static memory allocator so that mbedtls allocates
      * memory from the provided static buffer instead of from the heap.
@@ -194,19 +213,31 @@ int main(void)
     stdio_init();
 #endif
 #endif
-    partition_init();
+    if (partition_init() != 0) {
+            BOOT_LOG_ERR("partition fail\r\n");
+            FIH_PANIC;
+    }
+
     flash_map_init();
-    deep_sleep_reset();
-    BOOT_LOG_INF("Starting bootloader");
+
+#if CONFIG_DIRECT_XIP
+    xip_deep_sleep_reset();
+#endif
+
+    boot_show_version();
+
+#if MCUBOOT_LOG_LEVEL > MCUBOOT_LOG_LEVEL_INFO
     dump_partition();
     dump_efuse();
+#endif
 
-
+#if CONFIG_PLATFORM_DEFAULT_OTP
     plat_err = tfm_plat_otp_init();
     if (plat_err != TFM_PLAT_ERR_SUCCESS) {
             BOOT_LOG_ERR("OTP system initialization failed");
             FIH_PANIC;
     }
+#endif
 
 #if TFM_PROVISIONING
     if (tfm_plat_provisioning_is_required()) {
@@ -220,11 +251,17 @@ int main(void)
     }
 #endif
 
+#if CONFIG_PLATFORM_DEFAULT_OTP
     FIH_CALL(boot_nv_security_counter_init, fih_rc);
+#if CONFIG_MCUBOOT_V2_1_0
+    if (FIH_NOT_EQ(fih_rc, FIH_SUCCESS)) {
+#else
     if (fih_not_eq(fih_rc, FIH_SUCCESS)) {
+#endif
         BOOT_LOG_ERR("Error while initializing the security counter");
         FIH_PANIC;
     }
+#endif
 
     /* Perform platform specific post-initialization */
     if (boot_platform_post_init() != 0) {
@@ -237,18 +274,29 @@ int main(void)
 #endif /* TEST_BL2 */
 
     FIH_CALL(boot_go, fih_rc, &rsp);
+#if CONFIG_MCUBOOT_V2_1_0
+    if (FIH_NOT_EQ(fih_rc, FIH_SUCCESS)) {
+#else
     if (fih_not_eq(fih_rc, FIH_SUCCESS)) {
-        BOOT_LOG_ERR("Unable to find bootable image");
+#endif
+        BOOT_LOG_ERR("Unable to find bootable image, err=%x", fih_rc);
+        BOOT_LOG_ERR("APP corrupted");
+#if CONFIG_OTA_CONFIRM_UPDATE
+        bk_boot_erase_ota_confirm();
+        bk_boot_write_app_fail();
+        bk_boot_write_ota_confirm(OVERWRITE_CONFIRM);
+#endif
         FIH_PANIC;
     }
 
     BOOT_LOG_FORCE("Bootloader chainload address offset: 0x%x",
                  rsp.br_image_off);
-    BOOT_LOG_INF("Jumping to the first image slot");
+    BOOT_LOG_FORCE("Jump APP");
+#if CONFIG_BL2_WDT
+    aon_wdt_feed();
+#endif
     do_boot(&rsp);
 
     BOOT_LOG_ERR("Never should get here");
     FIH_PANIC;
 }
-// eof
-

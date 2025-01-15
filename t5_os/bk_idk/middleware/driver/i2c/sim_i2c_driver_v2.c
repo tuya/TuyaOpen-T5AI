@@ -30,7 +30,7 @@
 /* Disable this macro by default, as gpio api way would cost more time to switch output level */
 //#define SIM_I2C_GPIO_API_EN
 
-
+// Modified by TUYA Start
 #ifdef CONFIG_TUYA_GPIO_MAP
 extern int tkl_display_ll_tp_config(int type);
 #define HWD_GPIO_I2C_SDA		tkl_display_ll_tp_config(3)
@@ -39,6 +39,7 @@ extern int tkl_display_ll_tp_config(int type);
 #define HWD_GPIO_I2C_SDA		GPIO_5
 #define HWD_GPIO_I2C_SCL		GPIO_8
 #endif // CONFIG_TUYA_GPIO_MAP
+// Modified by TUYA End
 
 /*****************************************************
  * These Macros could be used for RISCV 120Mhz.

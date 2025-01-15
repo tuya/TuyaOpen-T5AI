@@ -8,13 +8,166 @@ extern "C" {
 
 #include <driver/int.h>
 #include "common/bk_err.h"
-
+#include "sys_types.h"
+#include "sdkconfig.h"
 
 #define PARAM_DATA_VALID  (0xFFFF)
 #define PM_APP_AUTO_VOTE_ENABLE          (0x1)
 #define PM_APP_AUTO_VOTE_DISENABLE       (0x0)
 #define PM_CP1_AUTO_POWER_DOWN_ENABLE    (0x1)
 #define PM_CP1_AUTO_POWER_DOWN_DISENABLE (0x0)
+
+/*--------------------------WAKEUP SOURCE DEFINE  START--------------------------------*/
+#define pm_wakeup_source_e                wakeup_source_t
+
+#define PM_WAKEUP_SOURCE_INT_GPIO        (WAKEUP_SOURCE_INT_GPIO)
+#define PM_WAKEUP_SOURCE_INT_RTC         (WAKEUP_SOURCE_INT_RTC)
+#define PM_WAKEUP_SOURCE_INT_TOUCHED     (WAKEUP_SOURCE_INT_TOUCHED)
+#define PM_WAKEUP_SOURCE_INT_SYSTEM_WAKE (WAKEUP_SOURCE_INT_WIFI)//WAKEUP_SOURCE_INT_BT AND WAKEUP_SOURCE_INT_WIFI ARE THE SAME BIT
+#define PM_WAKEUP_SOURCE_INT_WIFI        (WAKEUP_SOURCE_INT_WIFI)
+#define PM_WAKEUP_SOURCE_INT_BT          (WAKEUP_SOURCE_INT_BT)
+#define PM_WAKEUP_SOURCE_INT_USBPLUG     (WAKEUP_SOURCE_INT_USBPLUG)
+#define PM_WAKEUP_SOURCE_INT_NONE        (WAKEUP_SOURCE_INT_NONE)
+/*--------------------------WAKEUP SOURCE DEFINE  END--------------------------------*/
+
+/*--------------------------POWER DOMAIN MODUEL DEFINE  START--------------------------------*/
+#define pm_power_module_name_e                         unsigned int
+
+/*----POWER DOMAIN DEFINE--------*/
+#define PM_POWER_MODULE_NAME_MEM1                      (POWER_MODULE_NAME_MEM1) //0
+#define PM_POWER_MODULE_NAME_MEM2                      (POWER_MODULE_NAME_MEM2) //1
+#define PM_POWER_MODULE_NAME_MEM3                      (POWER_MODULE_NAME_MEM3) //2
+#define PM_POWER_MODULE_NAME_ENCP                      (POWER_MODULE_NAME_ENCP) //3
+#define PM_POWER_MODULE_NAME_BAKP                      (POWER_MODULE_NAME_BAKP) //4
+#define PM_POWER_MODULE_NAME_AHBP                      (POWER_MODULE_NAME_AHBP) //5
+#define PM_POWER_MODULE_NAME_AUDP                      (POWER_MODULE_NAME_AUDP) //6
+#define PM_POWER_MODULE_NAME_VIDP                      (POWER_MODULE_NAME_VIDP) //7
+#define PM_POWER_MODULE_NAME_BTSP                      (POWER_MODULE_NAME_BTSP) //8
+#define PM_POWER_MODULE_NAME_WIFIP_MAC                 (POWER_MODULE_NAME_WIFIP_MAC)//9
+#define PM_POWER_MODULE_NAME_PHY                       (POWER_MODULE_NAME_WIFI_PHY) //10
+#define PM_POWER_MODULE_NAME_MEM0                      (POWER_MODULE_NAME_MEM0) //11
+#define PM_POWER_MODULE_NAME_MEM4                      (POWER_MODULE_NAME_MEM4) //12
+#define PM_POWER_MODULE_NAME_OFDM                      (POWER_MODULE_NAME_OFDM) //13
+#define PM_POWER_MODULE_NAME_THREAD                    (POWER_MODULE_NAME_THREAD) //14
+#define PM_POWER_MODULE_NAME_TCM0_PGEN                 (POWER_MODULE_NAME_TCM0_PGEN)//14
+#define PM_POWER_MODULE_NAME_ROM_PGEN                  (POWER_MODULE_NAME_ROM_PGEN) //15
+#define PM_POWER_MODULE_NAME_TCM1_PGEN                 (POWER_MODULE_NAME_TCM1_PGEN)//16
+#define PM_POWER_MODULE_NAME_CPU1                      (POWER_MODULE_NAME_CPU1)     //17
+
+#define PM_POWER_MODULE_NAME_CPU2                      (POWER_MODULE_NAME_CPU2)     //18
+
+#define PM_POWER_MODULE_NAME_APP                       (POWER_MODULE_NAME_APP)      //19
+
+#define PM_POWER_MODULE_NAME_NONE                      (POWER_MODULE_NAME_NONE)
+
+/*----SUB POWER DOMAIN AUDP--------*/
+#define PM_POWER_SUB_MODULE_NAME_AUDP_FFT              (POWER_SUB_MODULE_NAME_AUDP_FFT)
+#define PM_POWER_SUB_MODULE_NAME_AUDP_SBC              (POWER_SUB_MODULE_NAME_AUDP_SBC)
+#define PM_POWER_SUB_MODULE_NAME_AUDP_AUDIO            (POWER_SUB_MODULE_NAME_AUDP_AUDIO)
+#define PM_POWER_SUB_MODULE_NAME_AUDP_I2S              (POWER_SUB_MODULE_NAME_AUDP_I2S)
+/*----SUB POWER DOMAIN VIDP--------*/
+#define PM_POWER_SUB_MODULE_NAME_VIDP_DMA2D            (POWER_SUB_MODULE_NAME_VIDP_DMA2D)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_YUVBUF           (POWER_SUB_MODULE_NAME_VIDP_YUVBUF)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_JPEG_EN          (POWER_SUB_MODULE_NAME_VIDP_JPEG_EN)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_JPEG_DE          (POWER_SUB_MODULE_NAME_VIDP_JPEG_DE)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_LCD              (POWER_SUB_MODULE_NAME_VIDP_LCD)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_ROTT             (POWER_SUB_MODULE_NAME_VIDP_ROTT)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_SCAL0            (POWER_SUB_MODULE_NAME_VIDP_SCAL0)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_SCAL1            (POWER_SUB_MODULE_NAME_VIDP_SCAL1)
+#define PM_POWER_SUB_MODULE_NAME_VIDP_H264             (POWER_SUB_MODULE_NAME_VIDP_H264)
+/*----SUB POWER DOMAIN PHY--------*/
+#define PM_POWER_SUB_MODULE_NAME_PHY_BT                (POWER_SUB_MODULE_NAME_PHY_BT)
+#define PM_POWER_SUB_MODULE_NAME_PHY_WIFI              (POWER_SUB_MODULE_NAME_PHY_WIFI)
+#define PM_POWER_SUB_MODULE_NAME_PHY_RF                (POWER_SUB_MODULE_NAME_PHY_RF)
+#define PM_POWER_SUB_MODULE_NAME_PHY_THREAD            (POWER_SUB_MODULE_NAME_PHY_THREAD)
+/*----SUB POWER DOMAIN AHB--------*/
+#define PM_POWER_SUB_MODULE_NAME_AHBP_CAN              (POWER_SUB_MODULE_NAME_AHBP_CAN)
+#define PM_POWER_SUB_MODULE_NAME_AHBP_QSPI             (POWER_SUB_MODULE_NAME_AHBP_QSPI)
+#define PM_POWER_SUB_MODULE_NAME_AHBP_USB              (POWER_SUB_MODULE_NAME_AHBP_USB)
+#define PM_POWER_SUB_MODULE_NAME_AHBP_PSRAM            (POWER_SUB_MODULE_NAME_AHBP_PSRAM)
+#define PM_POWER_SUB_MODULE_NAME_AHBP_QSPI1            (POWER_SUB_MODULE_NAME_AHBP_QSPI1)
+#define PM_POWER_SUB_MODULE_NAME_AHBP_ENET             (POWER_SUB_MODULE_NAME_AHBP_ENET)
+#define PM_POWER_SUB_MODULE_NAME_AHBP_SCR              (POWER_SUB_MODULE_NAME_AHBP_SCR)
+#define PM_POWER_SUB_MODULE_NAME_AHBP_LIN              (POWER_SUB_MODULE_NAME_AHBP_LIN)
+/*----SUB POWER DOMAIN BAKP--------*/
+#define PM_POWER_SUB_MODULE_NAME_BAKP_TIMER1           (POWER_SUB_MODULE_NAME_BAKP_TIMER1)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_UART1            (POWER_SUB_MODULE_NAME_BAKP_UART1)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_UART2            (POWER_SUB_MODULE_NAME_BAKP_UART2)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_SPI1             (POWER_SUB_MODULE_NAME_BAKP_SPI1)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_I2C0             (POWER_SUB_MODULE_NAME_BAKP_I2C0)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_I2C1             (POWER_SUB_MODULE_NAME_BAKP_I2C1)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_SADC             (POWER_SUB_MODULE_NAME_BAKP_SADC)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_PWM1             (POWER_SUB_MODULE_NAME_BAKP_PWM1)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_PWM0             (POWER_SUB_MODULE_NAME_BAKP_PWM0)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_TRNG             (POWER_SUB_MODULE_NAME_BAKP_TRNG)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_IRDA             (POWER_SUB_MODULE_NAME_BAKP_IRDA)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_SDIO             (POWER_SUB_MODULE_NAME_BAKP_SDIO)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_COMSEG           (POWER_SUB_MODULE_NAME_BAKP_COMSEG)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_DMA0             (POWER_SUB_MODULE_NAME_BAKP_DMA0)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_DMA1             (POWER_SUB_MODULE_NAME_BAKP_DMA1)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_LA               (POWER_SUB_MODULE_NAME_BAKP_LA)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_UART3            (POWER_SUB_MODULE_NAME_BAKP_UART3)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_I2S              (POWER_SUB_MODULE_NAME_BAKP_I2S)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_LEDC             (POWER_SUB_MODULE_NAME_BAKP_LEDC)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_QSPI1            (POWER_SUB_MODULE_NAME_BAKP_QSPI1)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_PSRAM            (POWER_SUB_MODULE_NAME_BAKP_PSRAM)
+#define PM_POWER_SUB_MODULE_NAME_BAKP_PM               (POWER_SUB_MODULE_NAME_BAKP_PM)// used for PM control of bakp domain power on and off
+
+
+#define pm_dev_clk_e                                   dev_clk_pwr_id_t
+#define PM_CLK_ID_I2C1                                 (CLK_PWR_ID_I2C1)
+#define PM_CLK_ID_SPI_1                                (CLK_PWR_ID_SPI_1)
+#define PM_CLK_ID_UART1                                (CLK_PWR_ID_UART1)
+#define PM_CLK_ID_PWM_1                                (CLK_PWR_ID_PWM_1)
+#define PM_CLK_ID_TIMER_1                              (CLK_PWR_ID_TIMER_1)
+#define PM_CLK_ID_SARADC                               (CLK_PWR_ID_SARADC)
+#define PM_CLK_ID_IRDA                                 (CLK_PWR_ID_IRDA)
+#define PM_CLK_ID_EFUSE                                (CLK_PWR_ID_EFUSE)
+#define PM_CLK_ID_I2C2                                 (CLK_PWR_ID_I2C2)
+#define PM_CLK_ID_SPI_2                                (CLK_PWR_ID_SPI_2)
+#define PM_CLK_ID_UART2                                (CLK_PWR_ID_UART2)
+#define PM_CLK_ID_UART3                                (CLK_PWR_ID_UART3)
+#define PM_CLK_ID_PWM_2                                (CLK_PWR_ID_PWM_2)
+#define PM_CLK_ID_TIMER_2                              (CLK_PWR_ID_TIMER_2)
+#define PM_CLK_ID_TIMER_3                              (CLK_PWR_ID_TIMER_3)
+#define PM_CLK_ID_OTP                                  (CLK_PWR_ID_OTP)
+#define PM_CLK_ID_I2S_1                                (CLK_PWR_ID_I2S_1)
+#define PM_CLK_ID_USB_1                                (CLK_PWR_ID_USB_1)
+#define PM_CLK_ID_CAN                                  (CLK_PWR_ID_CAN)
+#define PM_CLK_ID_PSRAM                                (CLK_PWR_ID_PSRAM)
+#define PM_CLK_ID_QSPI_1                               (CLK_PWR_ID_QSPI_1)
+#define PM_CLK_ID_QSPI_2                               (CLK_PWR_ID_QSPI_2)
+#define PM_CLK_ID_SDIO                                 (CLK_PWR_ID_SDIO)
+#define PM_CLK_ID_AUXS                                 (CLK_PWR_ID_AUXS)
+#define PM_CLK_ID_BTDM                                 (CLK_PWR_ID_BTDM)
+#define PM_CLK_ID_XVR                                  (CLK_PWR_ID_XVR)
+#define PM_CLK_ID_MAC                                  (CLK_PWR_ID_MAC)
+#define PM_CLK_ID_PHY                                  (CLK_PWR_ID_PHY)
+#define PM_CLK_ID_JPEG                                 (CLK_PWR_ID_JPEG)
+#define PM_CLK_ID_DISP                                 (CLK_PWR_ID_DISP)
+#define PM_CLK_ID_AUDIO                                (CLK_PWR_ID_AUDIO)
+#define PM_CLK_ID_WDG_CPU                              (CLK_PWR_ID_WDG_CPU)
+
+#define PM_CLK_ID_UART4                                (CLK_PWR_ID_UART4)
+#define PM_CLK_ID_GPIO                                 (CLK_PWR_ID_GPIO)
+#define PM_CLK_ID_LED                                  (CLK_PWR_ID_LED)
+#define PM_CLK_ID_DPLLDIV                              (CLK_PWR_ID_DPLLDIV)
+#define PM_CLK_ID_THREAD                               (CLK_PWR_ID_THREAD)
+#define PM_CLK_ID_RF                                   (CLK_PWR_ID_RF)
+
+
+/*---------------------------POWER DOMAIN MODUEL DEFINE  END-------------------------------------*/
+typedef enum
+{
+	PM_CP1_AUTO_CTRL_DISABLE = 0,
+	PM_CP1_AUTO_CTRL_ENABLE    = 1,
+}pm_cp1_auto_ctrl_e;
+
+typedef enum
+{
+	PM_MEM_AUTO_CTRL_DISABLE = 0,
+	PM_MEM_AUTO_CTRL_ENABLE    = 1,
+}pm_mem_auto_ctrl_e;
 
 typedef enum
 {
@@ -62,50 +215,11 @@ typedef enum
 	PM_MODE_NORMAL_SLEEP = 0,
 	PM_MODE_LOW_VOLTAGE ,
 	PM_MODE_DEEP_SLEEP ,
+	PM_MODE_SUPER_DEEP_SLEEP ,
 	PM_MODE_DEFAULT
 }pm_sleep_mode_e;
 
-typedef enum
-{
-	PM_WAKEUP_SOURCE_INT_GPIO = 0,
-	PM_WAKEUP_SOURCE_INT_RTC ,
-	PM_WAKEUP_SOURCE_INT_SYSTEM_WAKE ,
-	PM_WAKEUP_SOURCE_INT_USBPLUG ,
-	PM_WAKEUP_SOURCE_INT_TOUCHED ,
-	PM_WAKEUP_SOURCE_INT_NONE ,
-}pm_wakeup_source_e;
-typedef enum
-{
-	PM_POWER_MODULE_NAME_MEM1 = 0,   // 0
-	PM_POWER_MODULE_NAME_MEM2,       // 1
-	PM_POWER_MODULE_NAME_MEM3,       // 2
-	PM_POWER_MODULE_NAME_ENCP,       // 3
-	PM_POWER_MODULE_NAME_BAKP,       // 4
-	PM_POWER_MODULE_NAME_AHBP,       // 5
-	PM_POWER_MODULE_NAME_AUDP,       // 6
-	PM_POWER_MODULE_NAME_VIDP,       // 7
-	PM_POWER_MODULE_NAME_BTSP,       // 8
-	PM_POWER_MODULE_NAME_WIFIP_MAC,  // 9
-	PM_POWER_MODULE_NAME_PHY,        // 10
-	PM_POWER_MODULE_NAME_CPU1 ,      // 11
-	PM_POWER_MODULE_NAME_APP ,       // 12  app not power domain
-	PM_POWER_SUB_MODULE_NAME_AUDP_FFT ,     // 13
-	PM_POWER_SUB_MODULE_NAME_AUDP_SBC ,     // 14
-	PM_POWER_SUB_MODULE_NAME_AUDP_AUDIO ,   // 15
-	PM_POWER_SUB_MODULE_NAME_AUDP_I2S ,     // 16
-	PM_POWER_SUB_MODULE_NAME_VIDP_JPEG_EN , // 17
-	PM_POWER_SUB_MODULE_NAME_VIDP_JPEG_DE , // 18
-	PM_POWER_SUB_MODULE_NAME_VIDP_DMA2D ,   // 19
-	PM_POWER_SUB_MODULE_NAME_VIDP_LCD ,     // 20
-	PM_POWER_SUB_MODULE_NAME_PHY_BT ,       // 21
-	PM_POWER_SUB_MODULE_NAME_PHY_WIFI ,     // 22
-	PM_POWER_SUB_MODULE_NAME_AHBP_CAN ,     // 23
-	PM_POWER_SUB_MODULE_NAME_AHBP_QSPI ,    // 24
-	PM_POWER_SUB_MODULE_NAME_AHBP_USB ,     // 25
-	PM_POWER_SUB_MODULE_NAME_AHBP_PSRAM ,   // 26
 
-	PM_POWER_MODULE_NAME_NONE               // 27
-}pm_power_module_name_e;
 
 typedef enum
 {
@@ -121,7 +235,7 @@ typedef enum
 	PM_SLEEP_MODULE_NAME_WIFIP_MAC,// 9
 	PM_SLEEP_MODULE_NAME_WIFI_PHY, // 10
 	PM_SLEEP_MODULE_NAME_TIMER_2,  // 11
-	PM_SLEEP_MODULE_NAME_APP,  // 12
+	PM_SLEEP_MODULE_NAME_APP,      // 12  //attention: the APP vote is for customer application using,other applications use the other votes
 	PM_SLEEP_MODULE_NAME_OTP,      // 13
 	PM_SLEEP_MODULE_NAME_I2S_1,    // 14
 	PM_SLEEP_MODULE_NAME_USB_1,    // 15
@@ -131,17 +245,17 @@ typedef enum
 	PM_SLEEP_MODULE_NAME_QSPI_2,   // 19
 	PM_SLEEP_MODULE_NAME_SDIO,     // 20
 	PM_SLEEP_MODULE_NAME_AUXS,     // 21
-	PM_SLEEP_MODULE_NAME_CPU,      // 22
-	PM_SLEEP_MODULE_NAME_XVR,      // 23
+	PM_SLEEP_MODULE_NAME_LOG,      // 22
+	PM_SLEEP_MODULE_NAME_AT,       // 23
 	PM_SLEEP_MODULE_NAME_I2C2,     // 24
 	PM_SLEEP_MODULE_NAME_UART2,    // 25
 	PM_SLEEP_MODULE_NAME_UART3,    // 26
 	PM_SLEEP_MODULE_NAME_WDG,      // 27
-	PM_SLEEP_MODULE_NAME_TIMER_3,      // 28
+	PM_SLEEP_MODULE_NAME_TIMER_3,  // 28
 	PM_SLEEP_MODULE_NAME_APP1,     // 29
-	PM_SLEEP_MODULE_NAME_APP2,     // 30
+	PM_SLEEP_MODULE_NAME_CPU1,     // 30
 	PM_SLEEP_MODULE_NAME_APP3,     // 31
-
+	/*Attention: if you add vote ,the following[ #define PM_ENTER_LOW_VOL_MODULES_CONFIG] also need add the vote*/
 	PM_SLEEP_MODULE_NAME_MAX
 }pm_sleep_module_name_e;
 typedef enum
@@ -163,43 +277,7 @@ typedef enum
 	PM_LPO_SRC_ROSC,    //32K from ROSC
 	PM_LPO_SRC_DEFAULT  //32K from ROSC
 }pm_lpo_src_e;
-typedef enum
-{
-	PM_CLK_ID_I2C1 = 0, // 0
-	PM_CLK_ID_SPI_1,    // 1
-	PM_CLK_ID_UART1,    // 2
-	PM_CLK_ID_PWM_1,    // 3
-	PM_CLK_ID_TIMER_1,  // 4
-	PM_CLK_ID_SARADC,   // 5
-	PM_CLK_ID_IRDA,     // 6
-	PM_CLK_ID_EFUSE,    // 7
-	PM_CLK_ID_I2C2,     // 8
-	PM_CLK_ID_SPI_2,    // 9
-	PM_CLK_ID_UART2,    // 10
-	PM_CLK_ID_UART3,    // 11
-	PM_CLK_ID_PWM_2,    // 12
-	PM_CLK_ID_TIMER_2,  // 13
-	PM_CLK_ID_TIMER_3,  // 14
-	PM_CLK_ID_OTP,      // 15
-	PM_CLK_ID_I2S_1,    // 16
-	PM_CLK_ID_USB_1,    // 17
-	PM_CLK_ID_CAN,      // 18
-	PM_CLK_ID_PSRAM,    // 19
-	PM_CLK_ID_QSPI_1,   // 20
-	PM_CLK_ID_QSPI_2,   // 21
-	PM_CLK_ID_SDIO,     // 22
-	PM_CLK_ID_AUXS,     // 23
-	PM_CLK_ID_BTDM,     // 24
-	PM_CLK_ID_XVR,      // 25
-	PM_CLK_ID_MAC,      // 26
-	PM_CLK_ID_PHY,      // 27
-	PM_CLK_ID_JPEG,     // 28
-	PM_CLK_ID_DISP,     // 29
-	PM_CLK_ID_AUDIO,    // 30
-	PM_CLK_ID_WDG_CPU,  // 31
 
-	PM_CLK_ID_NONE
-}pm_dev_clk_e;
 typedef enum
 {
 	PM_CLK_CTRL_PWR_DOWN = 0,
@@ -210,7 +288,7 @@ typedef enum
 	PM_DEV_ID_I2C1 = 0, // 0
 	PM_DEV_ID_SPI_1,    // 1
 	PM_DEV_ID_UART1,    // 2
-	PM_DEV_ID_WDG,      // 3
+	PM_DEV_ID_AIRPLAY,  // 3
 	PM_DEV_ID_TIMER_1,  // 4
 	PM_DEV_ID_SARADC,   // 5
 	PM_DEV_ID_IRDA,     // 6
@@ -232,26 +310,40 @@ typedef enum
 	PM_DEV_ID_SDIO,     // 22
 	PM_DEV_ID_AUXS,     // 23
 	PM_DEV_ID_BTDM,     // 24
-	PM_DEV_ID_XVR,      // 25
+	PM_DEV_ID_WPAS,     // 25
 	PM_DEV_ID_MAC,      // 26
 	PM_DEV_ID_PHY,      // 27
 	PM_DEV_ID_JPEG,     // 28
 	PM_DEV_ID_DISP,     // 29
 	PM_DEV_ID_AUDIO,    // 30
 	PM_DEV_ID_RTC,      // 31
+	PM_DEV_ID_GPIO,     // 32
+	PM_DEV_ID_DECODER, 	// 33
+	PM_DEV_ID_LIN,      // 34
+	PM_DEV_ID_PWM_1,    // 35
+	PM_DEV_ID_SECURE_WORLD,  // 36
+	PM_DEV_ID_UART4,    // 37
+	PM_DEV_ID_TRNG,     // 38
+	PM_DEV_ID_TIMER_0,  // 39
 
-	PM_DEV_ID_DEFAULT,  // 32  it is used by pm module set default cpu frequency
+	PM_DEV_ID_DEFAULT,  // 40  it is used by pm module set default cpu frequency
 
 	PM_DEV_ID_MAX
 }pm_dev_id_e;
 typedef enum
 {
+	#if CONFIG_PM_EXTEND_CPU_FREQ
+	PM_CPU_FRQ_30M = 0,   // 0:CPU:30M,BUS:30M
+	PM_CPU_FRQ_26M = 1,  // 0:CPU:40M,BUS:40M
+	#else	
 	PM_CPU_FRQ_26M = 0,  // 0:CPU:26M,BUS:26M
+	#endif
 	PM_CPU_FRQ_60M,      // 1:CPU:60M,BUS:60M
 	PM_CPU_FRQ_80M,      // 2:CPU:80M,BUS:80M
 	PM_CPU_FRQ_120M,     // 3:CPU:120M,BUS:120M
 	PM_CPU_FRQ_240M,     // 4:CPU:240M,BUS:120M
 	PM_CPU_FRQ_320M,     // 5:CPU:320M,BUS:160M
+	PM_CPU_FRQ_480M,     // 6:CPU:480M,BUS:240M
 	PM_CPU_FRQ_DEFAULT   // default cpu frequency which control by pm module
 }pm_cpu_freq_e;
 typedef enum
@@ -265,6 +357,20 @@ typedef struct {
     pm_cb cb;
     void *args;
 } pm_cb_conf_t;
+
+typedef struct {
+    pm_dev_id_e id;
+    pm_cb_conf_t cfg;
+} pm_sleep_cb_t;
+
+typedef enum
+{
+	PM_CB_PRIORITY_0 = 0,
+	PM_CB_PRIORITY_1,
+	PM_CB_PRIORITY_2,
+	PM_CB_PRIORITY_3,
+	PM_CB_PRIORITY_MAX,
+} pm_cb_priority_e;
 
 typedef enum
 {
@@ -325,15 +431,15 @@ typedef enum
 	PM_SLEEP_MODULE_NAME_QSPI_2,\
 	PM_SLEEP_MODULE_NAME_SDIO,\
 	PM_SLEEP_MODULE_NAME_AUXS,\
-	PM_SLEEP_MODULE_NAME_CPU,\
-	PM_SLEEP_MODULE_NAME_XVR,\
+	PM_SLEEP_MODULE_NAME_LOG,\
+	PM_SLEEP_MODULE_NAME_AT,\
 	PM_SLEEP_MODULE_NAME_I2C2,\
 	PM_SLEEP_MODULE_NAME_UART2,\
 	PM_SLEEP_MODULE_NAME_UART3,\
 	PM_SLEEP_MODULE_NAME_WDG,\
 	PM_SLEEP_MODULE_NAME_TIMER_3,\
 	PM_SLEEP_MODULE_NAME_APP1,\
-	PM_SLEEP_MODULE_NAME_APP2,\
+	PM_SLEEP_MODULE_NAME_CPU1,\
 	PM_SLEEP_MODULE_NAME_APP3,\
 }
 
@@ -359,6 +465,50 @@ typedef enum
 #define PM_CP1_AUTO_POWER_DOWN_CTRL      (PM_CP1_AUTO_POWER_DOWN_ENABLE)
 
 /*=====================CONFIG  SECTION  END=======================*/
+/**
+ * @brief clear the lv sleep state
+ *
+ * clear the lv sleep state
+ *
+ * @attention
+ * - This API is used to clear the lv sleep state
+ *
+ * @param
+ * -module:module name
+ * @return
+ * - BK_OK: succeed
+ * - others: other errors.
+ */
+bk_err_t bk_pm_module_lv_sleep_state_clear(pm_dev_id_e module);
+/**
+ * @brief set the lv sleep state
+ *
+ * set the lv sleep state
+ *
+ * @attention
+ * - This API is used to set the lv sleep state
+ *
+ * @param
+ * -void
+ * @return
+ * - BK_OK: succeed
+ * - others: other errors.
+ */
+__attribute__((section(".itcm_sec_code"))) bk_err_t bk_pm_module_lv_sleep_state_set();
+/**
+ * @brief get the lv sleep state
+ *
+ * get the lv sleep state
+ *
+ * @attention
+ * - This API is used to get the lv sleep state
+ *
+ * @param
+ * -module:module name
+ * @return
+ * - module_lv_sleep_state
+ */
+uint64_t bk_pm_module_lv_sleep_state_get(pm_dev_id_e module);
 /**
  * @brief get wakeup source from deepsleep
  *
@@ -419,6 +569,37 @@ bk_err_t bk_pm_exit_low_vol_wakeup_source_set();
  * - wakeup source(0x0:WAKEUP SOURCE OF GPIO;0x1:WAKEUP SOURCE OF RTC;0x2:WAKEUP SOURCE OF WIFI OR BT;0x4:WAKEUP SOURCE OF TOUCHED;0x5:NONE WAKEUP_SOURCE)
  */
 pm_wakeup_source_e bk_pm_exit_low_vol_wakeup_source_get();
+/**
+ * @brief get memory auto power down flag
+ *
+ * get memory auto power down flag
+ *
+ * @attention
+ * - This API is used to get memory auto power down flag
+ *
+ * @param
+ * -void
+ * @return
+ * - memory auto power down flag(PM_MEM_AUTO_CTRL_DISABLE:disable memory auto power down feature ;PM_MEM_AUTO_CTRL_ENABLE:enable memory auto power down feature)
+ */
+pm_mem_auto_ctrl_e bk_pm_mem_auto_power_down_state_get();
+/**
+ * @brief memory auto power down flag set
+ *
+ * set memory auto power down flag
+ *
+ * @attention
+ * - This API is used to set memory auto power down flag
+ *
+ * @param
+ * -PM_MEM_AUTO_CTRL_DISABLE:disable memory auto power down feature ;PM_MEM_AUTO_CTRL_ENABLE:enable memory auto power down feature
+ * @return
+ * - BK_OK: succeed
+ * - others: other errors.
+ *
+ */
+bk_err_t bk_pm_mem_auto_power_down_state_set(pm_mem_auto_ctrl_e value);
+
 /**
  * @brief get cp1 auto power down flag
  *
@@ -709,7 +890,7 @@ bk_err_t bk_pm_clock_ctrl(pm_dev_clk_e module,pm_dev_clk_pwr_e clock_state);
  * - others: other errors.
  *
  */
-bk_err_t bk_pm_lp_vol_set( uint32_t lp_vol);
+bk_err_t bk_pm_lp_vol_set(uint32_t lp_vol);
 
 /**
  * @brief lp voltage get
@@ -726,6 +907,73 @@ bk_err_t bk_pm_lp_vol_set( uint32_t lp_vol);
  *
  */
 uint32_t bk_pm_lp_vol_get();
+
+/**
+ * @brief rf tx voltage set
+ *
+ * set the tx voltage of RF
+ *
+ * @attention
+ * - This API is used to set tx voltage of RF
+ *
+ * @param
+ * -uint32_t:0x0:1.25v;0x1:1.3v;0x2:1.35v;0x3:1.4v;0x4:1.45v;0x5:1.5v;0x6:1.55v;0x7:1.6v;
+ * @return
+ * - BK_OK: succeed
+ * - others: other errors.
+ *
+ */
+bk_err_t bk_pm_rf_tx_vol_set(uint32_t tx_vol);
+
+/**
+ * @brief rf tx voltage get
+ *
+ * get the tx voltage of RF
+ *
+ * @attention
+ * - This API is used to get tx voltage value of RF
+ *
+ * @param
+ * -void
+ * @return
+ * - the tx voltage value
+ *
+ */
+uint32_t bk_pm_rf_tx_vol_get();
+
+/**
+ * @brief rf rx voltage set
+ *
+ * set the rx voltage of RF
+ *
+ * @attention
+ * - This API is used to set rx voltage of RF
+ *
+ * @param
+ * -uint32_t:0x0:1.25v;0x1:1.3v;0x2:1.35v;0x3:1.4v;0x4:1.45v;0x5:1.5v;0x6:1.55v;0x7:1.6v;
+ * @return
+ * - BK_OK: succeed
+ * - others: other errors.
+ *
+ */
+bk_err_t bk_pm_rf_rx_vol_set(uint32_t rx_vol);
+
+/**
+ * @brief rf rx voltage get
+ *
+ * get the rx voltage of RF
+ *
+ * @attention
+ * - This API is used to get rx voltage value of RF
+ *
+ * @param
+ * -void
+ * @return
+ * - the rx voltage value
+ *
+ */
+uint32_t bk_pm_rf_rx_vol_get();
+
 /**
  * @brief lpo source set
  *
@@ -849,7 +1097,7 @@ bk_err_t bk_pm_module_vote_sleep_ctrl(pm_sleep_module_name_e module,uint32_t sle
  * @attention
  *  - This API is used for the module power on and power off.
  *  - if all the specific module power off, the mcu will enter deep sleep
- * @param 
+ * @param
  * -module:module name
  * -power_state:0x1:power off;0x0:power on
  * @return
@@ -956,6 +1204,25 @@ bk_err_t pm_extern32k_register_cb(pm_cb_extern32k_cfg_t *cfg);
  *
  */
 bk_err_t pm_extern32k_unregister_cb(pm_cb_extern32k_cfg_t *cfg);
+/**
+ * @brief register rtc callback for wifi
+ *
+ * @param
+ * -tick:tick cnt for lv
+ * -callback:callback when exit lv
+ * @return
+ * - void
+ *
+ */
+void bk_pm_wifi_rtc_set(uint32_t tick, void *callback);
+/**
+ * @brief unregister rtc callback for wifi
+ *
+ * @return
+ * - void
+ *
+ */
+void bk_pm_wifi_rtc_clear(void);
 
 #ifdef __cplusplus
 }

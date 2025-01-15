@@ -22,8 +22,10 @@ extern "C" {
  *
  */
 typedef struct {
+    OPERATE_RET (*init)                     (TKL_WIRED_BASE_CFG_T *cfg);
     OPERATE_RET (*get_status)               (TKL_WIRED_STAT_E *is_up);
     OPERATE_RET (*set_status_cb)            (TKL_WIRED_STATUS_CHANGE_CB cb);
+    OPERATE_RET (*set_ip)                   (NW_IP_S *ip);
     OPERATE_RET (*get_ip)                   (NW_IP_S *ip);
     OPERATE_RET (*get_ipv6)                 (NW_IP_TYPE type, NW_IP_S *ip);
     OPERATE_RET (*get_mac)                  (NW_MAC_S *mac);

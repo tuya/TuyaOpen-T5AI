@@ -108,6 +108,7 @@ void psram_hal_set_sf_reset(uint32_t value);
 void psram_hal_set_cmd_reset(void);
 void psram_hal_cmd_write(uint32_t addr, uint32_t value);
 uint32_t psram_hal_cmd_read(uint32_t addr);
+bk_err_t psram_hal_cmd_read_ext(uint32_t addr, uint32_t *val_p);
 void psram_hal_set_transfer_mode(uint32_t value);
 
 void psram_hal_power_clk_enable(uint8_t enable);

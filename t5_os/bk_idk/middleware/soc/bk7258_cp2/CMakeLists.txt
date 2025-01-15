@@ -68,7 +68,7 @@ list(APPEND srcs
 # Modified by TUYA Start
 set(tuya_build $ENV{TUYA_APP_NAME})
 if (NOT ${tuya_build} STREQUAL "")
-armino_component_register(SRCS "${srcs}" INCLUDE_DIRS "${incs}" REQUIRES partitions tuya_os_adapter)
+armino_component_register(SRCS "${srcs}" INCLUDE_DIRS "${incs}" REQUIRES partitions tuyaos_adapter)
 else()
 armino_component_register(SRCS "${srcs}" INCLUDE_DIRS "${incs}" REQUIRES partitions)
 endif()

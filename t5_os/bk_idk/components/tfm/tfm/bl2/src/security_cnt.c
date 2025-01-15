@@ -38,9 +38,11 @@ static enum tfm_nv_counter_t get_nv_counter_from_image_id(uint32_t image_id)
 fih_int boot_nv_security_counter_init(void)
 {
     fih_int fih_rc = FIH_FAILURE;
-
+#if CONFIG_MCUBOOT_V2_1_0
+    fih_rc = fih_ret_encode_zero_equality(tfm_plat_init_nv_counter());
+#else
     fih_rc = fih_int_encode_zero_equality(tfm_plat_init_nv_counter());
-
+#endif
     FIH_RET(fih_rc);
 }
 
@@ -59,8 +61,11 @@ fih_int boot_nv_security_counter_get(uint32_t image_id, fih_int *security_cnt)
     if (nv_counter >= TFM_BOOT_NV_COUNTER_MAX) {
         FIH_RET(FIH_FAILURE);
     }
-
+#if CONFIG_MCUBOOT_V2_1_0
+    fih_rc = fih_ret_encode_zero_equality(
+#else
     fih_rc = fih_int_encode_zero_equality(
+#endif
              tfm_plat_read_nv_counter(nv_counter,
                                       sizeof(security_cnt_soft),
                                       (uint8_t *)&security_cnt_soft));

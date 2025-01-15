@@ -354,8 +354,8 @@ beken_time_t rtos_get_time(void)
  */
 bk_err_t rtos_delay_milliseconds(uint32_t num_ms)
 {
-	extern void delay(int num);
-	delay(100 * num_ms);
+	extern void bk_delay(int num);
+	bk_delay(100 * num_ms);
 
 	return kNoErr;
 }
@@ -435,6 +435,16 @@ void rtos_start_int(void)
 bool rtos_is_in_interrupt_context(void)
 {
 	return platform_is_in_interrupt_context();
+}
+
+bool rtos_local_irq_disabled(void)
+{
+    return platform_local_irq_disabled();
+}
+
+bool rtos_is_scheduler_suspended(void)
+{
+	return 0;
 }
 
 void rtos_wait_for_interrupt(void)

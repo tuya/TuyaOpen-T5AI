@@ -47,7 +47,7 @@ static int32_t *temp_mic_addr = NULL;     //存放从mic_ring_buff中取的mic�
 static dma_id_t adc_dma_id = DMA_ID_MAX;
 static RingBufferContext mic_rb;
 
-extern void delay(int num);
+extern void bk_delay(int num);
 
 static bk_err_t audio_send_msg(audio_record_msg_t msg)
 {
@@ -451,7 +451,7 @@ void cli_cp0_audio_record_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc
 			os_printf("deinit audio record task fail \r\n");
 		}
 
-		delay(1000);
+		bk_delay(1000);
 		/* close encoder file */
 		fr = f_close(&mic_file);
 		if (fr != FR_OK) {

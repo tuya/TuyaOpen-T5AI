@@ -51,7 +51,7 @@ typedef struct {
     LIST_HEAD head;
 }TUYA_QUEUE_T;
 
-STATIC OPERATE_RET __enqueue(TUYA_QUEUE_HANDLE handle, const void *item, ENQUEUE_POLICY_E policy)
+static OPERATE_RET __enqueue(TUYA_QUEUE_HANDLE handle, const void *item, ENQUEUE_POLICY_E policy)
 {
     OPERATE_RET op_ret = OPRT_OK;
 

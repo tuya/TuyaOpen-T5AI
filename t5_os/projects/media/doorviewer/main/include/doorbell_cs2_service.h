@@ -41,6 +41,7 @@ typedef struct
 	uint32_t status_cnt;
 	bool check_type;
 	bool support_type;
+	bool I_frame_droped;
 } doorbell_cs2_h264_drop_info_t;
 #endif
 

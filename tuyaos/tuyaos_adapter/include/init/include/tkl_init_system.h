@@ -61,6 +61,11 @@ typedef struct {
     void              (*free)                     (void* ptr);
     void*             (*calloc)                   (size_t nitems, size_t size);
     void*             (*realloc)                  (void* ptr, size_t size);
+#if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM==1)
+    void*             (*psram_malloc)             (const size_t size);
+    void              (*psram_free)               (void* ptr);
+#endif
+
     //! thread
     OPERATE_RET         (*thread_create)            (TKL_THREAD_HANDLE* thread, const char* name, const uint32_t stack_size, const uint32_t priority, const THREAD_FUNC_T func, void* const arg);
     OPERATE_RET         (*thread_release)           (const TKL_THREAD_HANDLE thread);
@@ -108,7 +113,9 @@ TKL_OS_T* tkl_os_desc_get(void);
  */
 typedef struct {
     OPERATE_RET         (*fs_mkdir)                 (const char* path);
+    OPERATE_RET         (*fs_mkdir_r)               (const char* path);
     OPERATE_RET         (*fs_remove)                (const char* path);
+    OPERATE_RET         (*fs_remove_r)              (const char* path);
     OPERATE_RET         (*fs_mode)                  (const char* path, uint32_t* mode);
     OPERATE_RET         (*fs_is_exist)              (const char* path, BOOL_T* is_exist);
     OPERATE_RET         (*fs_rename)                (const char* path_old, const char* path_new);
@@ -118,7 +125,7 @@ typedef struct {
     OPERATE_RET         (*dir_name)                 (TUYA_FILEINFO info, const char** name);
     OPERATE_RET         (*dir_is_dir)               (TUYA_FILEINFO info, BOOL_T* is_dir);
     OPERATE_RET         (*dir_is_regular)           (TUYA_FILEINFO info, BOOL_T* is_regular);
-    TUYA_FILE            (*fopen)                    (const char* path, const char* mode);
+    TUYA_FILE           (*fopen)                    (const char* path, const char* mode);
     OPERATE_RET         (*fclose)                   (TUYA_FILE file);
     OPERATE_RET         (*fread)                    (void* buf, int bytes, TUYA_FILE file);
     OPERATE_RET         (*fwrite)                   (void* buf, int bytes, TUYA_FILE file);

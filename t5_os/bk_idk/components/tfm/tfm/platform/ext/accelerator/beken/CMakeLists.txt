@@ -39,6 +39,7 @@ if(TEST_NS)
     )
 endif()
 
+if (CONFIG_BUILD_TFM)
 target_link_libraries(crypto_service_mbedcrypto
     PUBLIC
         crypto_service_crypto_hw
@@ -55,3 +56,4 @@ target_compile_options(crypto_service_mbedcrypto
         $<$<C_COMPILER_ID:GNU>:-Wno-unused-parameter>
         $<$<C_COMPILER_ID:ARMClang>:-Wno-unused-parameter>
 )
+endif()

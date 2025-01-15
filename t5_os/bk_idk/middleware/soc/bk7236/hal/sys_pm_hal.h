@@ -72,7 +72,7 @@
 
 
 #if CONFIG_SPE
-#define PD_DOWN_DOMAIN  (PD_ALL & ~(PD_MEM) & ~(PD_BTSP) & ~(PD_WIFI) & ~(PD_PHY) & ~(PD_OFDM) & ~(PD_ENCP) & ~(PD_AUDP) & ~(PD_VIDP) & POWER_BAKP & POWER_AHBP)
+#define PD_DOWN_DOMAIN  (PD_ALL & ~(PD_MEM) & ~(PD_BTSP) & ~(PD_WIFI) & ~(PD_PHY) & ~(PD_OFDM) & ~(PD_AUDP) & ~(PD_VIDP) & POWER_BAKP & POWER_AHBP)
 #else
 #define PD_DOWN_DOMAIN  (PD_ALL & ~(PD_MEM) & ~(PD_BTSP) & ~(PD_WIFI) & ~(PD_PHY) & ~(PD_OFDM) & ~(PD_AUDP) & ~(PD_VIDP))
 #endif

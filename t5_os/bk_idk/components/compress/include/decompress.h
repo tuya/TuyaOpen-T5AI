@@ -24,4 +24,4 @@ typedef enum {
 	UNKNOWN_DECOMPRESSPOR,
 } decompress_type_t;
 
-uint8_t *decompress_in_memory(uint8_t *src, uint32_t src_len, decompress_type_t decompressor);
+uint8_t *decompress_in_memory(uint8_t *src, uint8_t *dest, uint32_t src_len, decompress_type_t decompressor);

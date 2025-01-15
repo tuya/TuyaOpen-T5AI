@@ -211,7 +211,7 @@ bk_err_t bk_psram_init(void)
 	uint32_t chip_id = 0, actual_id = 0;
 
 	// psram voltage sel
-	bk_psram_set_voltage(PSRAM_OUT_1_90V);
+	bk_psram_set_voltage(PSRAM_OUT_1_95V);
 
 	// power up and clk config
 	psram_hal_power_clk_enable(1);
@@ -261,6 +261,16 @@ bk_err_t bk_psram_init(void)
 	}
 
 	s_psram_server_is_init = true;
+
+	//double check PSRAM initilized succ
+	{
+		uint32_t val = 0;
+		if(psram_hal_cmd_read_ext(0x00000000, &val) != BK_OK)
+		{
+			PSRAM_LOGE("%s fail:val=0x%x\r\n", __func__, val);
+			return BK_FAIL;
+		}
+	}
 
 	return BK_OK;
 #else

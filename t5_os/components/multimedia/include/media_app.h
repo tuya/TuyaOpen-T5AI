@@ -100,7 +100,6 @@ bk_err_t  media_app_lcd_display_file(char *file_name);  //display sd card file
 bk_err_t media_app_lcd_display(void* lcd_display);
 bk_err_t media_app_lcd_display_beken(void* lcd_display);
 bk_err_t media_app_lcd_blend(void *param);
-bk_err_t media_app_register_uvc_connect_state_cb(void *cb);
 bk_err_t media_app_lcd_gui_blend_open(int blend_x_size, int blend_y_size);
 bk_err_t media_app_lcd_gui_blend_close(void);
 bk_err_t media_app_lcd_decode(media_decode_mode_t decode_mode);

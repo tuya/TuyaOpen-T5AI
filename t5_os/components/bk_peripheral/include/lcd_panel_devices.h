@@ -22,6 +22,7 @@ extern "C" {
 #endif
 
 // Modified by TUYA Start
+extern const lcd_device_t lcd_device_nv3047;
 #if CONFIG_LCD_ILI9488
 extern const lcd_device_t lcd_device_ili9488;
 #endif
@@ -34,6 +35,9 @@ extern const lcd_device_t lcd_device_gc9503_boe;
 extern const lcd_device_t lcd_device_t50p181cq;
 #endif
 
+#if CONFIG_LCD_TUYA_COMMON_RGB
+extern lcd_device_t lcd_device_tuya_rgb;
+#endif
 // Modified by TUYA End
 
 #if CONFIG_LCD_ST7282

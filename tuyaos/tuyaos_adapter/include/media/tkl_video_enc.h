@@ -97,6 +97,7 @@ typedef struct
     TKL_VENC_DATA_TRANS_MODE_E trans_mode;
     TKL_VENC_PUT_CB put_cb;
     TKL_VENC_OSD_CONFIG_T osd;
+    uint32_t enable_h264_pipeline;
 }TKL_VENC_CONFIG_T;
 
 typedef struct
@@ -114,7 +115,7 @@ typedef enum {
 typedef struct
 {
     uint32_t enable;                                       // 0, 不显示遮挡; 1, 区域遮挡
-    uint32_t id;                                           // 遮挡编号 
+    uint32_t id;                                           // 遮挡编号
     uint32_t color;                                        // 遮挡的颜色，ARGB8888类型
     FLOAT_T x;                                           // 矩形区域左上点水平方向上的坐标, [0~100]
     FLOAT_T y;                                           // 矩形区域左上点垂直方向上的坐标, [0~100]
@@ -167,7 +168,7 @@ typedef struct {
 
 /**
 * @brief video encode init
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] pconfig: venc config
 * @param[in] count: count of pconfig
@@ -178,7 +179,7 @@ OPERATE_RET tkl_venc_init(int32_t vi_chn, TKL_VENC_CONFIG_T *pconfig, int32_t co
 
 /**
 * @brief video encode get frame
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 * @param[out] pframe:  output frame
@@ -189,7 +190,7 @@ OPERATE_RET tkl_venc_get_frame(TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn, TKL
 
 /**
 * @brief video first snap
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[out] pframe: output frame
 *
@@ -199,7 +200,7 @@ OPERATE_RET tkl_venc_get_first_snap(TKL_VI_CHN_E vi_chn, TKL_VENC_FRAME_T *pfram
 
 /**
 * @brief video encode set osd
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 * @param[out] posd:  osd config
@@ -210,7 +211,7 @@ OPERATE_RET tkl_venc_set_osd(TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn, TKL_V
 
 /**
 * @brief video encode set osd
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 * @param[in] idr_type: request idr type
@@ -221,7 +222,7 @@ OPERATE_RET tkl_venc_set_IDR(TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn,  TKL_
 
 /**
 * @brief video encode set mask
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 * @param[out] pmask: mask config
@@ -232,7 +233,7 @@ OPERATE_RET tkl_venc_set_mask(TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn, TKL_
 
 /**
 * @brief video settings format
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 * @param[in] pformat: format config
@@ -243,7 +244,7 @@ OPERATE_RET tkl_venc_set_format(TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn, TK
 
 /**
 * @brief video get format
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 * @param[out] pformat: format config
@@ -254,7 +255,7 @@ OPERATE_RET tkl_venc_get_format(TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn, TK
 
 /**
 * @brief video encode stream buff pool set
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 * @param[in] parg:  buff pool config
@@ -274,7 +275,7 @@ OPERATE_RET tkl_venc_set_time_cb(TKL_VENC_TIME_CB cb);
 
 /**
 * @brief video encode  start
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 *
@@ -284,7 +285,7 @@ OPERATE_RET tkl_venc_start(TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn);
 
 /**
 * @brief video encode  stop
-* 
+*
 * @param[in] vi_chn: vi channel number
 * @param[in] venc_chn: venc channel number
 *
@@ -294,12 +295,13 @@ OPERATE_RET tkl_venc_stop( TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn);
 
 /**
 * @brief video encode uninit
-* 
+*
 * @param[in] vi_chn: vi channel number
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_venc_uninit(TKL_VI_CHN_E vi_chn);
+// OPERATE_RET tkl_venc_uninit(TKL_VI_CHN_E vi_chn);
+OPERATE_RET tkl_venc_uninit(TKL_VI_CHN_E vi_chn, TKL_VENC_CONFIG_T *pconfig);
 
 #ifdef __cplusplus
 }

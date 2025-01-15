@@ -287,6 +287,9 @@ struct netif {
   /** This function is called by the network device driver
    *  to pass a packet up the TCP/IP stack. */
   netif_input_fn input;
+#if BK_LWIP && CONFIG_BRIDGE
+  netif_input_fn input_origin;
+#endif
 #if LWIP_IPV4
   /** This function is called by the IP module when it wants
    *  to send a packet on the interface. This function typically
@@ -346,7 +349,7 @@ struct netif {
   u8_t flags;
   /** descriptive abbreviation */
   char name[2];
-  /** number of this interface. Used for @ref if_api and @ref netifapi_netif, 
+  /** number of this interface. Used for @ref if_api and @ref netifapi_netif,
    * as well as for IPv6 zones */
   u8_t num;
 #if LWIP_IPV6_AUTOCONFIG

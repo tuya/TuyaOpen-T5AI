@@ -69,7 +69,7 @@ typedef struct bridgeif_dfdb_s {
  * remembers known src mac addresses to know which port to send frames destined for that
  * mac address.
  *
- * ATTENTION: This is meant as an example only, in real-world use, you should 
+ * ATTENTION: This is meant as an example only, in real-world use, you should
  * provide a better implementation :-)
  */
 void
@@ -120,9 +120,9 @@ bridgeif_fdb_update_src(void *fdb_ptr, struct eth_addr *src_addr, u8_t port_idx)
   /* not found, no free entry -> flood */
 }
 
-/** 
+/**
  * @ingroup bridgeif_fdb
- * Walk our list of auto-learnt fdb entries and return a port to forward or BR_FLOOD if unknown 
+ * Walk our list of auto-learnt fdb entries and return a port to forward or BR_FLOOD if unknown
  */
 bridgeif_portmask_t
 bridgeif_fdb_get_dst_ports(void *fdb_ptr, struct eth_addr *dst_addr)
@@ -187,6 +187,10 @@ bridgeif_age_tmr(void *arg)
   sys_timeout(BRIDGEIF_AGE_TIMER_MS, bridgeif_age_tmr, arg);
 }
 
+#if BK_LWIP
+bridgeif_dfdb_t *g_fdb;
+#endif
+
 /**
  * @ingroup bridgeif_fdb
  * Init our simple fdb list
@@ -206,7 +210,39 @@ bridgeif_fdb_init(u16_t max_fdb_entries)
   fdb->max_fdb_entries = max_fdb_entries;
   fdb->fdb = (bridgeif_dfdb_entry_t *)(fdb + 1);
 
+#if BK_LWIP
+  g_fdb = fdb;
+#endif
+
   sys_timeout(BRIDGEIF_AGE_TIMER_MS, bridgeif_age_tmr, fdb);
 
   return fdb;
 }
+
+#if BK_LWIP
+void print_fdb()
+{
+  int i;
+  bridgeif_dfdb_t *fdb = (bridgeif_dfdb_t *)g_fdb;
+  BRIDGEIF_DECL_PROTECT(lev);
+  BRIDGEIF_READ_PROTECT(lev);
+
+  if (!fdb)
+    return;
+
+  for (i = 0; i < fdb->max_fdb_entries; i++) {
+    bridgeif_dfdb_entry_t *e = &fdb->fdb[i];
+    if (e->used && e->ts) {
+      os_printf("%pm, eport %d, ts %d\n", &e->addr, e->port, e->ts);
+    }
+  }
+  BRIDGEIF_READ_UNPROTECT(lev);
+}
+
+void bridgeif_fdb_deinit(bridgeif_private_t *br)
+{
+  sys_untimeout(bridgeif_age_tmr, br->fdbd);
+  mem_free(br->fdbd);
+  br->fdbd = NULL;
+}
+#endif

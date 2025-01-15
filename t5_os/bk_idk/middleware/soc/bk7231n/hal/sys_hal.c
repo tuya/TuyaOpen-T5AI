@@ -865,14 +865,14 @@ void sys_hal_modem_core_reset(void)
 				 << MODEM_CORE_RESET_POSI);
 	REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
 
-	delay(1);
+	bk_delay(1);
 	reg = ret;
 	REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
 
 	/*resetting, and waiting for done*/
 	reg = REG_READ(SCTRL_RESET);
 	while (reg & MODEM_CORE_RESET_BIT) {
-		delay(10);
+		bk_delay(10);
 		reg = REG_READ(SCTRL_RESET);
 	}
 }
@@ -895,7 +895,7 @@ void sys_hal_modem_subsys_reset(void)
 	reset_word = MODEM_SUBCHIP_RESET_WORD;
 
 	REG_WRITE(reg, reset_word);
-	delay(10);
+	bk_delay(10);
 	REG_WRITE(reg, 0);
 }
 
@@ -908,7 +908,7 @@ void sys_hal_mac_subsys_reset(void)
 	reset_word = MAC_SUBSYS_RESET_WORD;
 
 	REG_WRITE(reg, reset_word);
-	delay(10);
+	bk_delay(10);
 	REG_WRITE(reg, 0);
 }
 
@@ -921,7 +921,7 @@ void sys_hal_usb_subsys_reset(void)
 	reset_word = USB_SUBSYS_RESET_WORD;
 
 	REG_WRITE(reg, reset_word);
-	delay(10);
+	bk_delay(10);
 	REG_WRITE(reg, 0);
 }
 
@@ -934,7 +934,7 @@ void sys_hal_dsp_subsys_reset(void)
 	reset_word = DSP_SUBSYS_RESET_WORD;
 
 	REG_WRITE(reg, reset_word);
-	delay(10);
+	bk_delay(10);
 	REG_WRITE(reg, 0);
 }
 

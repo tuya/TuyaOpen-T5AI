@@ -298,6 +298,8 @@ void set_flash_clk(unsigned char clk_conf) {
 void watchdog_stop(void) {
 	BK3000_WDT_CONFIG = 0x5A0000;
 	BK3000_WDT_CONFIG = 0xA50000;
+	AON_WDT_CONFIG = 0x5A0000;
+	AON_WDT_CONFIG = 0xA50000;
 	return;
 }
 
@@ -407,7 +409,7 @@ void legacy_boot_main(void) {
 					}
 				}
 
-				//delay(10);
+				//bk_delay(10);
 			}
 		//	c = 0xbb;
 			//debug2_uart_send_poll(&c,1);

@@ -66,7 +66,7 @@ typedef struct _hashmap_map{
   /*                                                                        */
   /*  --------------------------------------------------------------------  */
 
-STATIC ULONG_T crc32_tab[] = {
+static ULONG_T crc32_tab[] = {
       0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
       0x706af48fL, 0xe963a535L, 0x9e6495a3L, 0x0edb8832L, 0x79dcb8a4L,
       0xe0d5e91eL, 0x97d2d988L, 0x09b64c2bL, 0x7eb17cbdL, 0xe7b82d07L,
@@ -122,7 +122,7 @@ STATIC ULONG_T crc32_tab[] = {
     };
 
 /* Return a 32-bit CRC of the contents of the buffer. */
-STATIC ULONG_T __crc32_hashmap(const UCHAR_T *s, uint32_t len)
+static ULONG_T __crc32_hashmap(const UCHAR_T *s, uint32_t len)
 {
     uint32_t i;
     ULONG_T crc32val;
@@ -159,7 +159,7 @@ uint32_t __hashmap_hash_int(HASHMAP_T * m, char* keystring)
     return key % m->table_size;
 }
 
-STATIC HASHMAP_ELEMENT_T *__hash_find_next_element(HASHMAP_ELEMENT_T *curr)
+static HASHMAP_ELEMENT_T *__hash_find_next_element(HASHMAP_ELEMENT_T *curr)
 {
     HLIST_NODE *pos = NULL;
     HASHMAP_ELEMENT_T *tmp_element = NULL;
@@ -172,7 +172,7 @@ STATIC HASHMAP_ELEMENT_T *__hash_find_next_element(HASHMAP_ELEMENT_T *curr)
     return NULL;
 }
 
-STATIC HASHMAP_ELEMENT_T *__hash_find(HASHMAP_T *m, char* key)
+static HASHMAP_ELEMENT_T *__hash_find(HASHMAP_T *m, char* key)
 {
     int curr = __hashmap_hash_int(m, key);
     HLIST_HEAD *list = &(m->list[curr]);

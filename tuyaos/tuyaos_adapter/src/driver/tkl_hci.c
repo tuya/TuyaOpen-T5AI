@@ -1,9 +1,11 @@
 #include "tkl_hci.h"
-// #include "hci.h"
 #include <stdbool.h>
 
 #include "components/bluetooth/bk_ble_types.h"
 #include "common/bk_err.h"
+#include <components/bluetooth/bk_ble_types.h>
+#include <components/bluetooth/bk_dm_bluetooth.h>
+#include <components/bluetooth/bk_ble.h>
 
 
 #define TKL_DEBUG 1
@@ -11,7 +13,6 @@
 #if !CFG_USE_BK_HOST
 extern void ble_entry(void);
 extern void bk_printf(const char *fmt, ...);
-
 
 static TKL_HCI_FUNC_CB s_evt_cb = NULL;
 static TKL_HCI_FUNC_CB s_acl_cb = NULL;
@@ -61,18 +62,15 @@ OPERATE_RET tkl_hci_cmd_packet_send(const UCHAR_T *p_buf, USHORT_T buf_len)
     }
 
     ble_err_t ret = 0;
-    ret = bk_ble_hci_to_controller(BK_BLE_HCI_TYPE_CMD, p_buf, buf_len);
-
-    if(ret == BK_ERR_BLE_SUCCESS)
-    {
+    ret = bk_ble_hci_to_controller(BK_BLE_HCI_TYPE_CMD, (uint8_t *)p_buf, buf_len);
+    if(ret == BK_ERR_BLE_SUCCESS) {
         return OPRT_OK;
-    }
-    else
-    {
+    } else {
         return OPRT_COM_ERROR;
     }
 
 }
+
 
 OPERATE_RET tkl_hci_acl_packet_send(const UCHAR_T *p_buf, USHORT_T buf_len)
 {
@@ -88,14 +86,10 @@ OPERATE_RET tkl_hci_acl_packet_send(const UCHAR_T *p_buf, USHORT_T buf_len)
 #endif
 
     ble_err_t ret = 0;
-    ret = bk_ble_hci_to_controller(BK_BLE_HCI_TYPE_ACL, p_buf, buf_len);
-
-    if(ret == BK_ERR_BLE_SUCCESS)
-    {
+    ret = bk_ble_hci_to_controller(BK_BLE_HCI_TYPE_ACL, (uint8_t *)p_buf, buf_len);
+    if(ret == BK_ERR_BLE_SUCCESS) {
         return OPRT_OK;
-    }
-    else
-    {
+    } else {
         return OPRT_COM_ERROR;
     }
 }
@@ -103,8 +97,7 @@ OPERATE_RET tkl_hci_acl_packet_send(const UCHAR_T *p_buf, USHORT_T buf_len)
 static ble_err_t bk_ble_hci_evt_to_host_cb(uint8_t *buf, uint16_t len)
 {
     // bk_printf("bk_ble_hci_evt_to_host_cb: s_evt_cb %p.\n", s_evt_cb);
-    if(s_evt_cb)
-    {
+    if(s_evt_cb) {
         s_evt_cb(buf, len);
     }
 
@@ -113,8 +106,7 @@ static ble_err_t bk_ble_hci_evt_to_host_cb(uint8_t *buf, uint16_t len)
 
 static ble_err_t bk_ble_hci_acl_to_host_cb(uint8_t *buf, uint16_t len)
 {
-    if(s_acl_cb)
-    {
+    if(s_acl_cb) {
         s_acl_cb(buf, len);
     }
 
@@ -134,13 +126,9 @@ OPERATE_RET tkl_hci_callback_register(const TKL_HCI_FUNC_CB hci_evt_cb, const TK
     s_acl_cb = acl_pkt_cb;
 
     ret = bk_ble_reg_hci_recv_callback(bk_ble_hci_evt_to_host_cb, bk_ble_hci_acl_to_host_cb);
-
-    if(ret == BK_ERR_BLE_SUCCESS)
-    {
+    if(ret == BK_ERR_BLE_SUCCESS) {
         return OPRT_OK;
-    }
-    else
-    {
+    } else {
         return OPRT_COM_ERROR;
     }
 }

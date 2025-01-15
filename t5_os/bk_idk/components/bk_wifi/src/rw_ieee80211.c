@@ -388,8 +388,13 @@ UINT32 rw_ieee80211_init(void)
 #if CONFIG_WIFI_BAND_5G  // FIXME: BK7239, temporarily code for 5G because country code is not suitable for 5G/6G
 	g_country_code.cfg.policy = WIFI_COUNTRY_POLICY_AUTO;
 #else
+	#if CONFIG_WIFI_AUTO_COUNTRY_CODE
+	g_country_code.cfg.policy = WIFI_COUNTRY_POLICY_AUTO;
+	#else
 	g_country_code.cfg.policy = WIFI_COUNTRY_POLICY_MANUAL;
+	#endif
 #endif
+
 
 	g_country_code.init = 1;
 
@@ -644,6 +649,16 @@ UINT8 rw_ieee80211_init_scan_chan(struct scanu_start_req *req)
 		req->chan[i].flags = 0;
 		req->chan[i].freq = rw_ieee80211_get_centre_frequency(i + start_chan);
 		req->chan[i].tx_power = VIF_UNDEF_POWER;
+
+#if CONFIG_WIFI_AUTO_COUNTRY_CODE
+		uint16_t freq = req->chan[i].freq;
+		// If auto mode, disable 12, 13 active scan
+		if ((g_country_code.cfg.policy == WIFI_COUNTRY_POLICY_AUTO) &&
+			(freq == 2467 || freq == 2472 || freq == 2484)) {
+			req->chan[i].flags |= CHAN_NO_IR;
+			// os_printf("XXX disable IR for freq %d\n", freq);
+		}
+#endif // CONFIG_WIFI_AUTO_COUNTRY_CODE
 	}
 
 #if CONFIG_WIFI_BAND_5G
@@ -712,6 +727,13 @@ UINT8 rw_ieee80211_get_scan_default_chan_num(void)
 
 	return chan_num;
 }
+
+#if CONFIG_WIFI_AUTO_COUNTRY_CODE
+bool country_code_policy_is_auto(void)
+{
+	return (g_country_code.cfg.policy == WIFI_COUNTRY_POLICY_AUTO);
+}
+#endif // CONFIG_WIFI_AUTO_COUNTRY_CODE
 
 #if CONFIG_WIFI4
 void rw_ieee80211_set_ht_cap(UINT8 ht_supp)

@@ -463,7 +463,11 @@ static struct wpa_bss * wpa_bss_add(struct wpa_supplicant *wpa_s,
 	wpa_bss_set_hessid(bss);
 
 	if (wpa_s->num_bss + 1 > wpa_s->conf->bss_max_count &&
-	    wpa_bss_remove_oldest(wpa_s) != 0) {
+		(
+		#ifdef BK_SUPPLICANT
+		(wpa_s->last_scan_req == MANUAL_SCAN_REQ) ||
+		#endif
+		wpa_bss_remove_oldest(wpa_s) != 0)) {
 		wpa_printf(MSG_ERROR, "Increasing the MAX BSS count to %d "
 			   "because all BSSes are in use. We should normally "
 			   "not get here!", (int) wpa_s->num_bss + 1);

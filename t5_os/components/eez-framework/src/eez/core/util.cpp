@@ -1,0 +1,923 @@
+/*
+ * eez-framework
+ *
+ * MIT License
+ * Copyright 2024 Envox d.o.o.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#include <eez/conf-internal.h>
+
+#include <eez/core/util.h>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+#if defined(EEZ_PLATFORM_STM32) && !defined(EEZ_FOR_LVGL)
+#include <crc.h>
+#endif
+
+namespace eez {
+
+float remap(float x, float x1, float y1, float x2, float y2) {
+    return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
+}
+
+float remapQuad(float x, float x1, float y1, float x2, float y2) {
+    float t = remap(x, x1, 0, x2, 1);
+    t = t * t;
+    x = remap(t, 0, x1, 1, x2);
+    return remap(x, x1, y1, x2, y2);
+}
+
+float remapOutQuad(float x, float x1, float y1, float x2, float y2) {
+    float t = remap(x, x1, 0, x2, 1);
+    t = t * (2 - t);
+    x = remap(t, 0, x1, 1, x2);
+    return remap(x, x1, y1, x2, y2);
+}
+
+float remapInOutQuad(float x, float x1, float y1, float x2, float y2) {
+    float t = remap(x, x1, 0, x2, 1);
+    t = t < .5 ? 2 * t*t : -1 + (4 - 2 * t)*t;
+    x = remap(t, 0, x1, 1, x2);
+    return remap(x, x1, y1, x2, y2);
+}
+
+float remapCubic(float x, float x1, float y1, float x2, float y2) {
+    float t = remap(x, x1, 0, x2, 1);
+    t = t * t * t;
+    x = remap(t, 0, x1, 1, x2);
+    return remap(x, x1, y1, x2, y2);
+}
+
+float remapOutCubic(float x, float x1, float y1, float x2, float y2) {
+    float t = remap(x, x1, 0, x2, 1);
+    t = t - 1;
+    t = 1 + t * t * t;
+    x = remap(t, 0, x1, 1, x2);
+    return remap(x, x1, y1, x2, y2);
+}
+
+float remapExp(float x, float x1, float y1, float x2, float y2) {
+    float t = remap(x, x1, 0, x2, 1);
+    t = t == 0 ? 0 : float(pow(2, 10 * (t - 1)));
+    x = remap(t, 0, x1, 1, x2);
+    return remap(x, x1, y1, x2, y2);
+}
+
+float remapOutExp(float x, float x1, float y1, float x2, float y2) {
+    float t = remap(x, x1, 0, x2, 1);
+    t = t == 1 ? 1 : float(1 - pow(2, -10 * t));
+    x = remap(t, 0, x1, 1, x2);
+    return remap(x, x1, y1, x2, y2);
+}
+
+float clamp(float x, float min, float max) {
+    if (x < min) {
+        return min;
+    }
+    if (x > max) {
+        return max;
+    }
+    return x;
+}
+
+void stringCopy(char *dst, size_t maxStrLength, const char *src) {
+    strncpy(dst, src, maxStrLength);
+    dst[maxStrLength - 1] = 0;
+}
+
+void stringCopyLength(char *dst, size_t maxStrLength, const char *src, size_t length) {
+	size_t n = MIN(length, maxStrLength);
+	strncpy(dst, src, n);
+	dst[n] = 0;
+}
+
+void stringAppendString(char *str, size_t maxStrLength, const char *value) {
+    int n = maxStrLength - strlen(str) - 1;
+    if (n >= 0) {
+        strncat(str, value, n);
+    }
+}
+
+void stringAppendStringLength(char *str, size_t maxStrLength, const char *value, size_t length) {
+    int n = MIN(maxStrLength - strlen(str) - 1, length);
+    if (n >= 0) {
+        strncat(str, value, n);
+    }
+}
+
+void stringAppendInt(char *str, size_t maxStrLength, int value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%d", value);
+}
+
+void stringAppendUInt32(char *str, size_t maxStrLength, uint32_t value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%lu", (unsigned long)value);
+}
+
+void stringAppendInt64(char *str, size_t maxStrLength, int64_t value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%jd", value);
+}
+
+void stringAppendUInt64(char *str, size_t maxStrLength, uint64_t value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%ju", value);
+}
+
+void stringAppendFloat(char *str, size_t maxStrLength, float value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%g", value);
+}
+
+void stringAppendFloat(char *str, size_t maxStrLength, float value, int numDecimalPlaces) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%.*f", numDecimalPlaces, value);
+}
+
+void stringAppendDouble(char *str, size_t maxStrLength, double value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%g", value);
+}
+
+void stringAppendDouble(char *str, size_t maxStrLength, double value, int numDecimalPlaces) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%.*f", numDecimalPlaces, value);
+}
+
+void stringAppendVoltage(char *str, size_t maxStrLength, float value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%g V", value);
+}
+
+void stringAppendCurrent(char *str, size_t maxStrLength, float value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%g A", value);
+}
+
+void stringAppendPower(char *str, size_t maxStrLength, float value) {
+    auto n = strlen(str);
+    snprintf(str + n, maxStrLength - n, "%g W", value);
+}
+
+void stringAppendDuration(char *str, size_t maxStrLength, float value) {
+    auto n = strlen(str);
+    if (value > 0.1) {
+        snprintf(str + n, maxStrLength - n, "%g s", value);
+    } else {
+        snprintf(str + n, maxStrLength - n, "%g ms", value * 1000);
+    }
+}
+
+void stringAppendLoad(char *str, size_t maxStrLength, float value) {
+    auto n = strlen(str);
+    if (value < 1000) {
+        snprintf(str + n, maxStrLength - n, "%g ohm", value);
+    } else if (value < 1000000) {
+        snprintf(str + n, maxStrLength - n, "%g Kohm", value / 1000);
+    } else {
+        snprintf(str + n, maxStrLength - n, "%g Mohm", value / 1000000);
+    }
+}
+
+#if defined(EEZ_PLATFORM_STM32) && !defined(EEZ_FOR_LVGL)
+uint32_t crc32(const uint8_t *mem_block, size_t block_size) {
+	return HAL_CRC_Calculate(&hcrc, (uint32_t *)mem_block, block_size);
+}
+#else
+/*
+From http://www.hackersdelight.org/hdcodetxt/crc.c.txt:
+
+This is the basic CRC-32 calculation with some optimization but no
+table lookup. The the byte reversal is avoided by shifting the crc reg
+right instead of left and by using a reversed 32-bit word to represent
+the polynomial.
+When compiled to Cyclops with GCC, this function executes in 8 + 72n
+instructions, where n is the number of bytes in the input message. It
+should be doable in 4 + 61n instructions.
+If the inner loop is strung out (approx. 5*8 = 40 instructions),
+it would take about 6 + 46n instructions.
+*/
+
+uint32_t crc32(const uint8_t *mem_block, size_t block_size) {
+    uint32_t crc = 0xFFFFFFFF;
+    for (size_t i = 0; i < block_size; ++i) {
+        uint32_t byte = mem_block[i]; // Get next byte.
+        crc = crc ^ byte;
+        for (int j = 0; j < 8; ++j) { // Do eight times.
+            uint32_t mask = -((int32_t)crc & 1);
+            crc = (crc >> 1) ^ (0xEDB88320 & mask);
+        }
+    }
+    return ~crc;
+}
+#endif
+
+uint8_t toBCD(uint8_t bin) {
+    return ((bin / 10) << 4) | (bin % 10);
+}
+
+uint8_t fromBCD(uint8_t bcd) {
+    return ((bcd >> 4) & 0xF) * 10 + (bcd & 0xF);
+}
+
+float roundPrec(float a, float prec) {
+    float r = 1 / prec;
+    return roundf(a * r) / r;
+}
+
+float floorPrec(float a, float prec) {
+    float r = 1 / prec;
+    return floorf(a * r) / r;
+}
+
+float ceilPrec(float a, float prec) {
+    float r = 1 / prec;
+    return ceilf(a * r) / r;
+}
+
+bool isNaN(float x) {
+    return x != x;
+}
+
+bool isNaN(double x) {
+    return x != x;
+}
+
+bool isDigit(char ch) {
+    return ch >= '0' && ch <= '9';
+}
+
+bool isHexDigit(char ch) {
+    return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
+}
+
+bool isUperCaseLetter(char ch) {
+    return ch >= 'A' && ch <= 'Z';
+}
+
+char toHexDigit(int num) {
+    if (num >= 0 && num <= 9) {
+        return '0' + num;
+    } else {
+        return 'A' + (num - 10);
+    }
+}
+
+int fromHexDigit(char ch) {
+    if (ch >= '0' && ch <= '9') {
+        return ch - '0';
+    }
+
+    if (ch >= 'a' && ch <= 'f') {
+        return 10 + (ch - 'a');
+    }
+
+    return 10 + (ch - 'A');
+}
+
+bool pointInsideRect(int xPoint, int yPoint, int xRect, int yRect, int wRect, int hRect) {
+    return xPoint >= xRect && xPoint < xRect + wRect && yPoint >= yRect && yPoint < yRect + hRect;
+}
+
+void getParentDir(const char *path, char *parentDirPath) {
+    int lastPathSeparatorIndex;
+
+    for (lastPathSeparatorIndex = strlen(path) - 1;
+         lastPathSeparatorIndex >= 0 && path[lastPathSeparatorIndex] != PATH_SEPARATOR[0];
+         --lastPathSeparatorIndex)
+        ;
+
+    int i;
+    for (i = 0; i < lastPathSeparatorIndex; ++i) {
+        parentDirPath[i] = path[i];
+    }
+    parentDirPath[i] = 0;
+}
+
+bool parseMacAddress(const char *macAddressStr, size_t macAddressStrLength, uint8_t *macAddress) {
+    int state = 0;
+    int a = 0;
+    int i = 0;
+    uint8_t resultMacAddress[6];
+
+    const char *end = macAddressStr + macAddressStrLength;
+    for (const char *p = macAddressStr; p < end; ++p) {
+        if (state == 0) {
+            if (*p == '-' || *p == ' ') {
+                continue;
+            } else if (isHexDigit(*p)) {
+                a = fromHexDigit(*p);
+                state = 1;
+            } else {
+                return false;
+            }
+        } else if (state == 1) {
+            if (isHexDigit(*p)) {
+                if (i < 6) {
+                    resultMacAddress[i++] = (a << 4) | fromHexDigit(*p);
+                    state = 0;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+
+    if (state != 0 || i != 6) {
+        return false;
+    }
+
+    memcpy(macAddress, resultMacAddress, 6);
+
+    return true;
+}
+
+bool parseIpAddress(const char *ipAddressStr, size_t ipAddressStrLength, uint32_t &ipAddress) {
+    const char *p = ipAddressStr;
+    const char *q = ipAddressStr + ipAddressStrLength;
+
+    uint8_t ipAddressArray[4];
+
+    for (int i = 0; i < 4; ++i) {
+        if (p == q) {
+            return false;
+        }
+
+        uint32_t part = 0;
+        for (int j = 0; j < 3; ++j) {
+            if (p == q) {
+                if (j > 0 && i == 3) {
+                    break;
+                } else {
+                    return false;
+                }
+            } else if (isDigit(*p)) {
+                part = part * 10 + (*p++ - '0');
+            } else if (j > 0 && *p == '.') {
+                break;
+            } else {
+                return false;
+            }
+        }
+
+        if (part > 255) {
+            return false;
+        }
+
+        if ((i < 3 && *p++ != '.') || (i == 3 && p != q)) {
+            return false;
+        }
+
+        ipAddressArray[i] = part;
+    }
+
+    ipAddress = arrayToIpAddress(ipAddressArray);
+
+    return true;
+}
+
+int getIpAddressPartA(uint32_t ipAddress) {
+    return ((uint8_t *)&ipAddress)[0];
+}
+
+void setIpAddressPartA(uint32_t *ipAddress, uint8_t value) {
+    ((uint8_t *)ipAddress)[0] = value;
+}
+
+int getIpAddressPartB(uint32_t ipAddress) {
+    return ((uint8_t *)&ipAddress)[1];
+}
+
+void setIpAddressPartB(uint32_t *ipAddress, uint8_t value) {
+    ((uint8_t *)ipAddress)[1] = value;
+}
+
+int getIpAddressPartC(uint32_t ipAddress) {
+    return ((uint8_t *)&ipAddress)[2];
+}
+
+void setIpAddressPartC(uint32_t *ipAddress, uint8_t value) {
+    ((uint8_t *)ipAddress)[2] = value;
+}
+
+int getIpAddressPartD(uint32_t ipAddress) {
+    return ((uint8_t *)&ipAddress)[3];
+}
+
+void setIpAddressPartD(uint32_t *ipAddress, uint8_t value) {
+    ((uint8_t *)ipAddress)[3] = value;
+}
+
+void ipAddressToArray(uint32_t ipAddress, uint8_t *ipAddressArray) {
+    ipAddressArray[0] = getIpAddressPartA(ipAddress);
+    ipAddressArray[1] = getIpAddressPartB(ipAddress);
+    ipAddressArray[2] = getIpAddressPartC(ipAddress);
+    ipAddressArray[3] = getIpAddressPartD(ipAddress);
+}
+
+uint32_t arrayToIpAddress(uint8_t *ipAddressArray) {
+    return getIpAddress(ipAddressArray[0], ipAddressArray[1], ipAddressArray[2], ipAddressArray[3]);
+}
+
+uint32_t getIpAddress(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
+    uint32_t ipAddress;
+
+    setIpAddressPartA(&ipAddress, a);
+    setIpAddressPartB(&ipAddress, b);
+    setIpAddressPartC(&ipAddress, c);
+    setIpAddressPartD(&ipAddress, d);
+
+    return ipAddress;
+}
+
+void ipAddressToString(uint32_t ipAddress, char *ipAddressStr, size_t maxIpAddressStrLength) {
+    snprintf(ipAddressStr, maxIpAddressStrLength, "%d.%d.%d.%d",
+        getIpAddressPartA(ipAddress), getIpAddressPartB(ipAddress),
+        getIpAddressPartC(ipAddress), getIpAddressPartD(ipAddress));
+}
+
+void macAddressToString(const uint8_t *macAddress, char *macAddressStr) {
+    for (int i = 0; i < 6; ++i) {
+        macAddressStr[3 * i] = toHexDigit((macAddress[i] & 0xF0) >> 4);
+        macAddressStr[3 * i + 1] = toHexDigit(macAddress[i] & 0xF);
+        macAddressStr[3 * i + 2] = i < 5 ? '-' : 0;
+    }
+}
+
+void formatTimeZone(int16_t timeZone, char *text, int count) {
+    if (timeZone == 0) {
+        stringCopy(text, count, "GMT");
+    } else {
+        char sign;
+        int16_t value;
+        if (timeZone > 0) {
+            sign = '+';
+            value = timeZone;
+        } else {
+            sign = '-';
+            value = -timeZone;
+        }
+        snprintf(text, count, "%c%02d:%02d GMT", sign, value / 100, value % 100);
+    }
+}
+
+bool parseTimeZone(const char *timeZoneStr, size_t timeZoneLength, int16_t &timeZone) {
+    int state = 0;
+
+    int sign = 1;
+    int integerPart = 0;
+    int fractionPart = 0;
+
+    const char *end = timeZoneStr + timeZoneLength;
+    for (const char *p = timeZoneStr; p < end; ++p) {
+        if (*p == ' ') {
+            continue;
+        }
+
+        if (state == 0) {
+            if (*p == '+') {
+                state = 1;
+            } else if (*p == '-') {
+                sign = -1;
+                state = 1;
+            } else if (isDigit(*p)) {
+                integerPart = *p - '0';
+                state = 2;
+            } else {
+                return false;
+            }
+        } else if (state == 1) {
+            if (isDigit(*p)) {
+                integerPart = (*p - '0');
+                state = 2;
+            } else {
+                return false;
+            }
+        } else if (state == 2) {
+            if (*p == ':') {
+                state = 4;
+            } else if (isDigit(*p)) {
+                integerPart = integerPart * 10 + (*p - '0');
+                state = 3;
+            } else {
+                return false;
+            }
+        } else if (state == 3) {
+            if (*p == ':') {
+                state = 4;
+            } else {
+                return false;
+            }
+        } else if (state == 4) {
+            if (isDigit(*p)) {
+                fractionPart = (*p - '0');
+                state = 5;
+            } else {
+                return false;
+            }
+        } else if (state == 5) {
+            if (isDigit(*p)) {
+                fractionPart = fractionPart * 10 + (*p - '0');
+                state = 6;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if (state != 2 && state != 3 && state != 6) {
+        return false;
+    }
+
+    int value = sign * (integerPart * 100 + fractionPart);
+
+    if (value < -1200 || value > 1400) {
+        return false;
+    }
+
+    timeZone = (int16_t)value;
+
+    return true;
+}
+
+void replaceCharacter(char *str, char ch, char repl) {
+    while (*str) {
+        if (*str == ch) {
+            *str = repl;
+        }
+        ++str;
+    }
+}
+
+int strcicmp(char const *a, char const *b) {
+    for (;; a++, b++) {
+        int d = tolower((unsigned char)*a) - tolower((unsigned char)*b);
+        if (d != 0 || !*a)
+            return d;
+    }
+}
+
+int strncicmp(char const *a, char const *b, int n) {
+    for (; n--; a++, b++) {
+        int d = tolower((unsigned char)*a) - tolower((unsigned char)*b);
+        if (d != 0 || !*a)
+            return d;
+    }
+    return 0;
+}
+
+bool isStringEmpty(char const *s) {
+    for (; *s; s++) {
+        if (!isspace(*s)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool startsWith(const char *str, const char *prefix) {
+    if (!str || !prefix)
+        return false;
+    size_t strLen = strlen(str);
+    size_t prefixLen = strlen(prefix);
+    if (prefixLen > strLen)
+        return false;
+    return strncmp(str, prefix, prefixLen) == 0;
+}
+
+bool startsWithNoCase(const char *str, const char *prefix) {
+    if (!str || !prefix)
+        return false;
+    size_t strLen = strlen(str);
+    size_t prefixLen = strlen(prefix);
+    if (prefixLen > strLen)
+        return false;
+    return strncicmp(str, prefix, prefixLen) == 0;
+}
+
+bool endsWith(const char *str, const char *suffix) {
+    if (!str || !suffix)
+        return false;
+    size_t strLen = strlen(str);
+    size_t suffixLen = strlen(suffix);
+    if (suffixLen > strLen)
+        return false;
+    return strncmp(str + strLen - suffixLen, suffix, suffixLen) == 0;
+}
+
+bool endsWithNoCase(const char *str, const char *suffix) {
+    if (!str || !suffix)
+        return false;
+    size_t strLen = strlen(str);
+    size_t suffixLen = strlen(suffix);
+    if (suffixLen > strLen)
+        return false;
+    return strncicmp(str + strLen - suffixLen, suffix, suffixLen) == 0;
+}
+
+void formatBytes(uint64_t bytes, char *text, int count) {
+    if (bytes == 0) {
+        stringCopy(text, count, "0 Bytes");
+    } else {
+        double c = 1024.0;
+        const char *e[] = { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+        uint64_t f = (uint64_t)floor(log((double)bytes) / log(c));
+        double g = round((bytes / pow(c, (double)f)) * 100) / 100;
+        snprintf(text, count, "%g %s", g, e[f]);
+    }
+}
+
+void getFileName(const char *path, char *fileName, unsigned fileNameSize) {
+    const char *a = strrchr(path, '/');
+    if (a) {
+         a++;
+    } else {
+        a = path;
+    }
+
+    const char *b = path + strlen(path);
+
+    unsigned n = b - a;
+    n = MIN(fileNameSize - 1, n);
+    if (n > 0) {
+        memcpy(fileName, a, n);
+    }
+    fileName[n] = 0;
+}
+
+void getBaseFileName(const char *path, char *baseName, unsigned baseNameSize) {
+    const char *a = strrchr(path, '/');
+    if (a) {
+         a++;
+    } else {
+        a = path;
+    }
+
+    const char *b = strrchr(path, '.');
+    if (!b || !(b >= a)) {
+        b = path + strlen(path);
+    }
+
+    unsigned n = b - a;
+    n = MIN(baseNameSize - 1, n);
+    if (n > 0) {
+        memcpy(baseName, a, n);
+    }
+    baseName[n] = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+} // namespace eez
+
+#if defined(M_PI)
+static const float PI_FLOAT = (float)M_PI;
+#else
+static const float PI_FLOAT = (float)3.14159265358979323846;
+#endif
+static const float c1 = 1.70158f;
+static const float c2 = c1 * 1.525f;
+static const float c3 = c1 + 1.0f;
+static const float c4 = (2 * PI_FLOAT) / 3;
+static const float c5 = (2 * PI_FLOAT) / 4.5f;
+
+extern "C" float eez_linear(float x) {
+    return x;
+}
+
+extern "C" float eez_easeInQuad(float x) {
+    return x * x;
+}
+
+extern "C" float eez_easeOutQuad(float x) {
+    return 1 - (1 - x) * (1 - x);
+}
+
+extern "C" float eez_easeInOutQuad(float x) {
+    return x < 0.5f ? 2 * x * x : 1 - powf(-2 * x + 2, 2) / 2;
+}
+
+extern "C" float eez_easeInCubic(float x) {
+    return x * x * x;
+}
+
+extern "C" float eez_easeOutCubic(float x) {
+    return 1 - pow(1 - x, 3);
+}
+
+extern "C" float eez_easeInOutCubic(float x) {
+    return x < 0.5f ? 4 * x * x * x : 1 - powf(-2 * x + 2, 3) / 2;
+}
+
+extern "C" float eez_easeInQuart(float x) {
+    return x * x * x * x;
+}
+
+extern "C" float eez_easeOutQuart(float x) {
+    return 1 - powf(1 - x, 4);
+}
+
+extern "C" float eez_easeInOutQuart(float x) {
+    return x < 0.5 ? 8 * x * x * x * x : 1 - powf(-2 * x + 2, 4) / 2;
+}
+
+extern "C" float eez_easeInQuint(float x) {
+    return x * x * x * x * x;
+}
+
+extern "C" float eez_easeOutQuint(float x) {
+    return 1 - powf(1 - x, 5);
+}
+
+extern "C" float eez_easeInOutQuint(float x) {
+    return x < 0.5f ? 16 * x * x * x * x * x : 1 - powf(-2 * x + 2, 5) / 2;
+}
+
+extern "C" float eez_easeInSine(float x) {
+    return 1 - cosf((x * PI_FLOAT) / 2);
+}
+
+extern "C" float eez_easeOutSine(float x) {
+    return sinf((x * PI_FLOAT) / 2);
+}
+
+extern "C" float eez_easeInOutSine(float x) {
+    return -(cosf(PI_FLOAT * x) - 1) / 2;
+}
+
+extern "C" float eez_easeInExpo(float x) {
+    return x == 0 ? 0 : powf(2, 10 * x - 10);
+}
+
+extern "C" float eez_easeOutExpo(float x) {
+    return x == 1 ? 1 : 1 - powf(2, -10 * x);
+}
+
+extern "C" float eez_easeInOutExpo(float x) {
+    return x == 0
+        ? 0
+        : x == 1
+        ? 1
+        : x < 0.5
+        ? powf(2, 20 * x - 10) / 2
+        : (2 - powf(2, -20 * x + 10)) / 2;
+}
+
+extern "C" float eez_easeInCirc(float x) {
+    return 1 - sqrtf(1 - powf(x, 2));
+}
+
+extern "C" float eez_easeOutCirc(float x) {
+    return sqrtf(1 - powf(x - 1, 2));
+}
+
+extern "C" float eez_easeInOutCirc(float x) {
+    return x < 0.5
+        ? (1 - sqrtf(1 - pow(2 * x, 2))) / 2
+        : (sqrtf(1 - powf(-2 * x + 2, 2)) + 1) / 2;
+}
+
+extern "C" float eez_easeInBack(float x) {
+    return c3 * x * x * x - c1 * x * x;
+}
+
+extern "C" float eez_easeOutBack(float x) {
+    return 1 + c3 * powf(x - 1, 3) + c1 * powf(x - 1, 2);
+}
+
+extern "C" float eez_easeInOutBack(float x) {
+    return x < 0.5
+        ? (powf(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
+        : (powf(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+}
+
+extern "C" float eez_easeInElastic(float x) {
+    return x == 0
+        ? 0
+        : x == 1
+        ? 1
+        : -powf(2, 10 * x - 10) * sinf((x * 10 - 10.75f) * c4);
+}
+
+extern "C" float eez_easeOutElastic(float x) {
+    return x == 0
+        ? 0
+        : x == 1
+        ? 1
+        : powf(2, -10 * x) * sinf((x * 10 - 0.75f) * c4) + 1;
+}
+
+extern "C" float eez_easeInOutElastic(float x) {
+    return x == 0
+        ? 0
+        : x == 1
+        ? 1
+        : x < 0.5
+        ? -(powf(2, 20 * x - 10) * sinf((20 * x - 11.125f) * c5)) / 2
+        : (powf(2, -20 * x + 10) * sinf((20 * x - 11.125f) * c5)) / 2 + 1;
+}
+
+extern "C" float eez_easeOutBounce(float x);
+
+extern "C" float eez_easeInBounce(float x) {
+    return 1 - eez_easeOutBounce(1 - x);
+}
+
+extern "C" float eez_easeOutBounce(float x) {
+    static const float n1 = 7.5625f;
+    static const float d1 = 2.75f;
+
+    if (x < 1 / d1) {
+        return n1 * x * x;
+    } else if (x < 2 / d1) {
+        x -= 1.5f / d1;
+        return n1 * x * x + 0.75f;
+    } else if (x < 2.5f / d1) {
+        x -= 2.25f / d1;
+        return n1 * x * x + 0.9375f;
+    } else {
+        x -= 2.625f / d1;
+        return n1 * x * x + 0.984375f;
+    }
+};
+
+extern "C" float eez_easeInOutBounce(float x) {
+    return x < 0.5
+        ? (1 - eez_easeOutBounce(1 - 2 * x)) / 2
+        : (1 + eez_easeOutBounce(2 * x - 1)) / 2;
+}
+
+namespace eez {
+
+EasingFuncType g_easingFuncs[] = {
+    eez_linear,
+    eez_easeInQuad,
+    eez_easeOutQuad,
+    eez_easeInOutQuad,
+    eez_easeInCubic,
+    eez_easeOutCubic,
+    eez_easeInOutCubic,
+    eez_easeInQuart,
+    eez_easeOutQuart,
+    eez_easeInOutQuart,
+    eez_easeInQuint,
+    eez_easeOutQuint,
+    eez_easeInOutQuint,
+    eez_easeInSine,
+    eez_easeOutSine,
+    eez_easeInOutSine,
+    eez_easeInExpo,
+    eez_easeOutExpo,
+    eez_easeInOutExpo,
+    eez_easeInCirc,
+    eez_easeOutCirc,
+    eez_easeInOutCirc,
+    eez_easeInBack,
+    eez_easeOutBack,
+    eez_easeInOutBack,
+    eez_easeInElastic,
+    eez_easeOutElastic,
+    eez_easeInOutElastic,
+    eez_easeInBounce,
+    eez_easeOutBounce,
+    eez_easeInOutBounce,
+};
+
+} // namespace eez
+
+#ifdef EEZ_PLATFORM_SIMULATOR_WIN32
+char *strnstr(const char *s1, const char *s2, size_t n) {
+    char c = *s2;
+
+    if (c == '\0')
+        return (char *)s1;
+
+    for (size_t len = strlen(s2); len <= n; n--, s1++) {
+        if (*s1 == c) {
+            for (size_t i = 1;; i++) {
+                if (i == len) {
+                    return (char *)s1;
+                }
+                if (s1[i] != s2[i]) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+#endif

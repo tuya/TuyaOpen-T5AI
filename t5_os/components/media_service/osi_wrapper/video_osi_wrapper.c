@@ -22,11 +22,6 @@ static void *malloc_wrapper(size_t size)
 	return os_malloc(size);
 }
 
-static void free_wrapper(void *ptr)
-{
-	os_free(ptr);
-}
-
 static void *zalloc_wrapper(size_t num, size_t size)
 {
 	return os_zalloc(num * size);
@@ -35,6 +30,26 @@ static void *zalloc_wrapper(size_t num, size_t size)
 static void *realloc_wrapper(void *old_mem, size_t size)
 {
 	return os_realloc(old_mem, size);
+}
+
+static void *psram_malloc_wrapper(size_t size)
+{
+	return psram_malloc(size);
+}
+
+static void *psram_zalloc_wrapper(size_t num, size_t size)
+{
+	return psram_zalloc(num * size);
+}
+
+static void *psram_realloc_wrapper(void *old_mem, size_t size)
+{
+	return bk_psram_realloc(old_mem, size);
+}
+
+static void free_wrapper(void *ptr)
+{
+	os_free(ptr);
 }
 
 static void *memcpy_wrapper(void *out, const void *in, uint32_t n)
@@ -145,9 +160,12 @@ static uint32_t get_avi_index_count_wrapper(void)
 static bk_video_osi_funcs_t video_osi_funcs =
 {
 	.malloc = malloc_wrapper,
-	.free = free_wrapper,
 	.zalloc = zalloc_wrapper,
 	.realloc = realloc_wrapper,
+	.psram_malloc = psram_malloc_wrapper,
+	.psram_zalloc = psram_zalloc_wrapper,
+	.psram_realloc = psram_realloc_wrapper,
+	.free = free_wrapper,
 	.memcpy = memcpy_wrapper,
 	.memcpy_word = memcpy_word_wrapper,
 

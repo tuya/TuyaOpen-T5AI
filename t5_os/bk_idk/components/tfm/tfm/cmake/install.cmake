@@ -17,6 +17,7 @@ set(INSTALL_INTERFACE_INC_DIR    ${TFM_INSTALL_PATH}/interface/include)
 set(INSTALL_INTERFACE_SRC_DIR    ${TFM_INSTALL_PATH}/interface/src)
 set(INSTALL_INTERFACE_LIB_DIR    ${TFM_INSTALL_PATH}/interface/lib)
 
+if (CONFIG_BUILD_TFM)
 # export veneer lib
 if (NOT TFM_MULTI_CORE_TOPOLOGY)
     install(FILES       ${CMAKE_BINARY_DIR}/secure_fw/s_veneers.o
@@ -24,7 +25,6 @@ if (NOT TFM_MULTI_CORE_TOPOLOGY)
 endif()
 
 ####################### export headers #########################################
-
 install(FILES       ${INTERFACE_INC_DIR}/psa/client.h
                     ${INTERFACE_INC_DIR}/psa/error.h
         DESTINATION ${INSTALL_INTERFACE_INC_DIR}/psa)
@@ -197,6 +197,7 @@ if(TFM_PARTITION_PLATFORM OR FORWARD_PROT_MSG)
         install(FILES       ${INTERFACE_SRC_DIR}/tfm_platform_func_api.c
                 DESTINATION ${INSTALL_INTERFACE_SRC_DIR})
     endif()
+endif()
 endif()
 
 

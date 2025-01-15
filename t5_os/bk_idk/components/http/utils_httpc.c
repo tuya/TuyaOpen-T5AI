@@ -11,7 +11,6 @@
 #include <os/mem.h>
 #include <os/str.h>
 #include <driver/wdt.h>
-#include "security_ota.h"
 
 #if HTTP_WR_TO_FLASH
 #if CONFIG_FLASH_ORIGIN_API
@@ -875,14 +874,7 @@ int http_data_process(char *buf, UINT32 len, UINT32 recived, UINT32 total)
 		http_wr_to_flash(buf, len);
 		BK_LOGI(TAG, "cyg_recvlen_per:(%.2f)%%\r\n",(((float)(recived))/(total))*100);
 #else
-#if (CONFIG_SECURITY_OTA)
-	if (security_ota_parse_data(buf, len) !=0){
-		return BK_FAIL;
-	}
-
-#else
 	BK_LOGD(TAG, "d");
-#endif
 #endif
 
 	return BK_OK;
@@ -1002,13 +994,6 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len, uint3
 		http_flash_init();
 		http_wr_to_flash(data, len);
 #endif
-#if (CONFIG_SECURITY_OTA)
-		security_ota_init();
-		if(security_ota_parse_data(data, len) != 0){
-			return FAIL_RETURN;
-		}
-
-#endif
 
 		b_data =  os_malloc((TCP_LEN_MAX + 1) * sizeof(char));
 		bk_http_ptr->do_data = 1;
@@ -1083,11 +1068,6 @@ int httpclient_retrieve_content(httpclient_t *client, char *data, int len, uint3
 			http_flash_wr(bk_http_ptr->wr_buf, bk_http_ptr->wr_last_len);
 #endif
 			http_flash_deinit();
-#endif
-#if (CONFIG_SECURITY_OTA)
-			if (security_ota_deinit() != 0) {
-				return FAIL_RETURN;
-			}
 #endif
 			client_data->is_more = false;
 			break;

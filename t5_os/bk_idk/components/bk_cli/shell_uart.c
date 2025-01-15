@@ -87,13 +87,7 @@ static const shell_dev_drv_t shell_uart_drv =
 
 static shell_uart_ext_t uart_ext =        /* default uart. */
 	{
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-		.uart_id = CONFIG_TUYA_UART_PRINT_PORT
-#else
 		.uart_id = CONFIG_UART_PRINT_PORT
-#endif
-// Modified by TUYA End
 	};
 
 shell_dev_t     shell_uart =
@@ -485,13 +479,7 @@ static bool_t shell_uart_init(shell_dev_t * shell_dev)
 	uart_ext->tx_suspend = 0;
 	uart_ext->uart_id = uart_id;
 
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-	if(CONFIG_TUYA_UART_PRINT_PORT != uart_id)
-#else
 	if(CONFIG_UART_PRINT_PORT != uart_id)
-#endif
-// Modified by TUYA End
 	{
 		bk_uart_init(uart_id, &config);
 	}

@@ -201,6 +201,7 @@ struct rwnx_txq {
     struct rwnx_hwq *hwq;
     STA_INF_PTR sta;
     int nb_retry;
+    u8 push_limit;
     u8 tid;
     u8 ps_id;
     u16 ndev_idx;

@@ -6,7 +6,7 @@
  *
  * @copyright Copyright 2019-2021 Tuya Inc. All Rights Reserved.
  *
- * Video input configuration: for sensor, ISP or VI attribute configuration, 
+ * Video input configuration: for sensor, ISP or VI attribute configuration,
  * such as image flip, anti flicker, compensation mode, profile, etc.
  */
 
@@ -25,7 +25,7 @@
 #define TKL_VI_PERI_POINT_MAX  8
 
 typedef struct
-{   
+{
     // 1个IIC+host 对应一个video设备   hardware_port[0] + host_port[0] 构造成1个video设备
     uint32_t * hardware_port;          // 存放iic
     uint32_t * host_port;              // 存放host dvp or mipi
@@ -38,7 +38,7 @@ typedef struct
 }TKL_VI_HARDWARE_SOURCE_T;
 
 typedef struct
-{   
+{
     uint32_t page;
     uint32_t reg_index;
     uint32_t val;
@@ -67,6 +67,42 @@ typedef struct
     TKL_ISP_FIG_STYLE_CONFIG_T isp_fig_style_night;               // isp fig style in night
     int32_t              fps;                                     // sensor fps
 }TKL_VI_ISP_CONFIG_T;
+
+typedef enum
+{
+    TKL_VI_CAMERA_TYPE_DVP,
+    TKL_VI_CAMERA_TYPE_UVC,
+    TKL_VI_CAMERA_TYPE_NET,
+}TKL_VI_CAMERA_TYPE_E;
+
+typedef struct {
+    TUYA_GPIO_NUM_E     clk;
+    TUYA_GPIO_NUM_E     sda;
+} TKL_VI_DVP_CONF_IO_T;
+
+typedef struct
+{
+    TKL_VI_CAMERA_TYPE_E    camera_type;
+    TKL_MEDIA_CODEC_TYPE_E  fmt;
+    TUYA_GPIO_NUM_E         power_pin;
+    TUYA_GPIO_LEVEL_E       active_level;
+    TKL_VI_DVP_CONF_IO_T    i2c;
+} TKL_VI_CAMERA_CONF_T;
+
+typedef enum
+{
+    TKL_VI_EXT_CONF_CAMERA,
+    TKL_VI_EXT_CONF_INVALID,
+}TKL_VI_EXT_CONFIG_E;
+
+typedef struct
+{
+    TKL_VI_EXT_CONFIG_E type;
+    union {
+        TKL_VI_CAMERA_CONF_T camera;
+        uint8_t buffer[64];
+    };
+}TKL_VI_EXT_CONFIG_T;
 
 typedef struct
 {
@@ -146,7 +182,7 @@ typedef struct
 
 /**
 * @brief vi init
-* 
+*
 * @param[in] pconfig: vi config
 * @param[in] count: count of pconfig
 *
@@ -156,7 +192,7 @@ OPERATE_RET tkl_vi_init(TKL_VI_CONFIG_T *pconfig, int32_t count);
 
 /**
 * @brief vi set mirror and flip
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] flag: mirror and flip value
 *
@@ -166,7 +202,7 @@ OPERATE_RET tkl_vi_set_mirror_flip(TKL_VI_CHN_E chn, TKL_VI_MIRROR_FLIP_E flag);
 
 /**
 * @brief vi get mirror and flip
-* 
+*
 * @param[in] chn: vi chn
 * @param[out] flag: mirror and flip value
 *
@@ -179,11 +215,11 @@ OPERATE_RET tkl_vi_get_mirror_flip(TKL_VI_CHN_E chn, TKL_VI_MIRROR_FLIP_E *flag)
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_vi_uninit(void);
+OPERATE_RET tkl_vi_uninit(TKL_VI_CAMERA_TYPE_E device_type);
 
 /**
 * @brief  set sensor reg value
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] pparam: reg info
 *
@@ -193,7 +229,7 @@ OPERATE_RET tkl_vi_sensor_reg_set( TKL_VI_CHN_E chn, TKL_VI_SENSOR_REG_CONFIG_T 
 
 /**
 * @brief  get sensor reg value
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] pparam: reg info
 *
@@ -203,7 +239,7 @@ OPERATE_RET tkl_vi_sensor_reg_get( TKL_VI_CHN_E chn, TKL_VI_SENSOR_REG_CONFIG_T 
 
 /**
 * @brief detect init
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] type: detect type
 * @param[in] pconfig: config
@@ -214,7 +250,7 @@ OPERATE_RET tkl_vi_detect_init(TKL_VI_CHN_E chn, TKL_MEDIA_DETECT_TYPE_E type, T
 
 /**
 * @brief detect start
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] type: detect type
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
@@ -223,7 +259,7 @@ OPERATE_RET tkl_vi_detect_start(TKL_VI_CHN_E chn, TKL_MEDIA_DETECT_TYPE_E type);
 
 /**
 * @brief detect stop
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] type: detect type
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
@@ -232,7 +268,7 @@ OPERATE_RET tkl_vi_detect_stop(TKL_VI_CHN_E chn, TKL_MEDIA_DETECT_TYPE_E type);
 
 /**
 * @brief get detection results
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] type: detect type
 * @param[out] presult: detection results
@@ -243,7 +279,7 @@ OPERATE_RET tkl_vi_detect_get_result(TKL_VI_CHN_E chn, TKL_MEDIA_DETECT_TYPE_E t
 
 /**
 * @brief set detection param
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] type: detect type
 * @param[in] pparam: detection param
@@ -254,13 +290,23 @@ OPERATE_RET tkl_vi_detect_set(TKL_VI_CHN_E chn, TKL_MEDIA_DETECT_TYPE_E type, TK
 
 /**
 * @brief detect uninit
-* 
+*
 * @param[in] chn: vi chn
 * @param[in] type: detect type
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
 OPERATE_RET tkl_vi_detect_uninit(TKL_VI_CHN_E chn, TKL_MEDIA_DETECT_TYPE_E type);
+
+/**
+* @brief set video power control pin
+*
+* @param[in] chn: vi chn
+* @param[in] type: detect type
+*
+* @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
+*/
+OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,5 @@
+# Ktuyaconf
+
+config ENABLE_SPI
+    bool "ENABLE_SPI: support spi"
+    default n

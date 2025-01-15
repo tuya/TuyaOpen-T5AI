@@ -51,6 +51,10 @@
 
 #include <string.h>
 
+#if BK_LWIP
+#include "bk_fake_clock.h"
+#endif
+
 #ifdef LWIP_HOOK_FILENAME
 #include LWIP_HOOK_FILENAME
 #endif
@@ -295,6 +299,103 @@ icmperr:
 #endif /* LWIP_ICMP_ECHO_CHECK_INPUT_PBUF_LEN || !LWIP_MULTICAST_PING || !LWIP_BROADCAST_PING */
 }
 
+#if BK_LWIP && ICMP_ERR_RATELIMIT
+/* Code from OpenBSD */
+static int icmperrpps_count = 0;
+static struct timeval icmperrppslim_last;
+int  icmperrppslim = ICMP_ERR_RATE_THRESHOLD;
+
+#define  timersub(tvp, uvp, vvp)            \
+  do {                \
+    (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;    \
+    (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;  \
+    if ((vvp)->tv_usec < 0) {        \
+      (vvp)->tv_sec--;        \
+      (vvp)->tv_usec += 1000000;      \
+    }              \
+  } while (0)
+
+
+static int microuptime(struct timeval *t)
+{
+  t->tv_sec = bk_get_second();
+  t->tv_usec = (bk_get_tick() * rtos_get_ms_per_tick() * 1000) % 1000000;
+
+  return 0;
+}
+
+/*
+ * ppsratecheck(): packets (or events) per second limitation.
+ */
+static int ppsratecheck(struct timeval *lasttime, int *curpps, int maxpps)
+{
+  struct timeval tv, delta;
+  int rv;
+
+  microuptime(&tv);
+
+  timersub(&tv, lasttime, &delta);
+
+  /*
+   * check for 0,0 is so that the message will be seen at least once.
+   * if more than one second have passed since the last update of
+   * lasttime, reset the counter.
+   *
+   * we do increment *curpps even in *curpps < maxpps case, as some may
+   * try to use *curpps for stat purposes as well.
+   */
+  if (maxpps == 0)
+    rv = 0;
+  else if ((lasttime->tv_sec == 0 && lasttime->tv_usec == 0) ||
+      delta.tv_sec >= 1) {
+    *lasttime = tv;
+    *curpps = 0;
+    rv = 1;
+  } else if (maxpps < 0)
+    rv = 1;
+  else if (*curpps < maxpps)
+    rv = 1;
+  else
+    rv = 0;
+
+#if 1 /*DIAGNOSTIC?*/
+  /* be careful about wrap-around */
+  if (*curpps + 1 > *curpps)
+    *curpps = *curpps + 1;
+#else
+  /*
+   * assume that there's not too many calls to this function.
+   * not sure if the assumption holds, as it depends on *caller's*
+   * behavior, not the behavior of this function.
+   * IMHO it is wrong to make assumption on the caller's behavior,
+   * so the above #if is #if 1, not #ifdef DIAGNOSTIC.
+   */
+  *curpps = *curpps + 1;
+#endif
+
+  return (rv);
+}
+
+/*
+ * Perform rate limit check.
+ * Returns 0 if it is okay to send the icmp packet.
+ * Returns 1 if the router SHOULD NOT send this icmp packet due to rate
+ * limitation.
+ *
+ * XXX per-destination/type check necessary?
+ */
+int
+icmp_ratelimit(uint32_t dst, int type, int code)
+{
+  /* PPS limit */
+  if (!ppsratecheck(&icmperrppslim_last, &icmperrpps_count,
+      icmperrppslim))
+    return 1;  /* The packet is subject to rate limit */
+  return 0;  /* okay to send */
+}
+#endif
+
+
 /**
  * Send an icmp 'destination unreachable' packet, called from ip_input() if
  * the transport layer protocol is unknown and from udp_input() if the local
@@ -345,6 +446,16 @@ icmp_send_response(struct pbuf *p, u8_t type, u8_t code)
   struct icmp_echo_hdr *icmphdr;
   ip4_addr_t iphdr_src;
   struct netif *netif;
+
+#if BK_LWIP && ICMP_ERR_RATELIMIT
+  /*
+   * First, do a rate limitation check.
+   */
+  if (icmp_ratelimit(((struct ip_hdr *)(p->payload))->src.addr, type, code)) {
+    LWIP_DEBUGF(ICMP_DEBUG, ("icmp_ratelimt: too many ICMP packet.\n"));
+    return;
+  }
+#endif
 
   /* increase number of messages attempted to send */
   MIB2_STATS_INC(mib2.icmpoutmsgs);

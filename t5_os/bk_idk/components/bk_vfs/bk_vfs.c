@@ -69,7 +69,7 @@ int bk_vfs_open(const char *path, int oflag) {
 	file->path = strdup(bk_sub_path(fs->mount_point, full_path));
 	if (!file->path) {
 		bk_set_errno(ENOMEM);
-		goto out;
+		goto cleanup_file;
 	}
 
 	file->filesystem = fs;
@@ -78,18 +78,33 @@ int bk_vfs_open(const char *path, int oflag) {
 	file->size = 0;
 	file->pos = 0;
 
-	if (file->f_ops && file->f_ops->open) {
-		ret = file->f_ops->open(file, file->path, oflag);
-		if (ret == 0)
-			fd = bk_file_to_fd(file);
-		else
-			bk_file_put(file);
-	} else {
-		bk_set_errno(ENOTSUP);
-		bk_file_put(file);
-	}
+    if (file->f_ops && file->f_ops->open) {
+        ret = file->f_ops->open(file, file->path, oflag);
+        if (ret == 0) {
+            fd = bk_file_to_fd(file);
+        } else {
+            goto cleanup_file;
+        }
+    } else {
+        bk_set_errno(ENOTSUP);
+        goto cleanup_file;
+    }
 
-out : 
+    goto out;
+
+cleanup_file:
+    if (file->path) {
+        free(file->path);
+    }
+    bk_file_put(file);
+
+out :
+    // Modified by TUYA Start
+    if (file && fd == -1) {
+        if (file->path)
+            free(file->path);
+    }
+    // Modified by TUYA End
 	if (full_path)
 		free(full_path);
 	bk_vfs_unlock();
@@ -290,7 +305,7 @@ int bk_vfs_rename(const char *oldpath, const char *newpath) {
 	}
 
 	if (fs_old == fs_new) {
-		ret = fs_old->f_ops->rename(fs_old, 
+		ret = fs_old->f_ops->rename(fs_old,
 				bk_sub_path(fs_old->mount_point, full_path_old),
 				bk_sub_path(fs_new->mount_point, full_path_new));
 	} else {
@@ -485,7 +500,7 @@ int bk_vfs_closedir(DIR *dirp_) {
 		return -1;
 
 	dirp = (bk_dir *)dirp_;
-	
+
 	if (bk_vfs_lock() != 0) {
 		return -1;
 	}
@@ -508,7 +523,7 @@ struct dirent *bk_vfs_readdir(DIR *dirp_) {
 
 	if (!dirp_)
 		return NULL;
-	
+
 	dirp = (bk_dir *)dirp_;
 
 	if (bk_vfs_lock() != 0) {
@@ -543,7 +558,7 @@ static char working_directory[MAX_PATH_LEN] = {"/"};
 
 int bk_vfs_chdir(const char *path) {
 	char *full_path;
-	
+
 	if (!path)
 		return -1;
 

@@ -54,6 +54,12 @@
 #define IP_FORWARD                      0
 #endif
 
+#ifdef CONFIG_IP_FORWARD_ALLOW_TX_ON_RX_NETIF
+#define IP_FORWARD_ALLOW_TX_ON_RX_NETIF    1
+#else
+#define IP_FORWARD_ALLOW_TX_ON_RX_NETIF    0
+#endif
+
 #ifdef CONFIG_IP_NAPT
 #define IP_NAPT                         1
 #else
@@ -590,6 +596,9 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 
 #define TCP_MSL (TCP_TMR_INTERVAL)
 
+#define ICMP_ERR_RATELIMIT                 CONFIG_ICMP_ERR_RATELIMIT
+#define ICMP_ERR_RATE_THRESHOLD            CONFIG_ICMP_ERR_RATE_THRESHOLD
+
 #define LWIP_COMPAT_MUTEX_ALLOWED       (1)
 
 // #define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS
@@ -597,6 +606,8 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define ETHARP_SUPPORT_STATIC_ENTRIES   1
 
 #define LWIP_RIPPLE20                   1
+
+#define ARP_TABLE_SIZE                  CONFIG_ARP_TABLE_SIZE
 
 /* Beken specific LWIP options */
 #define BK_DHCP                         1

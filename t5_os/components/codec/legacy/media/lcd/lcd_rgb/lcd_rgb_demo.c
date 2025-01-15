@@ -25,7 +25,7 @@
 #include <driver/pwm.h>
 #include <driver/media_types.h>
 
-extern void delay(INT32 num);
+extern void bk_delay(INT32 num);
 #define           LCD_FRAMEADDR    0x60000000   /**<define frame base addr */
 #define jpeg_dec_length    (20480*4-1)  //80k
 

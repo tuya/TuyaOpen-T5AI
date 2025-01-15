@@ -64,11 +64,17 @@ uint32_t get_flash_map_size(uint32_t index)
 	return flash_map[index].fa_size;
 }
 
+uint32_t get_flash_map_phy_size(uint32_t index)
+{
+	return flash_map[index].fa_phy_size;
+}
+
 int flash_map_init(void)
 {
 	uint32_t size, id;
 
 	size = partition_get_phy_size(PARTITION_PRIMARY_ALL);
+	flash_map[0].fa_phy_size = size;
 	flash_map[0].fa_off = partition_get_phy_offset(PARTITION_PRIMARY_ALL);
 	flash_map[0].fa_size = FLASH_PHY2VIRTUAL(size);
 	flash_map[0].fa_size &= ~(0xFFF);
@@ -80,8 +86,10 @@ int flash_map_init(void)
 #endif
 	flash_map[1].fa_off = partition_get_phy_offset(id);
 	flash_map[1].fa_size = partition_get_phy_size(id);
+	flash_map[1].fa_phy_size = partition_get_phy_size(id);
 #if CONFIG_DIRECT_XIP
 	size = partition_get_phy_size(PARTITION_SECONDARY_ALL);
+	flash_map[1].fa_phy_size = size;
 	flash_map[1].fa_size = FLASH_PHY2VIRTUAL(size);
 	flash_map[1].fa_size &= ~(0xFFF);
 	uint32_t primary_vir_start = FLASH_PHY2VIRTUAL(CEIL_ALIGN_34(flash_map[0].fa_off));

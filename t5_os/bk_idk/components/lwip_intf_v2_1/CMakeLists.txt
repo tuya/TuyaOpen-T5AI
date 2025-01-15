@@ -25,6 +25,9 @@ list(APPEND incs
 	lwip-2.1.2/src/api/tcpip.c
 	lwip-2.1.2/src/apps/mdns/mdns.c
 	lwip-2.1.2/src/apps/ping/ping.c
+    # Modified by TUYA Start
+	lwip-2.1.2/src/apps/tftp/tftp_server.c
+    # Modified by TUYA End
 	lwip-2.1.2/src/core/def.c
 	lwip-2.1.2/src/core/dns.c
 	lwip-2.1.2/src/core/inet_chksum.c

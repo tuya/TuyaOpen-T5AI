@@ -39,6 +39,7 @@ typedef struct {
 	yuv_mode_cfg_t yuv_mode_cfg;
 	h264_enc_mode_cfg_t h264_enc_mode_cfg;
 	uint8_t *base_addr;  /**< used for save source yuv data base addr */
+	uint8_t *emr_base_addr;  /**< used for save source yuv data base addr */
 } yuv_buf_config_t;
 
 typedef struct {

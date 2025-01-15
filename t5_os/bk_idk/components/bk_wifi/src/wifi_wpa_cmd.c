@@ -1405,6 +1405,24 @@ int cmd_wlan_ap_exec(char *cmd)
 			cmd_wlan_ap_print_sta_info(&stas);
 		if (stas.sta)
 			os_free(stas.sta);
+	} else if (os_strncmp(cmd, "add_blacklist ", 14) == 0) {
+		wlan_ap_blacklist_t req;
+		if (!hwaddr_aton(cmd + 14, req.addr)) {
+			os_printf("add deny mac: %pM\n", &req.addr);
+			ret = wlan_ap_add_blacklist(&req);
+		} else {
+			ret = -1;
+		}
+	} else if (os_strncmp(cmd, "del_blacklist ", 14) == 0) {
+		wlan_ap_blacklist_t req;
+		if (!hwaddr_aton(cmd + 14, req.addr)) {
+			os_printf("del deny mac: %pM\n", &req.addr);
+			ret = wlan_ap_del_blacklist(&req);
+		} else {
+			ret = -1;
+		}
+	} else if (os_strncmp(cmd, "clear_blacklist", 15) == 0) {
+		ret = wlan_ap_clear_blacklist();
 	} else {
 		BK_LOGE(TAG, "unknown cmd '%s'\n", cmd);
 		return -1;

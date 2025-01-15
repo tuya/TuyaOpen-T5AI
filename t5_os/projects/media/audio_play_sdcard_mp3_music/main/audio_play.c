@@ -14,367 +14,370 @@
 
 #include "stdio.h"
 #include <os/os.h>
+#include <os/mem.h>
+#include <os/str.h>
 #include <modules/pm.h>
-#include "audio_pipeline.h"
-#include "audio_mem.h"
-#include "onboard_speaker_stream.h"
-#include "fatfs_stream.h"
-#include "mp3_decoder.h"
+#include <modules/mp3dec.h>
+#include "ff.h"
+#include "diskio.h"
+#include "aud_intf.h"
+#include "aud_intf_types.h"
 #include "audio_play.h"
 
 
 #define TAG  "AUD_PLAY_SDCARD_MP3"
 
-#define TU_QITEM_COUNT      (4)
-
-#define AUDIO_PLAY_SDCARD_MP3_CHECK_NULL(ptr) do {\
-		if (ptr == NULL) {\
-			BK_LOGE(TAG, "AUDIO_PLAY_SDCARD_MP3_CHECK_NULL fail \n");\
-			goto audio_play_exit;\
-		}\
-	} while(0)
+#define PCM_SIZE_MAX		(MAX_NSAMP * MAX_NCHAN * MAX_NGRAN)
 
 
 typedef struct {
-	audio_pipeline_handle_t pipeline;
-	audio_element_handle_t onboard_speaker;
-	audio_element_handle_t fatfs_read;
-	audio_element_handle_t mp3_decoder;
-	char *file_name;
-	beken_thread_t audio_play_task_hdl;
-	beken_queue_t audio_play_msg_que;
+    HMP3Decoder hMP3Decoder;
+    MP3FrameInfo mp3FrameInfo;
+    unsigned char *readBuf;
+    short *pcmBuf;
+    int bytesLeft;
+
+    FIL mp3file;
+    char mp3_file_name[50];
+    unsigned char *g_readptr;
+
+    bool mp3_file_is_empty;
 } audio_play_info_t;
 
+
 static audio_play_info_t *audio_play_info = NULL;
+static FATFS *pfs = NULL;
 
-bk_err_t audio_play_send_msg(audio_play_op_t op, void *param)
+
+static bk_err_t tf_mount(void)
 {
-	bk_err_t ret;
-	audio_play_msg_t msg;
+	FRESULT fr;
 
-	msg.op = op;
-	msg.param = param;
-	if (audio_play_info && audio_play_info->audio_play_msg_que) {
-		ret = rtos_push_to_queue(&audio_play_info->audio_play_msg_que, &msg, BEKEN_NO_WAIT);
-		if (kNoErr != ret) {
-			BK_LOGE(TAG, "audio_play_send_msg fail \r\n");
-			return kOverrunErr;
-		}
-
-		return ret;
-	}
-	return kNoResourcesErr;
-}
-
-/* The "onboard mic stream" element is a producer. The element is the first element.
-   Usually this element only has src.
-   The data flow model of this element is as follow:
-   +-----------------+               +-------------------+               +-------------------+
-   |      fatfs      |               |        mp3        |               |  onboard-speaker  |
-   |   stream[in]    |               |      decoder      |               |       stream      |
-   |                 |               |                   |               |                   |
-   |                src - ringbuf - sink                src - ringbuf - sink                 |
-   |                 |               |                   |               |                   |
-   |                 |               |                   |               |                   |
-   +-----------------+               +-------------------+               +-------------------+
-
-   Function: Use onboard mic stream to record audio data to tfcard.
-*/
-void audio_play_main(beken_thread_arg_t param_data)
-{
-	bk_err_t ret = BK_OK;
-	audio_event_iface_handle_t evt = NULL;
-
-	bk_pm_module_vote_cpu_freq(PM_DEV_ID_AUDIO, PM_CPU_FRQ_320M);
-
-	BK_LOGI(TAG, "--------- %s ----------\n", __func__);
-	AUDIO_MEM_SHOW("start");
-
-	BK_LOGI(TAG, "--------- step1: pipeline init ----------\n");
-	audio_pipeline_cfg_t pipeline_cfg = DEFAULT_AUDIO_PIPELINE_CONFIG();
-	audio_play_info->pipeline = audio_pipeline_init(&pipeline_cfg);
-	AUDIO_PLAY_SDCARD_MP3_CHECK_NULL(audio_play_info->pipeline);
-
-	BK_LOGI(TAG, "--------- step2: init elements ----------\n");
-	/* fatfs read */
-	BK_LOGI(TAG, "init fatfs_read element \n");
-	fatfs_stream_cfg_t fatfs_reader_cfg = FATFS_STREAM_CFG_DEFAULT();
-	fatfs_reader_cfg.buf_sz = MP3_DECODER_MAIN_BUFF_SIZE;
-	fatfs_reader_cfg.out_rb_size = MP3_DECODER_MAIN_BUFF_SIZE;
-	fatfs_reader_cfg.type = AUDIO_STREAM_READER;
-	audio_play_info->fatfs_read = fatfs_stream_init(&fatfs_reader_cfg);
-	AUDIO_PLAY_SDCARD_MP3_CHECK_NULL(audio_play_info->fatfs_read);
-	if (BK_OK != audio_element_set_uri(audio_play_info->fatfs_read, audio_play_info->file_name)) {
-		BK_LOGE(TAG, "set uri fail, %d \n", __LINE__);
-		goto audio_play_exit;
-	}
-	/* mp3 decoder */
-	BK_LOGI(TAG, "init mp3_decoder element \n");
-	mp3_decoder_cfg_t mp3_decoder_cfg = DEFAULT_MP3_DECODER_CONFIG();
-	audio_play_info->mp3_decoder = mp3_decoder_init(&mp3_decoder_cfg);
-	AUDIO_PLAY_SDCARD_MP3_CHECK_NULL(audio_play_info->mp3_decoder);
-	/* onboard speaker */
-	BK_LOGI(TAG, "init onboard_speaker element \n");
-	onboard_speaker_stream_cfg_t onboard_speaker_cfg = ONBOARD_SPEAKER_STREAM_CFG_DEFAULT();
-	onboard_speaker_cfg.chl_num = 2;
-	onboard_speaker_cfg.samp_rate = 48000;
-	onboard_speaker_cfg.spk_gain = 0x10;
-	audio_play_info->onboard_speaker = onboard_speaker_stream_init(&onboard_speaker_cfg);
-	AUDIO_PLAY_SDCARD_MP3_CHECK_NULL(audio_play_info->onboard_speaker);
-
-	BK_LOGI(TAG, "--------- step3: pipeline register ----------\n");
-	if (BK_OK != audio_pipeline_register(audio_play_info->pipeline, audio_play_info->fatfs_read, "fatfs_in")) {
-		BK_LOGE(TAG, "register element fail, %d \n", __LINE__);
-		goto audio_play_exit;
-	}
-	if (BK_OK != audio_pipeline_register(audio_play_info->pipeline, audio_play_info->mp3_decoder, "mp3_dec")) {
-		BK_LOGE(TAG, "register element fail, %d \n", __LINE__);
-		goto audio_play_exit;
-	}
-	if (BK_OK != audio_pipeline_register(audio_play_info->pipeline, audio_play_info->onboard_speaker, "onboard_spk")) {
-		BK_LOGE(TAG, "register element fail, %d \n", __LINE__);
-		goto audio_play_exit;
+	if (pfs != NULL)
+	{
+		os_free(pfs);
 	}
 
-	BK_LOGI(TAG, "--------- step4: pipeline link ----------\n");
-	if (BK_OK != audio_pipeline_link(audio_play_info->pipeline, (const char *[]) {"fatfs_in", "mp3_dec", "onboard_spk"}, 3)) {
-		BK_LOGE(TAG, "pipeline link fail, %d \n", __LINE__);
-		goto audio_play_exit;
-	}
-
-	BK_LOGI(TAG, "--------- step5: init event listener ----------\n");
-	audio_event_iface_cfg_t evt_cfg = AUDIO_EVENT_IFACE_DEFAULT_CFG();
-	evt = audio_event_iface_init(&evt_cfg);
-
-	if (BK_OK != audio_pipeline_set_listener(audio_play_info->pipeline, evt)) {
-		BK_LOGE(TAG, "set uri fail, %d \n", __LINE__);
-		goto audio_play_exit;
-	}
-
-	BK_LOGI(TAG, "--------- step6: pipeline run ----------\n");
-	if (BK_OK != audio_pipeline_run(audio_play_info->pipeline)) {
-		BK_LOGE(TAG, "pipeline run fail, %d \n", __LINE__);
-		goto audio_play_exit;
-	}
-
-	while (1) {
-		audio_event_iface_msg_t msg;
-
-		audio_play_msg_t play_msg;
-		ret = rtos_pop_from_queue(&audio_play_info->audio_play_msg_que, &play_msg, 0);
-		if (kNoErr == ret) {
-			switch (play_msg.op) {
-				case AUDIO_PLAY_EXIT:
-					BK_LOGI(TAG, "goto: audio_play_exit \r\n");
-					goto audio_play_exit;
-					break;
-
-				default:
-					break;
-			}
-		}
-
-		ret = audio_event_iface_listen(evt, &msg, 1000 / portTICK_RATE_MS);//portMAX_DELAY
-		if (ret != BK_OK) {
-			BK_LOGD(TAG, "not receive event, error : %d \n", ret);
-			continue;
-		}
-
-		if (msg.source_type == AUDIO_ELEMENT_TYPE_ELEMENT && msg.source == (void *) audio_play_info->mp3_decoder && msg.cmd == AEL_MSG_CMD_REPORT_MUSIC_INFO) {
-			audio_element_info_t music_info = {0};
-			audio_element_getinfo(audio_play_info->mp3_decoder, &music_info);
-			BK_LOGI(TAG, "[ * ] Receive music info from mp3 decoder, sample_rates=%d, ch=%d, bits=%d \n", music_info.sample_rates, music_info.channels, music_info.bits);
-			onboard_speaker_stream_set_param(audio_play_info->onboard_speaker, music_info.sample_rates, music_info.channels, music_info.bits);
-/*
-			audio_element_info_t onboard_speaker_info = {0};
-			audio_element_getinfo(audio_play_info->onboard_speaker, &onboard_speaker_info);
-			onboard_speaker_info.sample_rates = music_info.sample_rates;
-			onboard_speaker_info.channels = music_info.channels;
-			onboard_speaker_info.bits = music_info.bits;
-			audio_element_setinfo(audio_play_info->onboard_speaker, &onboard_speaker_info);
-*/
-			continue;
-		}
-
-		if (msg.source_type == AUDIO_ELEMENT_TYPE_ELEMENT
-			&& msg.cmd == AEL_MSG_CMD_REPORT_STATUS
-			&& (((int)msg.data == AEL_STATUS_STATE_STOPPED)
-			|| ((int)msg.data == AEL_STATUS_STATE_FINISHED)
-			|| (int)msg.data == AEL_STATUS_ERROR_PROCESS)) {
-			BK_LOGW(TAG, "[ * ] Stop event received \n");
-			break;
-		}
-
-	}
-
-
-audio_play_exit:
-
-	BK_LOGI(TAG, "--------- step7: deinit pipeline ----------\n");
-	if (BK_OK != audio_pipeline_stop(audio_play_info->pipeline)) {
-		BK_LOGE(TAG, "pipeline stop fail, %d \n", __LINE__);
-	}
-	if (BK_OK != audio_pipeline_wait_for_stop(audio_play_info->pipeline)) {
-		BK_LOGE(TAG, "pipeline wait stop fail, %d \n", __LINE__);
-	}
-
-	if (BK_OK != audio_pipeline_terminate(audio_play_info->pipeline)) {
-		BK_LOGE(TAG, "pipeline terminate fail, %d \n", __LINE__);
-	}
-
-	if (BK_OK != audio_pipeline_unregister(audio_play_info->pipeline, audio_play_info->fatfs_read)) {
-		BK_LOGE(TAG, "pipeline terminate fail, %d \n", __LINE__);
-	}
-	if (BK_OK != audio_pipeline_unregister(audio_play_info->pipeline, audio_play_info->mp3_decoder)) {
-		BK_LOGE(TAG, "pipeline terminate fail, %d \n", __LINE__);
-	}
-	if (BK_OK != audio_pipeline_unregister(audio_play_info->pipeline, audio_play_info->onboard_speaker)) {
-		BK_LOGE(TAG, "pipeline terminate fail, %d \n", __LINE__);
-	}
-
-	if (BK_OK != audio_pipeline_remove_listener(audio_play_info->pipeline)) {
-		BK_LOGE(TAG, "pipeline terminate fail, %d \n", __LINE__);
-	}
-
-	if (evt && BK_OK != audio_event_iface_destroy(evt)) {
-		BK_LOGE(TAG, "pipeline terminate fail, %d \n", __LINE__);
-	}
-
-	if (BK_OK != audio_pipeline_deinit(audio_play_info->pipeline)) {
-		BK_LOGE(TAG, "pipeline terminate fail, %d \n", __LINE__);
-	}
-
-	if (BK_OK != audio_element_deinit(audio_play_info->fatfs_read)) {
-		BK_LOGE(TAG, "element deinit fail, %d \n", __LINE__);
-	}
-
-	if (BK_OK != audio_element_deinit(audio_play_info->mp3_decoder)) {
-		BK_LOGE(TAG, "element deinit fail, %d \n", __LINE__);
-	}
-
-	if (BK_OK != audio_element_deinit(audio_play_info->onboard_speaker)) {
-		BK_LOGE(TAG, "element deinit fail, %d \n", __LINE__);
-	}
-
-	BK_LOGI(TAG, "--------- play sdcard mp3 music test complete ----------\n");
-	AUDIO_MEM_SHOW("end");
-
-
-	if (audio_play_info && audio_play_info->file_name) {
-		os_free(audio_play_info->file_name);
-		audio_play_info->file_name = NULL;
-	}
-
-	/* delete msg queue */
-	if (audio_play_info && audio_play_info->audio_play_msg_que) {
-		rtos_deinit_queue(&audio_play_info->audio_play_msg_que);
-		audio_play_info->audio_play_msg_que = NULL;
-	}
-
-	/* delete task */
-	audio_play_info->audio_play_task_hdl = NULL;
-
-	if (audio_play_info) {
-		os_free(audio_play_info);
-		audio_play_info = NULL;
-	}
-
-	bk_pm_module_vote_cpu_freq(PM_DEV_ID_AUDIO, PM_CPU_FRQ_DEFAULT);
-
-	rtos_delete_thread(NULL);
-}
-
-bk_err_t audio_play_sdcard_mp3_music_start(char *file_name)
-{
-	bk_err_t ret = BK_OK;
-
-	audio_play_info = (audio_play_info_t *)os_malloc(sizeof(audio_play_info_t));
-	if (audio_play_info) {
-		audio_play_info->audio_play_task_hdl = NULL;
-		audio_play_info->audio_play_msg_que = NULL;
-		audio_play_info->fatfs_read = NULL;
-		audio_play_info->onboard_speaker = NULL;
-		audio_play_info->pipeline = NULL;
-		audio_play_info->file_name = NULL;
-		audio_play_info->file_name = (char *)os_malloc(50);
-		if (audio_play_info->file_name) {
-			sprintf(audio_play_info->file_name, "1:/%s", file_name);
-			BK_LOGI(TAG, "file_name: %s \n", audio_play_info->file_name);
-		} else {
-			BK_LOGE(TAG, "malloc file_name fail, %d \n", __LINE__);
-			return BK_FAIL;
-		}
-	} else {
-		BK_LOGE(TAG, "malloc audio_play_info fail, %d \n", __LINE__);
+	pfs = os_malloc(sizeof(FATFS));
+	if(NULL == pfs)
+	{
+		BK_LOGI(TAG, "f_mount malloc failed!\r\n");
 		return BK_FAIL;
 	}
 
-	if ((!audio_play_info->audio_play_task_hdl) && (!audio_play_info->audio_play_msg_que))
+	fr = f_mount(pfs, "1:", 1);
+	if (fr != FR_OK)
 	{
-		ret = rtos_init_queue(&audio_play_info->audio_play_msg_que,
-							  "audio_play_msg_que",
-							  sizeof(audio_play_msg_t),
-							  TU_QITEM_COUNT);
-		if (ret != kNoErr)
-		{
-			BK_LOGE(TAG, "ceate audio record message queue fail\n");
-			goto fail;
-		}
-
-		ret = rtos_create_thread(&audio_play_info->audio_play_task_hdl,
-								 4,
-								 "audio_play",
-								 (beken_thread_function_t)audio_play_main,
-								 1024 * 2,
-								 NULL);
-		if (ret != kNoErr)
-		{
-			BK_LOGE(TAG, "Error: Failed to create audio_play task \n");
-			goto fail;
-		}
+		BK_LOGE(TAG, "f_mount failed:%d\r\n", fr);
+		return BK_FAIL;
 	}
 	else
 	{
-		goto fail;
+		BK_LOGI(TAG, "f_mount OK!\r\n");
+	}
+
+	return BK_OK;
+}
+
+static bk_err_t tf_unmount(void)
+{
+	FRESULT fr;
+	fr = f_unmount(DISK_NUMBER_SDIO_SD, "1:", 1);
+	if (fr != FR_OK)
+	{
+		BK_LOGE(TAG, "f_unmount failed:%d\r\n", fr);
+		return BK_FAIL;
+	}
+	else
+	{
+		BK_LOGI(TAG, "f_unmount OK!\r\n");
+	}
+
+	if (pfs)
+	{
+		os_free(pfs);
+		pfs = NULL;
+	}
+
+	return BK_OK;
+}
+
+
+static bk_err_t mp3_decode_handler(unsigned int size)
+{
+	bk_err_t ret = BK_OK;
+
+	FRESULT fr;
+	uint32 uiTemp = 0;
+    static bool empty_already_flag = false;
+
+    if (!audio_play_info) {
+        return BK_FAIL;
+    }
+
+	if (audio_play_info->mp3_file_is_empty) {
+        if (empty_already_flag == false) {
+            empty_already_flag = true;
+		    BK_LOGW(TAG, "==========================================================\n");
+		    BK_LOGW(TAG, "%s playback is over, please input the stop command!\n", audio_play_info->mp3_file_name);
+		    BK_LOGW(TAG, "==========================================================\n");
+        }
+		return BK_FAIL;
+	}
+
+    empty_already_flag = false;
+
+	if (audio_play_info->bytesLeft < MAINBUF_SIZE) {
+		os_memmove(audio_play_info->readBuf, audio_play_info->g_readptr, audio_play_info->bytesLeft);
+		fr = f_read(&audio_play_info->mp3file, (void *)(audio_play_info->readBuf + audio_play_info->bytesLeft), MAINBUF_SIZE - audio_play_info->bytesLeft, &uiTemp);
+		if (fr != FR_OK) {
+			BK_LOGE(TAG, "read %s failed\n", audio_play_info->mp3_file_name);
+			return fr;
+		}
+
+		if ((uiTemp == 0) && (audio_play_info->bytesLeft == 0)) {
+			BK_LOGI(TAG, "uiTemp = 0 and bytesLeft = 0\n");
+			audio_play_info->mp3_file_is_empty = true;
+			BK_LOGI(TAG, "the %s is empty\n", audio_play_info->mp3_file_name);
+			return ret;
+		}
+
+		audio_play_info->bytesLeft = audio_play_info->bytesLeft + uiTemp;
+		audio_play_info->g_readptr = audio_play_info->readBuf;
+	}
+
+	int offset = MP3FindSyncWord(audio_play_info->g_readptr, audio_play_info->bytesLeft);
+
+	if (offset < 0) {
+		BK_LOGE(TAG, "MP3FindSyncWord not find\n");
+		audio_play_info->bytesLeft = 0;
+	} else {
+		audio_play_info->g_readptr += offset;
+		audio_play_info->bytesLeft -= offset;
+		
+		ret = MP3Decode(audio_play_info->hMP3Decoder, &audio_play_info->g_readptr, &audio_play_info->bytesLeft, audio_play_info->pcmBuf, 0);
+		if (ret != ERR_MP3_NONE) {
+			BK_LOGE(TAG, "MP3Decode failed, code is %d\n", ret);
+			return ret;
+		}
+
+		MP3GetLastFrameInfo(audio_play_info->hMP3Decoder, &audio_play_info->mp3FrameInfo);
+//		os_printf("Bitrate: %d kb/s, Samprate: %d\r\n", (mp3FrameInfo.bitrate) / 1000, mp3FrameInfo.samprate);
+//		os_printf("Channel: %d, Version: %d, Layer: %d\r\n", mp3FrameInfo.nChans, mp3FrameInfo.version, mp3FrameInfo.layer);
+//		os_printf("OutputSamps: %d\r\n", mp3FrameInfo.outputSamps);
+
+		/* write a frame speaker data to speaker_ring_buff */
+		ret = bk_aud_intf_write_spk_data((uint8_t*)audio_play_info->pcmBuf, audio_play_info->mp3FrameInfo.outputSamps * 2);
+		if (ret != BK_OK) {
+			BK_LOGE(TAG, "write spk data fail \r\n");
+			return ret;
+		}
 	}
 
 	return ret;
-
-fail:
-	if (audio_play_info && audio_play_info->file_name) {
-		os_free(audio_play_info->file_name);
-		audio_play_info->file_name = NULL;
-	}
-
-	if (audio_play_info && audio_play_info->audio_play_msg_que) {
-		rtos_deinit_queue(&audio_play_info->audio_play_msg_que);
-		audio_play_info->audio_play_msg_que = NULL;
-	}
-
-	if (audio_play_info) {
-		os_free(audio_play_info);
-		audio_play_info = NULL;
-	}
-
-	return BK_FAIL;
 }
 
 bk_err_t audio_play_sdcard_mp3_music_stop(void)
 {
 	bk_err_t ret;
-	audio_play_msg_t msg;
 
-	msg.op = AUDIO_PLAY_EXIT;
-	msg.param = NULL;
-	if (audio_play_info->audio_play_msg_que) {
-		ret = rtos_push_to_queue_front(&audio_play_info->audio_play_msg_que, &msg, BEKEN_NO_WAIT);
-		if (kNoErr != ret) {
-			BK_LOGE(TAG, "audio send msg: AUDIO_PLAY_EXIT fail \r\n");
-			return kOverrunErr;
-		}
+    if (!audio_play_info) {
+        return BK_OK;
+    }
 
-		return ret;
+	ret = bk_aud_intf_spk_stop();
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_spk_stop fail, ret:%d\n", ret);
 	}
-	return kNoResourcesErr;
+	
+	ret = bk_aud_intf_spk_deinit();
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_spk_deinit fail, ret:%d\n", ret);
+	}
+
+    ret = bk_aud_intf_set_mode(AUD_INTF_WORK_MODE_NULL);
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_set_mode fail, ret:%d\n", ret);
+	}
+
+	ret = bk_aud_intf_drv_deinit();
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_drv_deinit fail, ret:%d\n", ret);
+	}
+
+	audio_play_info->bytesLeft = 0;
+	audio_play_info->mp3_file_is_empty = false;
+
+	f_close(&audio_play_info->mp3file);
+
+    if (audio_play_info->hMP3Decoder) {
+	    MP3FreeDecoder(audio_play_info->hMP3Decoder);
+        audio_play_info->hMP3Decoder = NULL;
+    }
+
+    if (audio_play_info->readBuf) {
+        os_free(audio_play_info->readBuf);
+        audio_play_info->readBuf = NULL;
+    }
+
+    if (audio_play_info->pcmBuf) {
+        os_free(audio_play_info->pcmBuf);
+        audio_play_info->pcmBuf = NULL;
+    }
+
+    if (audio_play_info) {
+        os_free(audio_play_info);
+        audio_play_info = NULL;
+    }
+
+    tf_unmount();
+    tf_unmount();
+
+    return BK_OK;
+}
+
+bk_err_t audio_play_sdcard_mp3_music_start(char *file_name)
+{
+	bk_err_t ret = BK_OK;
+    uint32 uiTemp = 0;
+	char tag_header[10];
+	int tag_size = 0;
+
+	aud_intf_drv_setup_t aud_intf_drv_setup = DEFAULT_AUD_INTF_DRV_SETUP_CONFIG();
+	aud_intf_spk_setup_t aud_intf_spk_setup = DEFAULT_AUD_INTF_SPK_SETUP_CONFIG();
+
+	if (!file_name) {
+		BK_LOGE(TAG, "file_name is NULL\n");
+		return BK_FAIL;
+	}
+
+    ret = tf_mount();
+    if (ret != BK_OK) {
+        BK_LOGE(TAG, "mount sdcard fail\n");
+        return BK_FAIL;
+    }
+
+    audio_play_info = (audio_play_info_t *)os_malloc(sizeof(audio_play_info_t));
+    if (!audio_play_info) {
+        BK_LOGE(TAG, "mount sdcard fail\n");
+        goto fail;
+    }
+
+    os_memset(audio_play_info, 0, sizeof(audio_play_info_t));
+
+	audio_play_info->readBuf = os_malloc(MAINBUF_SIZE);
+	if (audio_play_info->readBuf == NULL) {
+		BK_LOGE(TAG, "readBuf malloc fail\n");
+		goto fail;
+	}
+    os_memset(audio_play_info->readBuf, 0, MAINBUF_SIZE);
+
+	audio_play_info->pcmBuf = os_malloc(PCM_SIZE_MAX * 2);
+	if (audio_play_info->pcmBuf == NULL) {
+		BK_LOGE(TAG, "pcmBuf malloc fail\n");
+		goto fail;
+	}
+    os_memset(audio_play_info->pcmBuf, 0, PCM_SIZE_MAX * 2);
+
+	audio_play_info->hMP3Decoder = MP3InitDecoder();
+	if (audio_play_info->hMP3Decoder == NULL) {
+		BK_LOGE(TAG, "MP3Decoder init fail\n");
+		goto fail;
+	}
+
+	BK_LOGI(TAG, "audio mp3 play decode init complete\n");
+
+	/*open file to read mp3 data */
+    os_memset(audio_play_info->mp3_file_name, 0, sizeof(audio_play_info->mp3_file_name)/sizeof(audio_play_info->mp3_file_name[0]));
+	sprintf(audio_play_info->mp3_file_name, "%d:/%s", DISK_NUMBER_SDIO_SD, file_name);
+	FRESULT fr = f_open(&audio_play_info->mp3file, audio_play_info->mp3_file_name, FA_OPEN_EXISTING | FA_READ);
+	if (fr != FR_OK) {
+		BK_LOGE(TAG, "open %s fail\n", audio_play_info->mp3_file_name);
+		goto fail;
+	}
+	BK_LOGI(TAG, "mp3 file: %s open successful\n", audio_play_info->mp3_file_name);
+
+    fr = f_read(&audio_play_info->mp3file, (void *)tag_header, 10, &uiTemp);
+    if (fr != FR_OK)
+    {
+        BK_LOGE(TAG, "read %s fail\n", audio_play_info->mp3_file_name);
+        goto fail;
+    }
+
+    if (os_memcmp(tag_header, "ID3", 3) == 0)
+    {
+        tag_size = ((tag_header[6] & 0x7F) << 21) | ((tag_header[7] & 0x7F) << 14) | ((tag_header[8] & 0x7F) << 7) | (tag_header[9] & 0x7F);
+        BK_LOGI(TAG, "tag_size = %d\n", tag_size);
+        f_lseek(&audio_play_info->mp3file, tag_size + 10);
+        BK_LOGI(TAG, "tag_header has found\n");
+    }
+    else
+    {
+        BK_LOGI(TAG, "tag_header not found\n");
+        f_lseek(&audio_play_info->mp3file, 0);
+    }
+
+	//aud_intf_drv_setup.work_mode = AUD_INTF_WORK_MODE_NULL;
+	//aud_intf_drv_setup.task_config.priority = 3;
+	aud_intf_drv_setup.aud_intf_rx_spk_data = mp3_decode_handler;
+	//aud_intf_drv_setup.aud_intf_tx_mic_data = NULL;
+	ret = bk_aud_intf_drv_init(&aud_intf_drv_setup);
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_drv_init fail, ret:%d \r\n", ret);
+        goto fail;
+	}
+
+	ret = bk_aud_intf_set_mode(AUD_INTF_WORK_MODE_GENERAL);
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_set_mode fail, ret:%d \r\n", ret);
+        goto fail;
+	}
+
+	audio_play_info->g_readptr = audio_play_info->readBuf;
+	ret = mp3_decode_handler(audio_play_info->mp3FrameInfo.outputSamps * 2);
+    if (ret < 0) {
+        BK_LOGE(TAG, "mp3_decode_handler fail, ret:%d\n", ret);
+        goto fail;
+    }
+
+    switch (audio_play_info->mp3FrameInfo.nChans)
+    {
+        case 1:
+            aud_intf_spk_setup.spk_chl = AUD_INTF_SPK_CHL_LEFT;
+            break;
+
+        case 2:
+            aud_intf_spk_setup.spk_chl = AUD_INTF_SPK_CHL_DUAL;
+            break;
+
+        default:
+            BK_LOGE(TAG, "nChans:%d is not support\n", audio_play_info->mp3FrameInfo.nChans);
+            goto fail;
+            break;
+    }
+	aud_intf_spk_setup.samp_rate = audio_play_info->mp3FrameInfo.samprate;
+	aud_intf_spk_setup.frame_size = audio_play_info->mp3FrameInfo.outputSamps * 2;
+	aud_intf_spk_setup.spk_gain = 0x20;
+	aud_intf_spk_setup.work_mode = AUD_DAC_WORK_MODE_DIFFEN;
+	//aud_intf_spk_setup.spk_type = AUD_INTF_SPK_TYPE_UAC;
+	ret = bk_aud_intf_spk_init(&aud_intf_spk_setup);
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_spk_init fail, ret:%d\n", ret);
+        goto fail;
+	}
+
+	ret = bk_aud_intf_spk_start();
+	if (ret != BK_ERR_AUD_INTF_OK) {
+		BK_LOGE(TAG, "bk_aud_intf_spk_start fail, ret:%d\n", ret);
+        goto fail;
+	}
+
+    return BK_OK;
+
+fail:
+
+    audio_play_sdcard_mp3_music_stop();
+
+	return BK_FAIL;
 }
 

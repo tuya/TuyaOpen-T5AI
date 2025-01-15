@@ -1,17 +1,38 @@
 #include "tkl_timer.h"
-// #include "_stdint.h"
 #include <driver/timer.h>
-// #include "BkDriverTimer.h"
 
 /* private macros */
-#define TIMER_DEV_NUM       4
+#define TIMER_DEV_NUM       6
 
 /* private variables */
-static TUYA_TIMER_BASE_CFG_T cfg_save;
+static TUYA_TIMER_BASE_CFG_T cfg_save[] = {
+    {TUYA_TIMER_MODE_ONCE, NULL, NULL},
+    {TUYA_TIMER_MODE_ONCE, NULL, NULL},
+    {TUYA_TIMER_MODE_ONCE, NULL, NULL},
+    {TUYA_TIMER_MODE_ONCE, NULL, NULL},
+    {TUYA_TIMER_MODE_ONCE, NULL, NULL},
+    {TUYA_TIMER_MODE_ONCE, NULL, NULL}
+};
 
 /* extern function */
 // extern OSStatus bk_timer_read_cnt(uint8_t timer_id, uint32_t *timer_cnt);
 // extern OSStatus bk_timer_initialize_us(uint8_t timer_id, uint32_t time_us, void *callback);
+
+/**
+ * @brief timer cb
+ * 
+ * @param[in] args: hw timer id
+ *
+ * @return none
+ */
+static void __tkl_hw_timer_cb(void *args)
+{
+    TUYA_TIMER_NUM_E timer_id = (TUYA_TIMER_NUM_E)args;
+    if(cfg_save[timer_id].cb){
+        cfg_save[timer_id].cb(cfg_save[timer_id].args);
+    }
+    return;
+}
 
 /**
  * @brief timer init
@@ -27,9 +48,9 @@ OPERATE_RET tkl_timer_init(TUYA_TIMER_NUM_E timer_id, TUYA_TIMER_BASE_CFG_T *cfg
         return OPRT_NOT_SUPPORTED;
     }
 
-    cfg_save.args = cfg->args;
-    cfg_save.cb = cfg->cb;
-    cfg_save.mode = cfg->mode;
+    cfg_save[timer_id].args = cfg->args;
+    cfg_save[timer_id].cb = cfg->cb;
+    cfg_save[timer_id].mode = cfg->mode;
     bk_timer_driver_init();
     return OPRT_OK;
 }
@@ -44,26 +65,14 @@ OPERATE_RET tkl_timer_init(TUYA_TIMER_NUM_E timer_id, TUYA_TIMER_BASE_CFG_T *cfg
  */
 OPERATE_RET tkl_timer_start(TUYA_TIMER_NUM_E timer_id, uint32_t us)
 {
-    TUYA_TIMER_BASE_CFG_T *cfg;
-
-    if (timer_id >= TIMER_DEV_NUM) {
+    if (timer_id >= TIMER_DEV_NUM || us == 0) {
         return OPRT_NOT_SUPPORTED;
     }
 
-    cfg = &cfg_save;
-    if ((0 == timer_id) || (1 == timer_id))
-    {
-        bk_timer_start(timer_id, us, (timer_isr_t)cfg->cb);
-    }
-    else
-    {
-        if (us < 1000)
-        {
-            /* tuya timer2~timer3 can't not set cycle less than 1ms */
-            return OPRT_INVALID_PARM;
-        }
-        bk_timer_start((timer_id + 2), us / 1000, (timer_isr_t)cfg->cb); //bk timer2、3 被系统占用了实际 bk timerID 为 timer4~timer5
-        return OPRT_OK;
+    if(!(us % 1000)) {
+        bk_timer_start(timer_id, (uint32_t)(us / 1000), (timer_isr_t)__tkl_hw_timer_cb);
+    } else {
+        bk_timer_start_us(timer_id, us, (timer_isr_t)__tkl_hw_timer_cb);
     }
 
     return OPRT_OK;
@@ -82,15 +91,7 @@ OPERATE_RET tkl_timer_stop(TUYA_TIMER_NUM_E timer_id)
         return OPRT_NOT_SUPPORTED;
     }
 
-    if ((0 == timer_id) || (1 == timer_id))
-    {
-        bk_timer_stop(timer_id);
-    }
-    else
-    {
-        bk_timer_stop(timer_id + 2); //bk timer2、3 被系统占用了实际 bk timerID 为 timer4~timer5
-        return OPRT_OK;
-    }
+    bk_timer_stop(timer_id);
 
     return OPRT_OK;
 }
@@ -104,7 +105,12 @@ OPERATE_RET tkl_timer_stop(TUYA_TIMER_NUM_E timer_id)
  */
 OPERATE_RET tkl_timer_deinit(TUYA_TIMER_NUM_E timer_id)
 {
-    return bk_timer_driver_deinit();
+    if (timer_id >= TIMER_DEV_NUM) {
+        return OPRT_NOT_SUPPORTED;
+    }
+
+    bk_timer_stop(timer_id);
+    return OPRT_OK;
 }
 
 /**
@@ -119,19 +125,13 @@ OPERATE_RET tkl_timer_get(TUYA_TIMER_NUM_E timer_id, uint32_t *us)
 {
     uint32_t count;
 
-    if ((0 == timer_id) || (1 == timer_id))
-    {
-        count = bk_timer_get_cnt(timer_id);
-
-        if (us != NULL) {
-            *us = count / 26;
-        }
+    count = bk_timer_get_cnt(timer_id);
+    if (us != NULL) {
+        *us = count / 26;
+    } else {
+        return OPRT_INVALID_PARM;
     }
-    else
-    {
-        return OPRT_NOT_SUPPORTED;
-    }
-
+ 
     return OPRT_OK;
 }
 

@@ -69,7 +69,9 @@ otp_item_t otp_apb_map[] = {
 	{OTP_DEVICE_ID,                  8,         0x3C0,     OTP_READ_WRITE},
 	{OTP_MEMORY_CHECK_VDDDIG,        4,         0x3C8,     OTP_READ_WRITE},
 	{OTP_GADC_TEMPERATURE,           2,         0x3CC,     OTP_READ_WRITE},
-	/*reserved 48,0x3D0*/
+	/*reserved 48,0x3CE*/
+	{OTP_RESERVED,                   48,        0x3CE,     OTP_READ_WRITE},
+	{OTP_CHIP_RESERVED,              2,         0x3FE,     OTP_READ_WRITE},//the chip reserved is for wifi, other modules can not use it
 };
 
 static const otp2_item_t otp_ahb_map[] = {
@@ -85,6 +87,7 @@ static otp_driver_t s_otp = {0};
 
 static void otp_sleep()
 {
+#if CONFIG_OTP_SLEEP
 #if CONFIG_ATE_TEST
 	return ;
 #endif
@@ -92,6 +95,7 @@ static void otp_sleep()
 	otp_hal_sleep(&s_otp.hal);
 #else
 	otp_hal_deinit(&s_otp.hal);
+#endif
 #endif
 }
 
@@ -264,6 +268,10 @@ bk_err_t bk_otp_apb_write_mask(otp_id_t item, uint32_t mask)
  */
 bk_err_t bk_otp_apb_read(otp_id_t item, uint8_t* buf, uint32_t size)
 {
+	if(OTP_APB_MAX <= item) {
+		os_printf("item=%d,max=%d\r\n", item, OTP_APB_MAX);
+		return BK_ERR_OTP_OPERATION_FAIL;
+	}
 	if(otp_apb_map[item].privilege == OTP_NO_ACCESS){
 		return BK_ERR_NO_READ_PERMISSION;
 	}
@@ -340,6 +348,11 @@ bk_err_t bk_otp_apb_read(otp_id_t item, uint8_t* buf, uint32_t size)
  */
 bk_err_t bk_otp_apb_update(otp_id_t item, uint8_t* buf, uint32_t size)
 {
+	if(OTP_APB_MAX <= item) {
+		os_printf("item=%d,max=%d\r\n", item, OTP_APB_MAX);
+		return BK_ERR_OTP_OPERATION_FAIL;
+	}
+
 	if(otp_apb_map[item].privilege != OTP_READ_WRITE){
 		return BK_ERR_NO_WRITE_PERMISSION;
 	}

@@ -37,8 +37,26 @@ static bk_err_t yuv_buf_hal_set_config_common(yuv_buf_hal_t *hal, const yuv_buf_
 	yuv_buf_ll_set_x_pixel_resize(hal->hw, config->x_pixel);
 	yuv_buf_ll_set_y_pixel_resize(hal->hw, config->y_pixel);
 
+	if (config->yuv_mode_cfg.hsync == SYNC_LOW_LEVEL)
+	{
+		yuv_buf_ll_enable_hsync_rev(hal->hw);
+	}
+	else
+	{
+		yuv_buf_ll_disable_hsync_rev(hal->hw);
+	}
+
+	if (config->yuv_mode_cfg.vsync == SYNC_LOW_LEVEL)
+	{
+		yuv_buf_ll_enable_vsync_rev(hal->hw);
+	}
+	else
+	{
+		yuv_buf_ll_disable_vsync_rev(hal->hw);
+	}
+
 	yuv_buf_ll_enable_sync_edge_dect(hal->hw);
-	yuv_buf_ll_set_encode_begin_hsync_posedge(hal->hw);
+	//yuv_buf_ll_set_encode_begin_hsync_posedge(hal->hw);
 	yuv_buf_ll_disable_bps_cis(hal->hw);
 	yuv_buf_ll_disable_memrev(hal->hw);
 	yuv_buf_ll_enable_int(hal->hw);
@@ -57,8 +75,8 @@ bk_err_t yuv_buf_hal_set_yuv_mode_config(yuv_buf_hal_t *hal, const yuv_buf_confi
 	yuv_buf_hal_set_config_common(hal, config);
 
 	/* yuv_mode set em_base_addr as psram */
-	yuv_buf_ll_set_em_base_addr(hal->hw, SOC_PSRAM_DATA_BASE);
-	yuv_buf_ll_set_emr_base_addr(hal->hw, SOC_PSRAM_DATA_BASE);
+	yuv_buf_ll_set_em_base_addr(hal->hw, (uint32_t)config->base_addr);
+	yuv_buf_ll_set_emr_base_addr(hal->hw, (uint32_t)config->emr_base_addr);
 
 	return BK_OK;
 }
@@ -71,7 +89,7 @@ bk_err_t yuv_buf_hal_set_jpeg_mode_config(yuv_buf_hal_t *hal, const yuv_buf_conf
 		return BK_FAIL;
 
 	yuv_buf_ll_set_em_base_addr(hal->hw, (uint32_t)config->base_addr);
-	yuv_buf_ll_set_emr_base_addr(hal->hw, (uint32_t)config->base_addr);
+	yuv_buf_ll_set_emr_base_addr(hal->hw, (uint32_t)config->emr_base_addr);
 
 	return BK_OK;
 }
@@ -84,7 +102,7 @@ bk_err_t yuv_buf_hal_set_h264_mode_config(yuv_buf_hal_t *hal, const yuv_buf_conf
 		return BK_FAIL;
 
 	yuv_buf_ll_set_em_base_addr(hal->hw, (uint32_t)config->base_addr);
-	yuv_buf_ll_set_emr_base_addr(hal->hw, (uint32_t)config->base_addr);
+	yuv_buf_ll_set_emr_base_addr(hal->hw, (uint32_t)config->emr_base_addr);
 
 	return BK_OK;
 }

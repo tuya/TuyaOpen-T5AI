@@ -50,6 +50,23 @@ int bk_feature_tcp_protect_enable(void) {
 #endif
 }
 
+
+int bk_feature_ap_ps_enable(void) {
+#if CONFIG_AP_PS
+	return 1;
+#else
+	return 0;
+#endif
+}
+
+int bk_feature_tx_tim_enable(void) {
+#if CONFIG_AP_TX_TIM
+    return 1;
+#else
+    return 0;
+#endif
+}
+
 int bk_feature_temp_detect_enable(void) {
 #if CONFIG_TEMP_DETECT
     return 1;

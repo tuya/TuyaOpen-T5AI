@@ -32,11 +32,23 @@
 #include "bk_wifi_private.h"
 #include "boot.h"
 #endif
+#include "rwnx_debug.h"
 
 #define TAG "wifi_cli"
 #define CMD_WLAN_MAX_BSS_CNT	50
 beken_semaphore_t wifi_cmd_sema = NULL;
 int wifi_cmd_status = 0;
+
+#if CONFIG_BRIDGE
+extern uint8_t bridge_is_enabled;
+uint8_t bridge_open;
+int bridge_sap_port = -1;
+int bridge_sta_port = -1;
+char br_ssid[WIFI_SSID_STR_LEN];
+char br_pwd[WIFI_PASSWORD_LEN];
+
+void bk_bridge_event_hapd_sta_disconnected(uint8_t *mac);
+#endif
 
 #if (CLI_CFG_WIFI == 1)
 int wifi_cli_find_id(int argc, char **argv, char *param)
@@ -208,7 +220,12 @@ void cli_wifi_ap_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **
 	char *ap_channel = NULL;
 	int ret = 0;
 	char *msg = NULL;
-
+#if CONFIG_BRIDGE
+	if (bridge_is_enabled && bridge_open) {
+		bk_printf("bridge has already open\r\n");
+		return;
+	}
+#endif
 #if CONFIG_ENABLE_WIFI_DEFAULT_CONNECT
 	if (wifi_cli_find_id(argc, argv, "-w") > 0 ||
 		wifi_cli_find_id(argc, argv, "-e") > 0) {
@@ -1626,6 +1643,46 @@ int cli_netif_event_cb(void *arg, event_module_t event_module,
 
 	switch (event_id) {
 	case EVENT_NETIF_GOT_IP4:
+#if CONFIG_BRIDGE && !CONFIG_CLI_CODE_SIZE_OPTIMIZE_ENABLE
+		if ((!bridge_is_enabled) && bridge_open) {
+			uint8_t mac[6] = {0};
+			bridgeif_initdata_t mybr_initdata = {0};
+			netif_ip4_config_t ip4_config = {0};
+			ip4_addr_t my_ip, my_gw, my_mask;
+			wifi_link_status_t link_status = {0};
+			int ret = BK_OK;
+
+			bridge_is_enabled = 1;
+			/*confige bridgeif and add sta to bridgeif*/
+			bk_wifi_sta_get_mac(mac);
+			os_memcpy(((struct netif *)net_get_br_handle())->hwaddr, mac, 6);
+			os_memcpy(&mybr_initdata.ethaddr, mac, 6);
+			mybr_initdata.max_fdb_dynamic_entries = 64;
+			mybr_initdata.max_fdb_static_entries = 4;
+			mybr_initdata.max_ports = 16;
+			bk_netif_get_ip4_config(NETIF_IF_STA, &ip4_config);
+			inet_aton((char *)&ip4_config.ip, &my_ip);
+			inet_aton((char *)&ip4_config.gateway, &my_gw);
+			inet_aton((char *)&ip4_config.mask, &my_mask);
+
+			// set STA interface IP to 0.0.0.0
+			netifapi_netif_set_addr((struct netif *)net_get_sta_handle(), NULL, NULL, NULL);
+
+			netifapi_netif_add((struct netif *)net_get_br_handle(), &my_ip, &my_mask, &my_gw,
+								&mybr_initdata, bridgeif_init, netif_input);
+			bridgeif_add_port((struct netif *)net_get_br_handle(), (struct netif *)net_get_sta_handle(), &bridge_sta_port);
+			netif_set_hostname((struct netif *)net_get_sta_handle(), "LGE");
+
+			bk_wifi_sta_get_link_status(&link_status);
+			ret = demo_bridge_softap_init(br_ssid, br_pwd, link_status.security);
+			if (ret == BK_OK) {
+				bridgeif_add_port((struct netif *)net_get_br_handle(), (struct netif *)net_get_uap_handle(), &bridge_sap_port);
+				netifapi_netif_set_default(net_get_br_handle());
+				netifapi_netif_set_up((struct netif *)net_get_br_handle());
+				bridge_set_ip_start_flag(true);
+			}
+		}
+#endif
 		if (wifi_cmd_sema != NULL) {
 			wifi_cmd_status = 1;
 			rtos_set_semaphore(&wifi_cmd_sema);
@@ -1660,6 +1717,17 @@ int cli_wifi_event_cb(void *arg, event_module_t event_module,
 		sta_disconnected = (wifi_event_sta_disconnected_t *)event_data;
 		CLI_LOGI("BK STA disconnected, reason(%d)%s\n", sta_disconnected->disconnect_reason,
 			sta_disconnected->local_generated ? ", local_generated" : "");
+#if CONFIG_BRIDGE && !CONFIG_CLI_CODE_SIZE_OPTIMIZE_ENABLE
+		if (bridge_is_enabled && bridge_open) {
+			bridge_is_enabled = 0;
+			bridge_ip_stop();
+			/*just stop softap, station still work*/
+			netifapi_netif_set_default(net_get_sta_handle());
+			bridge_set_ip_start_flag(false);
+
+			bk_wifi_ap_stop();
+		}
+#endif
 		break;
 
 	case EVENT_WIFI_AP_CONNECTED:
@@ -1670,6 +1738,9 @@ int cli_wifi_event_cb(void *arg, event_module_t event_module,
 	case EVENT_WIFI_AP_DISCONNECTED:
 		ap_disconnected = (wifi_event_ap_disconnected_t *)event_data;
 		CLI_LOGI(BK_MAC_FORMAT" disconnected from BK AP\n", BK_MAC_STR(ap_disconnected->mac));
+#if CONFIG_BRIDGE
+		bk_bridge_event_hapd_sta_disconnected(ap_disconnected->mac);
+#endif
 		break;
 
 	case EVENT_WIFI_NETWORK_FOUND:
@@ -2234,49 +2305,30 @@ enum mac_vif_type
     VIF_UNKNOWN
 };
 
-extern uint8 bridge_is_enabled;
-void bk_bridge_start(char *bridge_ssid, char *ext_ssid, char *key) {
-	uint8_t mac[6] = {0};
-	bridgeif_initdata_t mybr_initdata = {0};
-	wifi_linkstate_reason_t info = {0};
-	netif_ip4_config_t ip4_config = {0};
-	ip4_addr_t my_ip, my_gw, my_mask;
-
-	bridge_is_enabled = 1;
-	demo_sta_app_init(ext_ssid, key);
-	while(1) {
-		bk_wifi_sta_get_linkstate_with_reason(&info);
-		if (info.state != WIFI_LINKSTATE_STA_GOT_IP) {
-			BK_LOGI("br","waiting fot sta getting ip\r\n");
-			rtos_delay_milliseconds(500);
-		} else
-			break;
+void bk_bridge_start_by_ssid(char *bridge_ssid, char *ext_ssid, char *key) {
+	if (bridge_open) {
+		CLI_LOGE("bridge already opened\r\n");
+		return;
 	}
+	bridge_open = 1;
+	os_memset(br_ssid, 0, WIFI_SSID_STR_LEN);
+	os_memset(br_pwd, 0, WIFI_PASSWORD_LEN);
+	os_strncpy(br_ssid, bridge_ssid, WIFI_SSID_STR_LEN);
+	os_strncpy(br_pwd, key, WIFI_PASSWORD_LEN);
+	demo_sta_app_init(ext_ssid, key);
+}
 
-	/*confige bridgeif and add sta to bridgeif*/
-	bk_wifi_sta_get_mac(mac);
-	os_memcpy(((struct netif *)net_get_br_handle())->hwaddr, mac, 6);
-	os_memcpy(&mybr_initdata.ethaddr, mac, 6);
-	mybr_initdata.max_fdb_dynamic_entries = 64;
-	mybr_initdata.max_fdb_static_entries = 4;
-	mybr_initdata.max_ports = 16;
-	bk_netif_get_ip4_config(NETIF_IF_STA, &ip4_config);
-	inet_aton((char *)&ip4_config.ip, &my_ip);
-	inet_aton((char *)&ip4_config.gateway, &my_gw);
-	inet_aton((char *)&ip4_config.mask, &my_mask);
-
-	netifapi_netif_add((struct netif *)net_get_br_handle(), &my_ip, &my_mask, &my_gw,
-						&mybr_initdata, bridgeif_init, netif_input);
-	bridgeif_add_port((struct netif *)net_get_br_handle(), (struct netif *)net_get_sta_handle());
-	netif_set_hostname((struct netif *)net_get_sta_handle(), "beken");
-
-	/*start softap and add to bridgeif*/
-	bk_wifi_ap_stop();
-	demo_softap_app_init(bridge_ssid, key, NULL);
-	bridgeif_add_port((struct netif *)net_get_br_handle(), (struct netif *)net_get_uap_handle());
-	netifapi_netif_set_default(net_get_br_handle());
-	netifapi_netif_set_up((struct netif *)net_get_br_handle());
-
+void bk_bridge_start_by_bssid(char *bridge_ssid, uint8_t *ext_bssid, char *key) {
+	if (bridge_open) {
+		CLI_LOGE("bridge already opened\r\n");
+		return;
+	}
+	bridge_open = 1;
+	os_memset(br_ssid, 0, WIFI_SSID_STR_LEN);
+	os_memset(br_pwd, 0, WIFI_PASSWORD_LEN);
+	os_strncpy(br_ssid, bridge_ssid, WIFI_SSID_STR_LEN);
+	os_strncpy(br_pwd, key, WIFI_PASSWORD_LEN);
+	demo_sta_bssid_app_init(ext_bssid, key);
 }
 
 void bk_wifi_bridge_stop() {
@@ -2284,11 +2336,17 @@ void bk_wifi_bridge_stop() {
 }
 
 void bk_bridge_stop() {
+	if (!bridge_open) {
+		CLI_LOGE("bridge was not opened\r\n");
+		return;
+	}
+	bk_wifi_bridge_stop();
 	if(bk_wifi_sta_stop())
 		CLI_LOGE("bridge stop sta fail\r\n");
 	if(bk_wifi_ap_stop())
 		CLI_LOGE("bridge stop ap fail\r\n");
-	bk_wifi_bridge_stop();
+	bridge_is_enabled = 0;
+	bridge_open = 0;
 }
 
 void cli_wifi_open_bridge_cmd(char * pcWriteBuffer, int xWriteBufferLen, int argc, char * * argv)
@@ -2312,6 +2370,24 @@ usage:
 			goto usage;
 
 		bridge_ssid = argv[2];
+
+#ifdef CONFIG_BSSID_CONNECT
+		uint8_t bssid[6] = {0};
+		if (os_strcmp(argv[3], "bssid") == 0) {
+			if(argc < 5) {
+				bk_printf("no exist bssid, open fail\r\n");
+			}
+
+			hexstr2bin_cli(argv[4], bssid, 6);
+
+			if(argc >= 6) {
+				connect_key = argv[5];
+			}
+			bk_printf("open bridge by bssid\r\n");
+			bk_bridge_start_by_bssid(bridge_ssid, bssid, connect_key);
+			return;
+		}
+#endif
 		oob_ssid = argv[3];
 
 		if(argc == 5)
@@ -2319,14 +2395,127 @@ usage:
 		else
 			connect_key = "";
 
-		bk_bridge_start(bridge_ssid, oob_ssid, connect_key);
+		bk_printf("open bridge by ssid\r\n");
+		bk_bridge_start_by_ssid(bridge_ssid, oob_ssid, connect_key);
 	} else if (!strcmp(argv[1], "close")) {
         bk_bridge_stop();
 	} else {
 		goto usage;
 	}
 }
+
+extern void print_fdb();
+void cli_brctl_cmd(char * pcWriteBuffer, int xWriteBufferLen, int argc, char * * argv)
+{
+	print_fdb();
+}
 #endif
+
+void cli_rwnx_dbg_info(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+	if (argc > 2) {
+		CLI_LOGI("invalid rwnx command paramters\n");
+		return;
+	}
+
+	if ((argc == 2) && (os_strcmp(argv[1], "-r") == 0))
+	{
+		CLI_LOGI("reset rwnx debug info stats\n");
+		RWNX_MEM_STATS_RESET();
+	}
+
+	RWNX_MEM_STATS_DISPLAY();
+
+}
+
+void cli_td_para(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+	uint8_t reset,def_td_intv,dtim10_td_intv,td_reduce_intv;
+	int ret = -1;
+	char *msg = NULL;
+
+	if (argc < 2) {
+		CLI_LOGI("invalid td para command %d\n");
+		return;
+	}
+
+	if (0 == os_strcmp(argv[1], "set"))
+	{
+		if(2 < argc)
+		{
+			reset = (uint8_t)os_strtoul(argv[2], NULL, 10);
+
+			if(reset)
+			{
+				ret = bk_wifi_set_td_para(1,0,0,0);
+			}
+			else
+			{
+				if(6 == argc)
+				{
+					def_td_intv = (uint8_t)os_strtoul(argv[3], NULL, 10);
+					dtim10_td_intv = (uint8_t)os_strtoul(argv[4], NULL, 10);
+					td_reduce_intv = (uint8_t)os_strtoul(argv[5], NULL, 10);
+					if((def_td_intv > td_reduce_intv) && (dtim10_td_intv > td_reduce_intv))
+					{
+						ret = bk_wifi_set_td_para(0,def_td_intv,dtim10_td_intv,td_reduce_intv);
+					}
+					else
+					{
+						CLI_LOGI("cli_td_para:set def_td_intv:%d and dtim10_td_intv:%d should be bigger than td_reduce_intv:%d\r\n",
+								def_td_intv,
+								dtim10_td_intv,
+								td_reduce_intv);
+					}
+				}
+				else
+				{
+					CLI_LOGI("cli_td_para:set para num %d is invalid\r\n",argc);
+				}
+			}
+		}
+	}
+	else if(0 == os_strcmp(argv[1], "get"))
+	{
+		ret = bk_wifi_get_td_para(&def_td_intv, &dtim10_td_intv, &td_reduce_intv);
+		CLI_LOGI("cli_td_para:get def_td_intv:%d,dtim10_td_intv:%d,td_reduce_intv:%d\r\n",
+				def_td_intv,
+				dtim10_td_intv,
+				td_reduce_intv);
+	}
+	else
+	{}
+
+	if (!ret)
+	{
+		msg = WIFI_CMD_RSP_SUCCEED;
+	}
+	else
+	{
+		msg = WIFI_CMDMSG_ERROR_RSP;
+	}
+
+	os_memcpy(pcWriteBuffer, msg, os_strlen(msg));
+	return;
+}
+
+void ap_switch_channel_test(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+	uint8_t set_channel = 0;
+	int set_frequency = 0;
+
+	if (argc < 2)
+	{
+		bk_printf("channel parameter set error\r\n");
+	}
+
+	set_channel = (uint8_t)os_strtoul(argv[1], NULL, 10);
+	set_frequency = 2407 + 5 * set_channel;
+
+	bk_printf("switch to channel=%d\r\n", set_channel);
+	extern int hostapd_channel_switch(int frequecy);
+	hostapd_channel_switch(set_frequency);
+}
 
 #define WIFI_CMD_CNT (sizeof(s_wifi_commands) / sizeof(struct cli_command))
 static const struct cli_command s_wifi_commands[] = {
@@ -2335,6 +2524,11 @@ static const struct cli_command s_wifi_commands[] = {
 	{"ap", "ap ssid [password] [channel[1:14]]", cli_wifi_ap_cmd},
 	{"start_hidden_softap", "start_hidden_softap ssid [password] [channel[1:14]]", cli_wifi_hidden_ap_cmd},
 	{"sta", "sta ssid [password][bssid][channel]", cli_wifi_sta_cmd}, //TODO support connect speicific BSSID
+	{"ap_switch_channel", "ap switch channel", ap_switch_channel_test},
+
+	{"net", "net {sta/ap} ... - wifi net config", cli_wifi_net_cmd},
+
+
 #if CONFIG_COMPONENTS_WPA2_ENTERPRISE
 	{"sta_eap", "sta_eap ssid password [identity] [client_cert] [private_key]", cli_wifi_sta_eap_cmd},
 #endif
@@ -2391,10 +2585,13 @@ static const struct cli_command s_wifi_commands[] = {
 	{"close_coex_csa","close csa in coexist mode {1|0}", cli_wifi_close_coex_csa_cmd},
 #if CONFIG_BRIDGE
 	{"bridge", "bridge open|close", cli_wifi_open_bridge_cmd},
+	{"brctl", "bridge control utils", cli_brctl_cmd},
 #endif
 #else
 	{"state", "state - show STA/AP state", cli_wifi_state_cmd},
 #endif
+	{"rwnx_dbg", "print rwnx debug information", cli_rwnx_dbg_info},
+	{"td_para", "td_para set|get [reset][def_td_intv][dtim10_td_intv][td_resuce_intv]", cli_td_para},
 };
 
 int cli_wifi_init(void)

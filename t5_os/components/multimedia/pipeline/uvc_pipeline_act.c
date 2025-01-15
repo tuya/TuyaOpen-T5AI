@@ -37,12 +37,8 @@ static pixel_format_t lcd_fmt = PIXEL_FMT_UNKNOW;
 static media_rotate_t pipeline_rotate = ROTATE_90;
 static uint8_t lcd_scale = 0;
 
-#ifdef CONFIG_BT_REUSE_MEDIA_MEMORY
-__attribute__((section(".bt_spec_data"), aligned(0x10))) mux_sram_buffer_t mux_sram_buffer_saved = { 0 };
-mux_sram_buffer_t *mux_sram_buffer = &mux_sram_buffer_saved;
-#else
+extern uint8_t *media_bt_share_buffer;
 mux_sram_buffer_t *mux_sram_buffer = NULL;
-#endif
 
 static bk_err_t h264_jdec_pipeline_open(media_mailbox_msg_t *msg)
 {
@@ -431,6 +427,8 @@ void uvc_pipeline_event_handle(media_mailbox_msg_t *msg)
 
 bk_err_t uvc_pipeline_init(void)
 {
+	mux_sram_buffer = (mux_sram_buffer_t *)media_bt_share_buffer;
+
 	if (mux_sram_buffer == NULL)
 	{
 #ifdef CONFIG_BT_REUSE_MEDIA_MEMORY

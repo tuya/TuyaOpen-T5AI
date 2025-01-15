@@ -41,6 +41,8 @@ enum
 	IPC_FREE_DMA_CHNL,                      /* Client -> Server  */
 	IPC_DMA_CHNL_USER,                      /* Client -> Server  */
 
+	IPC_FLASH_VOTE_LINE_MODE,               /* Client -> Server  */
+
 	IPC_CPU1_TRAP_HANDLE_BEGIN,             /* CPU1 -> CPU0  */
 	IPC_CPU1_TRAP_HANDLE_END,               /* CPU1 -> CPU0  */
 
@@ -79,6 +81,9 @@ bk_err_t ipc_send_res_release_cnt(u16 resource_id, u16 cpu_id, amp_res_req_cnt_t
 u8       ipc_send_alloc_dma_chnl(u32 user_id);
 bk_err_t ipc_send_free_dma_chnl(u32 user_id, u8 chnl_id);
 u32      ipc_send_dma_chnl_user(u8 chnl_id);
+
+u32 ipc_vote_flash_line_mode(u32 v_line_mode);
+
 #endif
 
 #else  /* (CONFIG_CPU_CNT > 1) */

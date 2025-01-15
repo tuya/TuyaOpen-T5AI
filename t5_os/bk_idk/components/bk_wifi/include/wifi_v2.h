@@ -59,7 +59,7 @@ extern "C" {
 #define WIFI_LOGW(...) BK_LOGW(WIFI_TAG, ##__VA_ARGS__)
 #define WIFI_LOGE(...) BK_LOGE(WIFI_TAG, ##__VA_ARGS__)
 #define WIFI_LOGD(...) BK_LOGD(WIFI_TAG, ##__VA_ARGS__)
-#define WIFI_LOG_RAW(...) BK_LOG_RAW(WIFI_TAG, ##__VA_ARGS__)
+#define WIFI_LOG_RAW BK_LOG_RAW
 
 #define WIFI_VIDEO_TRANSFER_TCP_RTO     1
 

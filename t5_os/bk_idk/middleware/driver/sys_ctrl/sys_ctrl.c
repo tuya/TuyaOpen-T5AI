@@ -394,7 +394,7 @@ void sctrl_set_cpu_clk_dco(void)
 	reg_val |= HCLK_DIV2_EN_BIT;
 
 	REG_WRITE(SCTRL_CONTROL, reg_val);
-	delay(10);
+	bk_delay(10);
 
 }
 
@@ -1010,7 +1010,7 @@ void sctrl_subsys_reset(UINT32 cmd)
 
 	if (reg) {
 		REG_WRITE(reg, reset_word);
-		delay(10);
+		bk_delay(10);
 		REG_WRITE(reg, 0);
 	}
 
@@ -1246,7 +1246,7 @@ void sctrl_enter_rtos_idle_sleep(PS_DEEP_CTRL_PARAM deep_param)
 	reg &= ~(SLEEP_MODE_MASK << SLEEP_MODE_POSI);
 	reg = reg | SLEEP_MODE_CFG_LOW_VOL_WORD;
 	REG_WRITE(SCTRL_SLEEP, reg);
-	delay(5);
+	bk_delay(5);
 }
 
 void sctrl_exit_rtos_idle_sleep(void)
@@ -1268,7 +1268,7 @@ void sctrl_exit_rtos_idle_sleep(void)
 	reg |= ps_block_value;
 	REG_WRITE(SCTRL_BLOCK_EN_CFG, reg);
 
-	delay(20);  //delay 1.1ms for 26MHz DCO clock. need change for other dco clock frequency
+	bk_delay(20);  //delay 1.1ms for 26MHz DCO clock. need change for other dco clock frequency
 	sctrl_cali_dpll(1);
 	/* dpll division reset release*/
 	reg = REG_READ(SCTRL_CONTROL);
@@ -2083,14 +2083,14 @@ UINT32 sctrl_ctrl(UINT32 cmd, void *param)
 					 << MAC_SUBSYS_RESET_POSI);
 		REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
 
-		delay(1);
+		bk_delay(1);
 		reg = ret;
 		REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
 
 		/*resetting, and waiting for done*/
 		reg = REG_READ(SCTRL_RESET);
 		while (reg & MODEM_CORE_RESET_BIT) {
-			delay(10);
+			bk_delay(10);
 			reg = REG_READ(SCTRL_RESET);
 		}
 		ret = SCTRL_SUCCESS;
@@ -2104,14 +2104,14 @@ UINT32 sctrl_ctrl(UINT32 cmd, void *param)
 					 << MODEM_CORE_RESET_POSI);
 		REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
 
-		delay(1);
+		bk_delay(1);
 		reg = ret;
 		REG_WRITE(SCTRL_MODEM_CORE_RESET_PHY_HCLK, reg);
 
 		/*resetting, and waiting for done*/
 		reg = REG_READ(SCTRL_RESET);
 		while (reg & MODEM_CORE_RESET_BIT) {
-			delay(10);
+			bk_delay(10);
 			reg = REG_READ(SCTRL_RESET);
 		}
 		ret = SCTRL_SUCCESS;

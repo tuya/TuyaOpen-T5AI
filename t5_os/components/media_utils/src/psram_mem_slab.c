@@ -40,8 +40,8 @@ static void frame_buffer_heap_init(uint8_t type, uint8_t* heap, uint32_t heap_si
 	frame_mem_heap.heap[type]->next = NULL;
 	frame_mem_heap.heap[type]->previous = NULL;
 	frame_mem_heap.heap_size[type] = heap_size;
-	LOGI("%s heap:%p, type %d size %d\n", __func__, heap, type, heap_size);
-	LOGI("%s, free_size:%d, check:0x%x\r\n", __func__, frame_mem_heap.heap[type]->free_size, frame_mem_heap.heap[type]->corrupt_check);
+	LOGD("%s heap:%p, type %d size %d\n", __func__, heap, type, heap_size);
+	LOGD("%s, free_size:%d, check:0x%x\r\n", __func__, frame_mem_heap.heap[type]->free_size, frame_mem_heap.heap[type]->corrupt_check);
 }
 
 /**

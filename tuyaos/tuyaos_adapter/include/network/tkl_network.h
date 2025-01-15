@@ -1,6 +1,6 @@
 /**
-* @file tkl_network.h
-* @brief Common process - adapter the network api
+* @file tkl_wired.h
+* @brief Common process - adapter the wired api
 * @version 0.1
 * @date 2020-11-09
 *
@@ -146,6 +146,17 @@ TUYA_ERRNO tkl_net_shutdown(const int fd, const int how);
 * @return file descriptor
 */
 int tkl_net_socket_create(const TUYA_PROTOCOL_TYPE_E type);
+
+/**
+* @brief Create a IPv6 tcp/udp socket
+*
+* @param[in] type: protocol type, tcp or udp
+*
+* @note This API is used for creating a tcp/udp socket.
+*
+* @return file descriptor
+*/
+int tkl_net_socket_create_v6(const TUYA_PROTOCOL_TYPE_E type);
 
 /**
 * @brief Connect to network
@@ -491,6 +502,23 @@ OPERATE_RET tkl_net_getpeername(int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
 */
 OPERATE_RET tkl_net_sethostname(const char *hostname);
 
+/**
+ * @brief get netif by index
+ *
+ * @param[in]       net_if_idx    the num of netif index
+ * @return  NULL: get netif fail   other: the point of netif
+ */
+PVOID_T tkl_net_get_netif_by_index(const TUYA_NETIF_TYPE_E net_if_idx);
+
+/**
+* @brief Check ipv4/v6
+*
+* @param[in] has_ipv4: ipv4 is ready
+* @param[in] has_ipv6: ipv6 is ready
+*
+* @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+*/
+OPERATE_RET tkl_net_check_system_ipv4_ipv6(BOOL_T *has_ipv4, BOOL_T *has_ipv6);
 
 #ifdef __cplusplus
 }

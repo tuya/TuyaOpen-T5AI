@@ -1413,6 +1413,25 @@ int wlan_ap_sta_info(wlan_ap_stas_t *stas)
 	return wpa_ctrl_request(WPA_CTRL_CMD_AP_STA_INFO, stas);
 }
 
+int wlan_ap_add_blacklist(wlan_ap_blacklist_t *req)
+{
+	WLAN_RETURN_NULL_POINTER(req);
+
+	return wpa_ctrl_request(WPA_CTRL_CMD_AP_ADD_BLACKLIST, req);
+}
+
+int wlan_ap_del_blacklist(wlan_ap_blacklist_t *req)
+{
+	WLAN_RETURN_NULL_POINTER(req);
+
+	return wpa_ctrl_request(WPA_CTRL_CMD_AP_DEL_BLACKLIST, req);
+}
+
+int wlan_ap_clear_blacklist()
+{
+	return wpa_ctrl_request(WPA_CTRL_CMD_AP_CLEAR_BLACKLIST, NULL);
+}
+
 /**
  * @brief Set Beacon/Probe Response Vendor IE
  * @param[in] vendor IE and its len
@@ -2139,8 +2158,12 @@ bk_err_t bk_wifi_scan_start(const wifi_scan_config_t *config)
 	/* flush old scan results */
 	wlan_sta_bss_flush(0);
 
+	wlan_sta_scan_param_t scan_param = {0};
+	scan_param.id = (uint32_t)rtos_get_current_thread();
+
 	if (config ) {
 		ssid_len = MIN(WLAN_SSID_MAX_LEN, os_strlen((char *)config->ssid));
+		scan_param.scan_cc = !!(config->flag & SCAN_TYPE_CC);
 
 		if((0 != config->scan_type) ||(0 != config->chan_cnt) ||(0 != config->duration)) {
 			scan_param_env.set_param = 1;
@@ -2157,16 +2180,15 @@ bk_err_t bk_wifi_scan_start(const wifi_scan_config_t *config)
 
 	if (0 == ssid_len) {
 		WIFI_LOGD("scan all APs\n");
-		ret = wlan_sta_scan_once();
+		scan_param.num_ssids = 1;
+		scan_param.ssids[0].ssid_len = 0;
 	} else {
-		wlan_sta_scan_param_t scan_param = {0};
-
 		WIFI_LOGD("scan %s\n", config->ssid);
 		scan_param.num_ssids = 1;
 		scan_param.ssids[0].ssid_len = MIN(WLAN_SSID_MAX_LEN, os_strlen((char *)config->ssid));
 		os_memcpy(scan_param.ssids[0].ssid, config->ssid, scan_param.ssids[0].ssid_len);
-		ret = wlan_sta_scan(&scan_param);
 	}
+	ret = wlan_sta_scan(&scan_param);
 
 	if (ret != BK_OK) {
 		if (wlan_sta_scan_need_retry(ret)) {
@@ -4240,4 +4262,96 @@ int cmd_wlan_get_ps_status() {
 	ret = rwnxl_get_status_in_doze()? 1 : 0;
 	return ret;
 }
+
+#if CONFIG_WIFI_SCAN_COUNTRY_CODE
+struct bk_scan_cc_st
+{
+	beken_semaphore_t cc_wait;
+	uint8_t *cc_ptr;
+	uint8_t cc_len;
+};
+
+static bk_err_t bk_scan_country_code_callback(void *ctxt, uint8_t *cc, uint8_t cc_len)
+{
+	struct bk_scan_cc_st *bk_scan_ptr = NULL;
+
+	if(ctxt) {
+		bk_scan_ptr = (struct bk_scan_cc_st *)ctxt;
+		if((cc) && (cc_len != 0)) {
+			if(bk_scan_ptr->cc_ptr) {
+				os_memcpy(bk_scan_ptr->cc_ptr, cc, MAC_COUNTRY_STRING_LEN);
+			}
+			bk_scan_ptr->cc_len = MAC_COUNTRY_STRING_LEN;
+		}
+		bk_wifi_bcn_cc_rxed_register_cb(NULL, NULL);
+		rtos_set_semaphore(&bk_scan_ptr->cc_wait);
+	}
+
+	return 0;
+}
+
+int bk_scan_country_code(uint8_t *country_code)
+{
+	struct bk_scan_cc_st bk_scan = {0};
+	bk_err_t err = kNoErr;
+
+	err = rtos_init_semaphore(&bk_scan.cc_wait, 1);
+	if (err == kNoErr) {
+		bk_scan.cc_len = 0;
+		if(country_code)
+			bk_scan.cc_ptr = country_code;
+		else
+			bk_scan.cc_ptr = NULL;
+
+		bk_wifi_bcn_cc_rxed_register_cb(bk_scan_country_code_callback, &bk_scan);
+		err = cc_scan_start();
+		if (err == kNoErr) {
+			err = rtos_get_semaphore(&bk_scan.cc_wait, 4000);
+			cc_scan_stop();
+			if (err == kNoErr) {
+				rtos_deinit_semaphore(&bk_scan.cc_wait);
+				return bk_scan.cc_len;
+			}
+		}
+		bk_wifi_bcn_cc_rxed_register_cb(NULL, NULL);
+		rtos_deinit_semaphore(&bk_scan.cc_wait);
+	}
+
+	return 0;
+}
+#endif //CONFIG_WIFI_SCAN_COUNTRY_CODE
+
+bk_err_t bk_wifi_set_td_para(uint8_t reset, uint8_t def_td_intv, uint8_t dtim10_td_intv, uint8_t td_reduce_intv) 
+{
+	return rw_msg_send_set_td_para_req(reset, def_td_intv, dtim10_td_intv, td_reduce_intv);
+}
+
+bk_err_t bk_wifi_get_td_para(uint8_t *def_td_intv, uint8_t *dtim10_td_intv, uint8_t *td_reduce_intv)
+{
+	bk_err_t get_result = BK_FAIL;
+	struct mm_get_td_para_cfm *cfm = NULL;
+
+	cfm = os_malloc(sizeof(struct mm_get_td_para_cfm));
+	if (!cfm) {
+		WIFI_LOGE("get_td_para,malloc fail\r\n");
+		goto get_exit;
+	}
+
+	if (BK_OK != rw_msg_send_get_td_para_req((void *)cfm)) {
+		WIFI_LOGE("get_td_para,send fail\r\n");
+		goto get_exit;
+	}
+
+	*def_td_intv = cfm->td_default_intv_tu;
+	*dtim10_td_intv = cfm->dtim10_td_default_intv_tu;
+	*td_reduce_intv = cfm->td_reduce_intv_tu;
+	get_result = BK_OK;
+
+get_exit:
+	if (cfm)
+		os_free(cfm);
+
+	return get_result;
+}
+
 

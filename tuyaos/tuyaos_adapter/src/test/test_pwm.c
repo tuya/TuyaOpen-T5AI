@@ -12,6 +12,8 @@
 
 #if CONFIG_BK7258_PWM_ENABLE
 
+static void pwm_simple_demo(void *param);
+
 #include "driver/pwm_types.h"
 struct pwm_test_s {
     uint32_t ch;
@@ -81,7 +83,7 @@ static inline void __chan_dump(struct pwm_test_s *p, char *tag)
         bk_printf("ch: %d, freq: %d, duty: %d%%, period: %d, htime: %d\r\n",
                 p->ch, p->freq, p->duty, p->conf.period_cycle, p->conf.duty_cycle);
 }
-#define __PWM_FREQ2PERIOD(x) ((unsigned int)((1000000.0/x)))
+#define __PWM_FREQ2PERIOD(x) ((unsigned int)((26000000.0/x)))
 static inline __pwm_channel_remap(uint32_t ch)
 {
     switch(ch) {
@@ -254,10 +256,78 @@ void cli_pwm_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
     } else if (os_strcmp(argv[1], "help") == 0) {
         __pwm_usage();
         return;
+    } else if (os_strcmp(argv[1], "demo") == 0) {
+        pwm_simple_demo(NULL);
     } else {
         bk_printf("error, unknow command\r\n");
         return;
     }
+}
+
+#define PWM_DUTY                    5000 // 50% duty
+#define PWM_FREQUENCY               10000
+#include "tkl_pinmux.h"
+static void pwm_simple_demo(void *param)
+{
+    OPERATE_RET rt = OPRT_OK;
+    uint32_t frequency = PWM_FREQUENCY;
+    uint32_t count = 0;
+
+    uint32_t pwm_chan = tkl_io_pin_to_func(36, TUYA_IO_TYPE_PWM);
+
+    /*pwm init*/
+    TUYA_PWM_BASE_CFG_T pwm_cfg = {
+        .duty = PWM_DUTY, /* 1-10000 */
+        .frequency = PWM_FREQUENCY,
+        .polarity  = TUYA_PWM_NEGATIVE,
+    };
+
+    if (OPRT_OK != tkl_pwm_init(pwm_chan, &pwm_cfg)) {
+        bk_printf("error tkl_pwm_info_set\r\n");
+        return -1;
+    }
+
+    /*start PWM3*/
+    if (OPRT_OK != tkl_pwm_start(pwm_chan)) {
+        bk_printf("error tkl_pwm_info_set\r\n");
+        return -1;
+    }
+    bk_printf("PWM%d start\r\n", pwm_chan);
+
+    while (1) {
+        /*Frequency, duty cycle settings*/
+        pwm_cfg.frequency = frequency;
+        if (OPRT_OK != tkl_pwm_info_set(pwm_chan, &pwm_cfg)) {
+            bk_printf("error tkl_pwm_info_set\r\n");
+            return -1;
+        }
+
+        if (OPRT_OK != tkl_pwm_start(pwm_chan)) {
+            bk_printf("error tkl_pwm_info_set\r\n");
+            return -1;
+        }
+        bk_printf("pwm%d , frequency: %d\r\n", pwm_chan,  frequency);
+
+        tal_system_sleep(2000);
+
+        /*close pwm*/
+        count++;
+        if(count >= 3) {
+            bk_printf("pwm%d test end\r\n", pwm_chan,  frequency);
+            break;
+        }
+        frequency = frequency+10000;
+
+    }
+
+    if (OPRT_OK != tkl_pwm_stop(pwm_chan)) {
+        bk_printf("error tkl_pwm_info_set\r\n");
+        return -1;
+    }
+
+__EXIT:
+    bk_printf("PWM task is finished, will delete");
+    return;
 }
 
 #endif // CONFIG_BK7258_PWM_ENABLE

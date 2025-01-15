@@ -69,6 +69,12 @@ typedef enum
     TKL_AO_MAX,
 }TKL_AO_CHN_E;                                           // audio output channel
 
+typedef enum
+{
+    TKL_AUDIO_TYPE_UAC = 0,
+    TKL_AUDIO_TYPE_BOARD,
+}TKL_AUDIO_TYPE_E;
+
 typedef struct
 {
     BYTE_T platform_dai_type;                           // 0--IIS类型的AUDIO 1--DAC类型的AUDIO
@@ -95,6 +101,7 @@ typedef struct
 }TKL_AUDIO_FRAME_INFO_T;                                 // audio frame
 
 typedef int (*TKL_FRAME_PUT_CB)(TKL_AUDIO_FRAME_INFO_T *pframe);
+typedef int (*TKL_FRAME_SPK_CB)(void *arg);
 
 typedef struct
 {
@@ -114,6 +121,8 @@ typedef struct
     int32_t                 spk_gpio_polarity;           // pin polarity, 0 high enable, 1 low enable
     void * padta;
     TKL_FRAME_PUT_CB        put_cb;
+    TKL_FRAME_SPK_CB        spk_cb;
+    int                     spk_sample;
 }TKL_AUDIO_CONFIG_T;                                     // audio config
 
 typedef struct

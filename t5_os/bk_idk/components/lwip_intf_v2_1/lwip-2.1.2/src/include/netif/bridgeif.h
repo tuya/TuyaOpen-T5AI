@@ -62,6 +62,7 @@ typedef u32_t bridgeif_portmask_t;
 #elif BRIDGEIF_MAX_PORTS < 64
 typedef u64_t bridgeif_portmask_t;
 #endif
+extern u8_t bridgeif_netif_client_id;
 
 #define BR_FLOOD ((bridgeif_portmask_t)-1)
 
@@ -83,6 +84,30 @@ typedef struct bridgeif_initdata_s {
   u16_t           max_fdb_static_entries;
 } bridgeif_initdata_t;
 
+typedef struct bridgeif_port_private_s {
+  struct bridgeif_private_s *bridge;
+  struct netif *port_netif;
+  u8_t port_num;
+} bridgeif_port_t;
+
+typedef struct bridgeif_fdb_static_entry_s {
+  u8_t used;
+  bridgeif_portmask_t dst_ports;
+  struct eth_addr addr;
+} bridgeif_fdb_static_entry_t;
+
+typedef struct bridgeif_private_s {
+  struct netif     *netif;
+  struct eth_addr   ethaddr;
+  u8_t              max_ports;
+  u8_t              num_ports;
+  bridgeif_port_t  *ports;
+  u16_t             max_fdbs_entries;
+  bridgeif_fdb_static_entry_t *fdbs;
+  u16_t             max_fdbd_entries;
+  void             *fdbd;
+} bridgeif_private_t;
+
 /** @ingroup bridgeif
  * Use this for constant initialization of a bridgeif_initdat_t
  * (ethaddr must be passed as ETH_ADDR())
@@ -95,7 +120,11 @@ typedef struct bridgeif_initdata_s {
 #define BRIDGEIF_INITDATA2(max_ports, max_fdb_dynamic_entries, max_fdb_static_entries, e0, e1, e2, e3, e4, e5) {{e0, e1, e2, e3, e4, e5}, max_ports, max_fdb_dynamic_entries, max_fdb_static_entries}
 
 err_t bridgeif_init(struct netif *netif);
+#if BK_LWIP
+err_t bridgeif_add_port(struct netif *bridgeif, struct netif *portif, int *port_num);
+#else
 err_t bridgeif_add_port(struct netif *bridgeif, struct netif *portif);
+#endif
 err_t bridgeif_fdb_add(struct netif *bridgeif, const struct eth_addr *addr, bridgeif_portmask_t ports);
 err_t bridgeif_fdb_remove(struct netif *bridgeif, const struct eth_addr *addr);
 
@@ -103,6 +132,10 @@ err_t bridgeif_fdb_remove(struct netif *bridgeif, const struct eth_addr *addr);
 void                bridgeif_fdb_update_src(void *fdb_ptr, struct eth_addr *src_addr, u8_t port_idx);
 bridgeif_portmask_t bridgeif_fdb_get_dst_ports(void *fdb_ptr, struct eth_addr *dst_addr);
 void*               bridgeif_fdb_init(u16_t max_fdb_entries);
+#if BK_LWIP
+void bridgeif_fdb_deinit(bridgeif_private_t *br);
+void print_fdb();
+#endif
 
 #if BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT
 #ifndef BRIDGEIF_DECL_PROTECT

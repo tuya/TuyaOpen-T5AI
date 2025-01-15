@@ -370,9 +370,9 @@ bk_err_t gpio_hal_default_map_init(gpio_hal_t *hal)
 				gpio_hal_input_enable(hal, default_map[i].gpio_id, 0);
 				//NOTES:special combine use it with pull mode
 				if(default_map[i].pull_mode == GPIO_PULL_DOWN_EN)
-					gpio_hal_set_output_value(hal, i, 0);
+					gpio_hal_set_output_value(hal, default_map[i].gpio_id, 0);
 				if(default_map[i].pull_mode == GPIO_PULL_UP_EN)
-					gpio_hal_set_output_value(hal, i, 1);
+					gpio_hal_set_output_value(hal, default_map[i].gpio_id, 1);
 				break;
 			case GPIO_INPUT_ENABLE:
 				gpio_hal_output_enable(hal, default_map[i].gpio_id, 0);

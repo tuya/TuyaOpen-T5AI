@@ -3,6 +3,8 @@
 #include "bl_tra_hcit.h"
 #include "bl_uart.h"
 #include "cmsis_gcc.h"
+#include "inc/hal/hal_misc.h"
+
 #define TX_FIFO_THRD                0x40
 #define RX_FIFO_THRD                0x40
 
@@ -13,11 +15,10 @@ volatile unsigned long uart_rx_index_cur = 0;
 
 unsigned char uart_rx_end_flag = 0;
 
-
-
 char buf[128 / 2];
 u16 COUNT;
 u32 g_baud_rate;
+extern uint32_t g_cbus_delay;
 
 uint32_t uart_get_clock_freq(void)
 {
@@ -28,7 +29,12 @@ uint32_t uart_get_clock_freq(void)
 		return UART_CLOCK_FREQ_26M;
 	}
 #else
+#if CHIP_BK7236
 	return UART_CLOCK_FREQ_26M;
+#elif CHIP_BK7236N
+
+	return UART_CLOCK_FREQ_40M;
+#endif
 #endif
 }
 
@@ -118,7 +124,7 @@ int ad_printf(const char *fmt, ...)
     return rc;
 }
 
-void *bl_memcpy(void *d, const void *s, size_t n)
+__attribute__((section(".iram"))) void *bl_memcpy(void *d, const void *s, size_t n)
 {
         /* attempt word-sized copying only if buffers have identical alignment */
 
@@ -162,8 +168,7 @@ void *bl_memcpy(void *d, const void *s, size_t n)
         return d;
 }
 
-
-void *bl_memset(void *s, int c, size_t n)
+__attribute__((section(".iram"))) void *bl_memset(void *s, int c, size_t n)
 {
     unsigned char *ss = s;
     while (n--) {
@@ -172,18 +177,44 @@ void *bl_memset(void *s, int c, size_t n)
     return s;
 }
 
-void bl_flash_read_cbus(uint32_t address, void *user_buf, uint32_t size)
+__attribute__((section(".iram"))) void bl_flash_read_cbus(uint32_t address, void *user_buf, uint32_t size)
 {
-	// uint32_t int_level = bl_disable_irq();
+	while (get_FLASH_Reg0x4_busy_sw);
+
 	bl_memcpy((char*)user_buf, (const char*)(0x02000000+address),size);
-	// bl_enable_irq(int_level);
+
+	while (get_FLASH_Reg0x4_busy_sw);
 }
 
-void bl_flash_write_cbus(uint32_t address, const uint8_t *user_buf, uint32_t size)
+extern u32 g_cbus_delay;
+#define FLASH_FIFO_LEN 32
+
+void cbus_delay(uint32_t cnt)
 {
-	// uint32_t int_level = bl_disable_irq();
-	bl_memcpy((char*)(0x02000000+address), (const char*)user_buf,size);
-	// bl_enable_irq(int_level);
+	volatile int loop = cnt;
+	while (loop>0) {
+		loop--;
+	}
+}
+
+__attribute__((section(".iram"))) void bl_flash_write_cbus(uint32_t address, const uint8_t *user_buf, uint32_t size)
+{
+	while (get_FLASH_Reg0x4_busy_sw);
+
+	int offset;
+	for (offset = 0; offset < (size / FLASH_FIFO_LEN) * FLASH_FIFO_LEN; offset += FLASH_FIFO_LEN) {
+		bl_memcpy((char*)(0x02000000+address + offset), (const char*)&user_buf[offset], FLASH_FIFO_LEN);
+		cbus_delay(g_cbus_delay);
+
+		while (get_FLASH_Reg0x4_busy_sw);
+	}
+
+	if (offset < size) {
+		bl_memcpy((char*)(0x02000000 + address + offset), (const char*)&user_buf[offset], size - offset);
+		cbus_delay(g_cbus_delay);
+
+	}
+	while (get_FLASH_Reg0x4_busy_sw);
 }
 
 void uart_send(unsigned char *buff, int len)
@@ -512,10 +543,6 @@ if(status & (bit_UART_INT_RX_NEED_READ)) {
 
 void uart_static_read85(void)
 {
-	for (int i = 0; i < 85; i++) {
-		*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();	
-	}
-	#if 0  /* can reduce code size by 1k */
 			*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();
     		*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();
     		*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();
@@ -620,7 +647,6 @@ void uart_static_read85(void)
     		*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();
     		*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();
     		*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();//85
-	#endif
 	/*
 			*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();
 			*tra_hcit_rx_pdu_buf++ = UART_READ_BYTE();

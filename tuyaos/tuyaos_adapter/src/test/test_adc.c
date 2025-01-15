@@ -21,7 +21,7 @@ void cli_adc_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
     TUYA_ADC_BASE_CFG_T cfg;
     uint16_t value   = 0;
     float cali_value = 0;
-    adc_chan_t adc_chan = ADC_3;
+    adc_chan_t adc_chan = ADC_4;
 
     static uint8_t is_init = 0;
 
@@ -53,27 +53,13 @@ void cli_adc_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
     BK_LOG_ON_ERR(bk_adc_start());
     BK_LOG_ON_ERR(bk_adc_read(&value, 1000));
 
-    if(adc_chan == 0)
-    {
-        //cali_value = ((float)value/4096*5)*1.2*1000;
-        cali_value = saradc_calculate(value);
-        cali_value = cali_value*5/2;
-    }
-    else if(adc_chan == 7 || adc_chan == 8 || adc_chan == 9)
-    {
-        bk_printf("adc_chan %d has been used\r\n", adc_chan);
-    }
-    else
-    {
-        //cali_value = ((float)value/4096*2)*1.2*1000;
-        cali_value = saradc_calculate(value);
-    }
+    cali_value = bk_adc_data_calculate(value, adc_chan);
 
     bk_adc_stop();
     sys_drv_set_ana_pwd_gadc_buf(0);
     bk_adc_deinit(adc_chan);
     bk_adc_release();
-    bk_printf("adc read: %d, %f\r\n", value, cali_value * 2);
+    bk_printf("adc read: %d, %f\r\n", value, (uint32_t)(cali_value * 1000));
 
 //    BK_LOG_ON_ERR(bk_adc_driver_deinit());
 }

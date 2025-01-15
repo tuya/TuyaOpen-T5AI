@@ -67,7 +67,6 @@ enum
 #define TX_FIFO_MAX_COUNT           128
 
 
-#define RX_FIFO_THR_COUNT           85
 #define DEBUG_TX_FIFO_MAX_COUNT     16
 
 #if 0

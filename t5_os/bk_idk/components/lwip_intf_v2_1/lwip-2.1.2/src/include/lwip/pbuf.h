@@ -241,11 +241,16 @@ struct pbuf {
   u16_t tx_agg;           //mac A-MPDU bit
   u16_t tx_retry;      //mac sw retry bit
   #endif
+
 #if CONFIG_BRIDGE
   u8_t ista_idx;	/* sta_idx input from */
   u8_t osta_idx;	/* sta_idx to output */
   u8_t elfags;		/* extend flags */
   u32_t sn; 		/* seqno, 0 invalid */
+#endif
+
+#if MEMP_MEM_MALLOC
+  u16_t alloc_size;    //pool+libc malloc mode to record malloc size
 #endif
 };
 

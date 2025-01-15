@@ -12,8 +12,8 @@ def run_cmd(cmd):
         logging.error(f'failed to run "{cmd}"')
         exit(1)
 
-def pack_server_process(tool_path, bl1_secureboot_en, flash_aes_type, flash_aes_key, ota_type, ota_security_counter, boot_ota, pubkey_pem_file):
-    cmd = f'{tool_path}/main.py gen otp_efuse --flash_aes_type {flash_aes_type} --flash_aes_key flash_aes_key --pubkey_pem_file {pubkey_pem_file} --outfile otp_efuse_config.json --debug'
+def pack_server_process(tool_path, bl1_secureboot_en, flash_aes_type, flash_aes_key, ota_type, ota_security_counter, boot_ota, bl2_version, pubkey_pem_file, debug_opt=''):
+    cmd = f'{tool_path}/main.py gen otp_efuse --flash_aes_type {flash_aes_type} --flash_aes_key flash_aes_key --pubkey_pem_file {pubkey_pem_file} --outfile otp_efuse_config.json {debug_opt}'
     run_cmd(cmd)
 
     if bl1_secureboot_en:
@@ -26,5 +26,5 @@ def pack_server_process(tool_path, bl1_secureboot_en, flash_aes_type, flash_aes_
     else:
         boot_ota_opt = ''
 
-    cmd = f'{tool_path}/main.py steps pack {bl1_secureboot_en_opt} --flash_aes_type {flash_aes_type} --flash_aes_key {flash_aes_key} --ota_type {ota_type} --ota_security_counter {ota_security_counter} {boot_ota_opt} --pubkey_pem_file {pubkey_pem_file} --debug'
+    cmd = f'{tool_path}/main.py steps pack {bl1_secureboot_en_opt} --flash_aes_type {flash_aes_type} --flash_aes_key {flash_aes_key} --ota_type {ota_type} --ota_security_counter {ota_security_counter} {boot_ota_opt} --bl2_version {bl2_version} --pubkey_pem_file {pubkey_pem_file} {debug_opt}'
     run_cmd(cmd)

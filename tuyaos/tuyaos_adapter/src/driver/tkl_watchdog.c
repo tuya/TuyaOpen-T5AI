@@ -11,14 +11,13 @@
 
 #include "drv_model_pub.h"
 #include <driver/wdt.h>
-#include "tkl_output.h"
-
 
 #define WDT_RST_MASK             (0x1FF)
 #define PMU_WDT_RST_REG           (0x44000000+0x2*4)
 
 #define SYS_CPU_26M_WDT_CLK_DIV_ADDR      (0x44010000+0xa*4)
 
+extern void bk_printf(const char *fmt, ...);
 
 static void bk_wdt_rst_enable(void) {
     int level = rtos_disable_int();
@@ -34,7 +33,7 @@ uint32_t tkl_watchdog_init(TUYA_WDOG_BASE_CFG_T *cfg)
     if (cfg->interval_ms > 30000) {
         cfg->interval_ms = 30000;
     }
-    tkl_log_output("tkl_watchdog_init interval_ms(%d)!\r\n", cfg->interval_ms);
+    bk_printf("tkl_watchdog_init interval_ms(%d)!\r\n", cfg->interval_ms);
 
     bk_wdt_rst_enable();
 

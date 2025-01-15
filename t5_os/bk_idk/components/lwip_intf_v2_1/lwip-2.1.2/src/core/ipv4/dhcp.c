@@ -648,6 +648,10 @@ dhcp_handle_ack(struct netif *netif, struct dhcp_msg *msg_in)
   if (dhcp_option_given(dhcp, DHCP_OPTION_IDX_LEASE_TIME)) {
     /* remember offered lease time */
     dhcp->offered_t0_lease = dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_LEASE_TIME);
+#if BK_LWIP && CONFIG_BRIDGE
+    if (dhcp->offered_t0_lease < 600)
+      dhcp->offered_t0_lease = 600; /* 10min */
+#endif
   }
   /* renewal period given? */
   if (dhcp_option_given(dhcp, DHCP_OPTION_IDX_T1)) {

@@ -75,6 +75,42 @@ uint32_t psram_hal_cmd_read(uint32_t addr)
 	return 0;
 }
 
+//The return value can be used to check by APP
+bk_err_t psram_hal_cmd_read_ext(uint32_t addr, uint32_t *val_p)
+{
+	uint8_t m = 10, i = 5;
+
+	for (i = 5; i > 0; i--)
+	{
+		psram_ll_set_write_address(addr);
+		psram_ll_set_reg8_value(0x2);
+
+		m = 10;
+
+		while(psram_ll_get_reg8_value() & 0x2)
+		{
+			for (int j = 0; j < 5000; j++) {}
+
+			m--;
+
+			if (m == 0)
+				break;
+		};
+
+		if (m != 0)
+		{
+			*val_p = psram_ll_get_regb_value();
+			return BK_OK;
+		}
+
+		psram_hal_set_sf_reset(0);
+		psram_hal_set_sf_reset(1);
+		psram_hal_set_cmd_reset();
+	}
+
+	return BK_FAIL;
+}
+
 void psram_hal_set_clk(psram_clk_t clk)
 {
 	switch (clk)
@@ -208,7 +244,8 @@ static int psram_hal_APS6408L_init(uint32_t *id)
 		psram_hal_set_mode_value(PSRAM_MODE3);
 #else
 	psram_hal_set_mode_value(PSRAM_MODE6);//PSRAM_MODE2
-	psram_hal_set_reg5_value(0x282);
+	//psram_hal_set_reg5_value(0x282);
+	psram_hal_set_reg5_value(0x380);
 #endif
 
 	psram_hal_set_cmd_reset();
@@ -260,6 +297,7 @@ static int psram_hal_W955D8MKY_5J_init(uint32_t *id)
 	psram_hal_set_mode_value(PSRAM_MODE4);// mode 4
 #if (!CONFIG_SOC_BK7256XX)
 	psram_hal_set_reg5_value(0x292);
+	//psram_hal_set_reg5_value(0x380);	//NOTES:APS PSRAM drive stength needs changed.This type PSRAM needs to be verified.
 #endif
 
 	psram_hal_set_cmd_reset();
@@ -297,7 +335,8 @@ static int psram_hal_APS128XXO_OB9_init(uint32_t *id)
 	uint32_t val = 0;
 	psram_hal_set_mode_value(PSRAM_MODE7);
 #if (!CONFIG_SOC_BK7256XX)
-	psram_hal_set_reg5_value(0x292);
+	//psram_hal_set_reg5_value(0x292);
+	psram_hal_set_reg5_value(0x380);
 #endif
 	psram_hal_set_cmd_reset();
 

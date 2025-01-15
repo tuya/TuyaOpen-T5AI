@@ -58,8 +58,6 @@ static const int CONNECTION_TIMEOUT_MS = 5000;
 static const int CONNECTION_KEEP_ALIVE_IDLE = 5;
 static const int CONNECTION_KEEP_ALIVE_INTERVAL= 5;
 static const int CONNECTION_KEEP_ALIVE_COUNT= 3;
-#define IMAGE_HEADER_SIZE 5120
-#define DEFAULT_OTA_BUF_SIZE IMAGE_HEADER_SIZE
 
 static const char *HTTP_METHOD_MAPPING[] = {
 	"GET",
@@ -663,7 +661,7 @@ bk_http_client_handle_t bk_http_client_init(const bk_http_input_t *config)
 		}
 		_success = (
 			(bk_http_client_set_header(client, "User-Agent", user_agent) == BK_OK) &&
-			(bk_http_client_set_header(client, "Host", host_name) == BK_OK)
+			(bk_http_client_set_header(client, "Host", host_name) == BK_OK) 
 		);
 		free(host_name);
 		if (!_success) {
@@ -1130,37 +1128,6 @@ int bk_http_client_fetch_headers(bk_http_client_handle_t client)
 	return client->response->content_length;
 }
 
-static bool redirection_required(int status_code)
-{
-	switch (status_code) {
-		case HttpStatus_MovedPermanently:
-		case HttpStatus_Found:
-		case HttpStatus_SeeOther:
-		case HttpStatus_TemporaryRedirect:
-		case HttpStatus_PermanentRedirect:
-			return true;
-		default:
-			return false;
-	}
-	return false;
-}
-
-static bool process_again(int status_code)
-{
-	switch (status_code) {
-		case HttpStatus_MovedPermanently:
-		case HttpStatus_Found:
-		case HttpStatus_SeeOther:
-		case HttpStatus_TemporaryRedirect:
-		case HttpStatus_PermanentRedirect:
-		case HttpStatus_Unauthorized:
-			return true;
-		default:
-			return false;
-	}
-	return false;
-}
-
 void bk_http_client_add_auth(bk_http_client_handle_t client)
 {
 	if (client == NULL) {
@@ -1310,7 +1277,8 @@ int bk_http_client_read(bk_http_client_handle_t client, char *buffer, int len)
 				return ridx;
 			}
 			if (rlen < 0 && ridx == 0 && !bk_http_client_is_complete_data_received(client)) {
-			   return BK_FAIL;
+				http_dispatch_event(client, HTTP_EVENT_ERROR, NULL, 0);
+				return BK_FAIL;
 			}
 			return ridx;
 		}
@@ -1325,112 +1293,15 @@ int bk_http_client_read(bk_http_client_handle_t client, char *buffer, int len)
 	return ridx;
 }
 
-static bk_err_t _http_handle_response_code(bk_http_client_handle_t http_client, int status_code)
-{
-	bk_err_t err;
-	if (redirection_required(status_code)) {
-		err = bk_http_client_set_redirection(http_client);
-		if (err != BK_OK) {
-			BK_LOGE(TAG, "URL redirection Failed");
-			return err;
-		}
-	} else if (status_code == HttpStatus_Unauthorized) {
-		BK_LOGE(TAG, "HttpStatus_Unauthorized\r\n");
-		bk_http_client_add_auth(http_client);
-	} else if(status_code == HttpStatus_NotFound || status_code == HttpStatus_Forbidden) {
-		BK_LOGE(TAG, "File not found(%d)", status_code);
-		return BK_FAIL;
-	} else if (status_code >= HttpStatus_BadRequest && status_code < HttpStatus_InternalError) {
-		BK_LOGE(TAG, "Client error (%d)", status_code);
-		return BK_FAIL;
-	} else if (status_code >= HttpStatus_InternalError) {
-		BK_LOGE(TAG, "Server error (%d)", status_code);
-		return BK_FAIL;
-	}
-	else {
-		BK_LOGE(TAG, "status_code: (%d)", status_code);
-	}
-
-	char upgrade_data_buf[DEFAULT_OTA_BUF_SIZE];
-	// process_again() returns true only in case of redirection.
-	if (process_again(status_code)) {
-		 BK_LOGE(TAG, "_http_handle_response_code status_code: %d\r\n", status_code);
-		while (1) {
-			/*
-			 *	In case of redirection, bk_http_client_read() is called
-			 *	to clear the response buffer of http_client.
-			 */
-			int data_read = bk_http_client_read(http_client, upgrade_data_buf, DEFAULT_OTA_BUF_SIZE);
-			BK_LOGE(TAG, "_http_handle_response_code data_read: !!!!!!!!!!%d\r\n", data_read);
-			if (data_read <= 0) {
-				return BK_OK;
-			}
-		}
-	}
-	return BK_OK;
-}
-
-static bk_err_t _http_connect(bk_http_client_handle_t http_client)
-{
-	bk_err_t err = BK_FAIL;
-	int status_code, header_ret;
-	do {
-		char *post_data = NULL;
-		/* Send POST request if body is set.
-		 * Note: Sending POST request is not supported if partial_http_download
-		 * is enabled
-		 */
-		int post_len = bk_http_client_get_post_field(http_client, &post_data);
-		err = bk_http_client_open(http_client, post_len);
-		if (err != BK_OK) {
-			BK_LOGE(TAG, "Failed to open HTTP connection\r\n");
-			return err;
-		}
-		if (post_len) {
-			BK_LOGI(TAG, "post_len:%d\r\n", post_len);
-			int write_len = 0;
-			while (post_len > 0) {
-				write_len = bk_http_client_write(http_client, post_data, post_len);
-				if (write_len < 0) {
-					BK_LOGE(TAG, "Write failed\r\n");
-					return BK_FAIL;
-				}
-				post_len -= write_len;
-				post_data += write_len;
-			}
-		}
-		BK_LOGI(TAG, "BEGIN FEATCH HEADER\r\n");
-		header_ret = bk_http_client_fetch_headers(http_client);
-		if (header_ret < 0) {
-			BK_LOGE(TAG, "bk_http_client_fetch_headers fail\r\n");
-			return header_ret;
-		}
-		else {
-			BK_LOGD(TAG, "header_ret:%d\r\n", header_ret);
-		}
-		status_code = bk_http_client_get_status_code(http_client);
-		err = _http_handle_response_code(http_client, status_code);
-		if (err != BK_OK) {
-			return err;
-		}
-	} while (process_again(status_code));
-	BK_LOGD(TAG, "_http_connect over\r\n");
-	return err;
-}
-
-static void _http_cleanup(bk_http_client_handle_t client)
-{
-	bk_http_client_close(client);
-	bk_http_client_cleanup(client);
-}
-
 static bk_err_t bk_http_check_response(bk_http_client_handle_t client)
 {
 	if (client->response->status_code >= HttpStatus_Ok && client->response->status_code < HttpStatus_MultipleChoices) {
 		return BK_OK;
-	}
-	else
+	} else {
 		BK_LOGE(TAG, "Error, http status code: %d\r\n", client->response->status_code);
+		http_dispatch_event(client, HTTP_EVENT_ERROR, &(client->response->status_code), sizeof(client->response->status_code));
+		return BK_FAIL;
+	}
 	if (client->redirect_counter >= client->max_redirection_count || client->disable_auto_redirect) {
 		BK_LOGE(TAG, "Error, reach max_redirection_count count=%d\r\n", client->redirect_counter);
 		return BK_ERR_HTTP_MAX_REDIRECT;
@@ -1447,6 +1318,8 @@ static bk_err_t bk_http_check_response(bk_http_client_handle_t client)
 			break;
 		case HttpStatus_Unauthorized:
 			bk_http_client_add_auth(client);
+		default:
+			return BK_FAIL;
 	}
 	return BK_OK;
 }

@@ -130,7 +130,9 @@
 #define CFG_WAPI
 #define CFG_FHOST
 #define CFG_MU_CNT      1
-//#define CFG_UAPSD
+#if CONFIG_UAPSD
+#define CFG_UAPSD
+#endif
 #define CFG_KEYCFG
 #if CONFIG_WIFI6
 #define CFG_HE

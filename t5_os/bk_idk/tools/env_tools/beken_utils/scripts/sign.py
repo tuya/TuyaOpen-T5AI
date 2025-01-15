@@ -80,7 +80,7 @@ class Sign:
 
         cmd = f'{sh_sec_tools} sign -k {self.prvkey_file} -d {digest_file}'
         run_cmd(cmd)
-
+        
         with open('bl1_signature.txt', 'r') as f:
             self.signature_dict['bl1_sig_s'] = f.readline().strip();
             self.signature_dict['bl1_sig_r'] = f.readline();

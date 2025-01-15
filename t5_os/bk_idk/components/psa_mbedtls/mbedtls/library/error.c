@@ -806,12 +806,7 @@ void mbedtls_strerror(int ret, char *buf, size_t buflen)
         use_ret = ret & 0xFF80;
 
         // Translate high level error code.
-#if CONFIG_SIZE_OPTIMIZE
-        //Save 10K rodata
-        high_level_error_description = NULL; //mbedtls_high_level_strerr(ret);
-#else
         high_level_error_description = mbedtls_high_level_strerr(ret);
-#endif
 
         if (high_level_error_description == NULL) {
             mbedtls_snprintf(buf, buflen, "UNKNOWN ERROR CODE (%04X)", (unsigned int) use_ret);

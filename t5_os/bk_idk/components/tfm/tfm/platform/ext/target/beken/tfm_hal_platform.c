@@ -17,6 +17,7 @@
 #if CONFIG_TFM_BK7236_V5
 #include "tfm_hal_ppc.h"
 #endif
+#include "driver/flash.h"
 
 #define TAG "platform"
 
@@ -51,6 +52,9 @@ int bk_flash_dbus_isolation_init(void)
 #if CONFIG_OTA_OVERWRITE
 	uint32_t secondary_offset = partition_get_phy_offset(PARTITION_OTA);
 	uint32_t secondary_size = partition_get_phy_size(PARTITION_OTA);
+#if CONFIG_OTA_CONFIRM_UPDATE
+	secondary_size += partition_get_phy_size(PARTITION_OTA_CONTROL);
+#endif
 #else
 	uint32_t secondary_offset = partition_get_phy_offset(PARTITION_SECONDARY_ALL);
 	uint32_t secondary_size = partition_get_phy_size(PARTITION_SECONDARY_ALL);
@@ -164,6 +168,20 @@ uint32_t tfm_hal_is_ignore_data_shared(void)
     return (sys_is_running_from_deep_sleep() && sys_is_enable_fast_boot());
 }
 
+void tfm_hal_dma_init(void)
+{
+	/* dma secure attributes only are configured at the spe mode */
+	*((volatile uint32_t *)(0x45020000 + 2 * 4)) = 0;
+	*((volatile uint32_t *)(0x45020000 + 2 * 4)) = 1; /* soft reset dma0 module */
+	*((volatile uint32_t *)(0x45020000 + 5 * 4)) = 0xFFF;
+	*((volatile uint32_t *)(0x45020000 + 4 * 4)) = 0;
+
+	*((volatile uint32_t *)(0x45030000 + 2 * 4)) = 0;
+	*((volatile uint32_t *)(0x45030000 + 2 * 4)) = 1; /* soft reset dma1 module */
+	*((volatile uint32_t *)(0x45030000 + 5 * 4)) = 0xFFF;
+	*((volatile uint32_t *)(0x45030000 + 4 * 4)) = 0;
+}
+
 void tfm_s_2_ns_hook(void)
 {
 	tcm_spe();
@@ -187,17 +205,7 @@ void tfm_s_2_ns_hook(void)
 		reg[i] = piece_address(buf,0+i*4);
 	}
 
-	/* dma secure attributes only are configured at the spe mode */
-	*((volatile uint32_t *)(0x45020000 + 2 * 4)) = 0;
-	*((volatile uint32_t *)(0x45020000 + 2 * 4)) = 1; /* soft reset dma0 module */
-	*((volatile uint32_t *)(0x45020000 + 5 * 4)) = 0xFFF;
-	*((volatile uint32_t *)(0x45020000 + 4 * 4)) = 0;
-
-	*((volatile uint32_t *)(0x45030000 + 2 * 4)) = 0;
-	*((volatile uint32_t *)(0x45030000 + 2 * 4)) = 1; /* soft reset dma1 module */
-	*((volatile uint32_t *)(0x45030000 + 5 * 4)) = 0xFFF;
-	*((volatile uint32_t *)(0x45030000 + 4 * 4)) = 0;
-
+	tfm_hal_dma_init();
 	*((volatile uint32_t *)(0x41040000 + 2 * 4)) = 1; /* soft reset ppro module */
 
 #if CONFIG_TFM_BK7236_V5

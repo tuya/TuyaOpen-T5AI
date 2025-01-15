@@ -52,8 +52,8 @@ static inline void wdt_ll_set_period(wdt_hw_t *hw, uint32_t period)
 	REG_WRITE(WDT_R_CTRL, ctrl_val);
 
 	//TODO optimize delay API
-	extern void delay(int num);
-	delay(30);
+	extern void bk_delay(int num);
+	bk_delay(30);
 
 	ctrl_val = (period & WDT_F_PERIOD_M) | (WDT_V_KEY_2ND << WDT_F_KEY_S);
 	REG_WRITE(WDT_R_CTRL, ctrl_val);

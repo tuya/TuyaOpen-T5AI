@@ -16,6 +16,10 @@
 #include "net.h"
 #endif
 #include "bk_misc.h"
+#if CONFIG_PSA_MBEDTLS_TEST
+#include <tls_connect.h>
+#endif
+#define TAG "IPERF"
 
 #define THREAD_SIZE             (4 * 1024)
 #define THREAD_PROIRITY         4
@@ -67,6 +71,7 @@ static uint32_t iperf_priority = THREAD_PROIRITY;
 //data size of iperf
 static uint32_t iperf_size = IPERF_BUFSZ;
 static int speed_limit = IPERF_DEFAULT_SPEED_LIMIT;
+static int is_tls = 0;
 
 // TOS
 static uint32_t iperf_tos = 0; // TOS_BE: 0, BK: 0x20, VI: 0xA0, VO: 0xD0
@@ -82,6 +87,9 @@ static void iperf_reset(void)
 		os_free(s_param.host);
 	s_param.host = NULL;
 	s_param.state = IPERF_STATE_STOPPED;
+#if CONFIG_PSA_MBEDTLS_TEST
+	is_tls = 0;
+#endif
 }
 
 static void iperf_set_sock_opt(int sock)
@@ -187,6 +195,12 @@ static void iperf_client(void *thread_param)
 	int64_t prev_time = 0;
 	int64_t send_time = 0;
 	uint32_t now_time = 0;
+#if CONFIG_PSA_MBEDTLS_TEST
+	MbedTLSSession *session = NULL;
+	const char *pers = "iperf";
+	int tls_ret = 0;
+	int port = s_param.port;
+#endif
 	send_buf = (uint8_t *) os_malloc(iperf_size);
 	if (!send_buf)
 		goto _exit;
@@ -195,37 +209,81 @@ static void iperf_client(void *thread_param)
 		send_buf[i] = i & 0xff;
 
 	period_us = iperf_bw_delay(iperf_size);
-
-	while (s_param.state == IPERF_STATE_STARTED) {
-		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (sock < 0) {
-			os_printf("iperf: create socket failed, err=%d!\n", errno);
-			rtos_delay_milliseconds(1000);
-			continue;
-		}
-
-		addr.sin_family = PF_INET;
-		addr.sin_port = htons(s_param.port);
-		addr.sin_addr.s_addr = inet_addr((char *)s_param.host);
-#ifndef CONFIG_IPV6
+#if CONFIG_PSA_MBEDTLS_TEST
+	if (is_tls) {
+		session = (MbedTLSSession *) os_calloc(1, sizeof(MbedTLSSession));
+		if (session == NULL)
 		{
-			struct netif *netif;
-			netif = get_netif((ip4_addr_t *)&addr.sin_addr.s_addr);
-			if (netif) {
-				etharp_request(netif, (ip4_addr_t *)&addr.sin_addr.s_addr);
+			BK_LOGE(TAG,"malloc failed return\r\n");
+			goto _exit;
+		}
+		session->port = os_zalloc(20);
+		sprintf(session->port, "%d", port);
+		session->host = os_strdup(s_param.host);
+		if (session->port == NULL || session->host == NULL)
+		{
+			BK_LOGE(TAG,"malloc failed return\r\n");
+			goto _exit;
+		}
+		if((tls_ret = mbedtls_client_init(session, (void *)pers, strlen(pers))) != 0)
+		{
+			BK_LOGE(TAG,"initialize iperfs client failed return: -0x%x.\r\n", -tls_ret);
+			goto _exit;
+		}
+	}
+#endif
+	while (s_param.state == IPERF_STATE_STARTED) {
+#if CONFIG_PSA_MBEDTLS_TEST
+		if (is_tls) {
+			if ((tls_ret = mbedtls_client_context(session)) != 0)
+			{
+				BK_LOGE(TAG, "connect failed, iperfs client context return: -0x%x\r\n", -tls_ret);
+				goto _exit;
+			}
+			if ((tls_ret = mbedtls_client_connect(session)) != 0)
+			{
+				BK_LOGE(TAG, "connect failed, iperfs client connect return: -0x%x\r\n", -tls_ret);
+				goto _exit;
+			}
+			sock = session->server_fd.fd;
+			if (sock < 0) {
+				os_printf("iperf: create socket failed, err=%d!\n", errno);
 				rtos_delay_milliseconds(1000);
+				continue;
+			}
+			BK_LOGI(TAG, "iperf: get iperf ciphersuite:%s\n", mbedtls_ssl_get_ciphersuite(&session->ssl));
+		} else
+#endif
+		{
+			sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+			if (sock < 0) {
+				BK_LOGE(TAG, "iperf: create socket failed, err=%d!\n", errno);
+				rtos_delay_milliseconds(1000);
+				continue;
+			}
+
+			addr.sin_family = PF_INET;
+			addr.sin_port = htons(s_param.port);
+			addr.sin_addr.s_addr = inet_addr((char *)s_param.host);
+#ifndef CONFIG_IPV6
+			{
+				struct netif *netif;
+				netif = get_netif((ip4_addr_t *)&addr.sin_addr.s_addr);
+				if (netif) {
+					etharp_request(netif, (ip4_addr_t *)&addr.sin_addr.s_addr);
+					rtos_delay_milliseconds(1000);
+				}
+			}
+#endif
+			ret = connect(sock, (const struct sockaddr *)&addr, sizeof(addr));
+			if (ret == -1) {
+				BK_LOGE(TAG, "iperf: connect failed, err=%d!\n", errno);
+				closesocket(sock);
+				rtos_delay_milliseconds(1000);
+				continue;
 			}
 		}
-#endif
-		ret = connect(sock, (const struct sockaddr *)&addr, sizeof(addr));
-		if (ret == -1) {
-			os_printf("iperf: connect failed, err=%d!\n", errno);
-			closesocket(sock);
-			rtos_delay_milliseconds(1000);
-			continue;
-		}
-
-		os_printf("iperf: connect to iperf server successful!\n");
+		BK_LOGI(TAG, "iperf: connect to iperf server successful!\n");
 		iperf_set_sock_opt(sock);
 		iperf_report_init();
 		prev_time = rtos_get_time();
@@ -245,7 +303,12 @@ static void iperf_client(void *thread_param)
 
 			retry_cnt = 0;
 _tx_retry:
-			ret = send(sock, send_buf, iperf_size, 0);
+#if CONFIG_PSA_MBEDTLS_TEST
+			if (is_tls)
+				ret = mbedtls_client_write(session, send_buf, iperf_size);
+			else
+#endif
+				ret = send(sock, send_buf, iperf_size, 0);
 			if (ret > 0) {
 				iperf_report(ret);
 				if (fdelay_us > 0) {
@@ -259,7 +322,7 @@ _tx_retry:
 				if (errno == EWOULDBLOCK) {
 					retry_cnt ++;
 					if (retry_cnt >= IPERF_MAX_TX_RETRY) {
-						os_printf("iperf: tx reaches max retry(%u)\n", retry_cnt);
+						BK_LOGE(TAG, "iperf: tx reaches max retry(%u)\n", retry_cnt);
 						break;
 					} else
 						goto _tx_retry;
@@ -272,79 +335,140 @@ _tx_retry:
 			bk_task_wdt_feed();
 			#endif
 		}
-
-		closesocket(sock);
+		if (!is_tls)
+			closesocket(sock);
 		if (s_param.state != IPERF_STATE_STARTED)
 			break;
 		rtos_delay_milliseconds(1000 * 2);
 	}
 
 _exit:
+#if CONFIG_PSA_MBEDTLS_TEST
+	if (is_tls) {
+		mbedtls_client_close(session);
+		session = NULL;
+	}
+#endif
 	if (send_buf)
 		os_free(send_buf);
 	iperf_reset();
-	os_printf("iperf: is stopped\n");
+	BK_LOGI(TAG, "iperf: is stopped\n");
 	rtos_delete_thread(NULL);
 }
 
 void iperf_server(void *thread_param)
 {
 	uint8_t *recv_data;
-	uint32_t sin_size;
+	uint32_t sin_size = sizeof(struct sockaddr_in);
 	int sock = -1, connected, bytes_received;
 	struct sockaddr_in server_addr, client_addr;
 	uint32_t retry_cnt = 0;
-
+#if CONFIG_PSA_MBEDTLS_TEST
+	MbedTLSSessionServer *session = NULL;
+	int tls_ret;
+	char *pers = "iperf";
+	int port = s_param.port;
+#endif
 	recv_data = (uint8_t *) os_malloc(iperf_size);
 	if (recv_data == NULL) {
-		os_printf("iperf: no memory\n");
+		BK_LOGE(TAG, "iperf: no memory\n");
 		goto __exit;
 	}
+#if CONFIG_PSA_MBEDTLS_TEST
+	if (is_tls) {
+		session = (MbedTLSSessionServer *) os_calloc(1, sizeof(MbedTLSSessionServer));
+		if (session == NULL)
+		{
+			BK_LOGE(TAG,"malloc failed return\r\n");
+			goto __exit;
+		}
+		session->port = os_zalloc(20);
+		sprintf(session->port, "%d", port);
+		if((tls_ret = mbedtls_server_start(session, pers, strlen(pers))) != 0)
+		{
+			BK_LOGE(TAG,"initialize iperfs server failed return: -0x%x.\r\n", -tls_ret);
+			goto __exit;
+		}
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock < 0) {
-		os_printf("iperf: socket error\n");
-		goto __exit;
-	}
+		sock = session->listen_fd.fd;
+	} else
+#endif
+	{
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock < 0) {
+			BK_LOGE(TAG, "iperf: socket error\n");
+			goto __exit;
+		}
 
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(s_param.port);
-	server_addr.sin_addr.s_addr = INADDR_ANY;
-	os_memset(&(server_addr.sin_zero), 0x0, sizeof(server_addr.sin_zero));
+		server_addr.sin_family = AF_INET;
+		server_addr.sin_port = htons(s_param.port);
+		server_addr.sin_addr.s_addr = INADDR_ANY;
+		os_memset(&(server_addr.sin_zero), 0x0, sizeof(server_addr.sin_zero));
 
-	if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
-		os_printf("iperf: unable to bind, err=%d\n", errno);
-		goto __exit;
-	}
+		if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
+			BK_LOGE(TAG, "iperf: unable to bind, err=%d\n", errno);
+			goto __exit;
+		}
 
-	if (listen(sock, 5) == -1) {
-		os_printf("iperf: listen error, err=%d\n", errno);
-		goto __exit;
+		if (listen(sock, 5) == -1) {
+			BK_LOGE(TAG, "iperf: listen error, err=%d\n", errno);
+			goto __exit;
+		}
 	}
 	iperf_set_sock_opt(sock);
-
 	while (s_param.state == IPERF_STATE_STARTED) {
-		sin_size = sizeof(struct sockaddr_in);
 _accept_retry:
-		connected = accept(sock, (struct sockaddr *)&client_addr, &sin_size);
-		if (connected == -1) {
-			if (s_param.state != IPERF_STATE_STARTED)
-				break;
+#if CONFIG_PSA_MBEDTLS_TEST
+		if (is_tls) {
+			tls_ret = mbedtls_net_accept(&session->listen_fd, &session->client_fd, NULL, 0, NULL);
+			if (session->client_fd.fd == -1) {
+				if (s_param.state != IPERF_STATE_STARTED)
+					break;
+				if (tls_ret == MBEDTLS_ERR_SSL_WANT_READ || tls_ret == MBEDTLS_ERR_SSL_WANT_WRITE)
+					goto _accept_retry;
+				else {
+					BK_LOGE(TAG, "failed! mbedtls_net_accept returned %d\n\n", tls_ret);
+					goto __exit;
+				}
+			}
+			connected = session->client_fd.fd;
+			BK_LOGI(TAG, "iperf: new client connected from sock:%d\n", session->client_fd.fd);
 
-			if (errno == EWOULDBLOCK)
-				goto _accept_retry;
+			mbedtls_ssl_set_bio(&session->ssl, &session->client_fd, mbedtls_net_send, mbedtls_net_recv, NULL);
+			BK_LOGI(TAG, "Performing the SSL/TLS handshake...\r\n");
+			while ((tls_ret = mbedtls_ssl_handshake(&session->ssl)) != 0) {
+				if (tls_ret != MBEDTLS_ERR_SSL_WANT_READ && tls_ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+					os_printf("failed! mbedtls_ssl_handshake returned %d\n\n", tls_ret);
+					goto __exit;
+				}
+			}
+		} else
+#endif
+		{
+			connected = accept(sock, (struct sockaddr *)&client_addr, &sin_size);
+			if (connected == -1) {
+				if (s_param.state != IPERF_STATE_STARTED)
+					break;
+
+				if (errno == EWOULDBLOCK)
+					goto _accept_retry;
+			}
+			BK_LOGI(TAG, "iperf: new client connected from (%s, %d)\n",
+					  inet_ntoa(client_addr.sin_addr),
+					  ntohs(client_addr.sin_port));
 		}
-		os_printf("iperf: new client connected from (%s, %d)\n",
-				  inet_ntoa(client_addr.sin_addr),
-				  ntohs(client_addr.sin_port));
-
 		iperf_set_sock_opt(connected);
 		iperf_report_init();
 
 		while (s_param.state == IPERF_STATE_STARTED) {
 			retry_cnt = 0;
 _rx_retry:
-			bytes_received = recv(connected, recv_data, iperf_size, 0);
+#if CONFIG_PSA_MBEDTLS_TEST
+			if (is_tls)
+				bytes_received = mbedtls_ssl_read(&session->ssl, recv_data, iperf_size);
+			else
+#endif
+				bytes_received = recv(connected, recv_data, iperf_size, 0);
 			if (bytes_received <= 0) {
 				if (s_param.state != IPERF_STATE_STARTED)
 					break;
@@ -352,7 +476,7 @@ _rx_retry:
 				if (errno == EWOULDBLOCK) {
 					retry_cnt ++;
 					if (retry_cnt >= IPERF_MAX_RX_RETRY) {
-						os_printf("iperf: rx reaches max retry(%d)\n", retry_cnt);
+						BK_LOGE(TAG, "iperf: rx reaches max retry(%d)\n", retry_cnt);
 						break;
 					} else
 						goto _rx_retry;
@@ -361,24 +485,36 @@ _rx_retry:
 			}
 
 			iperf_report(bytes_received);
+#if (CONFIG_TASK_WDT)
+		bk_task_wdt_feed();
+#endif
 		}
-
-		if (connected >= 0)
-			closesocket(connected);
-		connected = -1;
+		if (!is_tls) {
+			if (connected >= 0)
+				closesocket(connected);
+			connected = -1;
+		}
 	}
 
 __exit:
-	if (sock >= 0)
-		closesocket(sock);
-
+#if CONFIG_PSA_MBEDTLS_TEST
+	if (is_tls) {
+		mbedtls_server_clean(session);
+		session = NULL;
+	}
+	else
+#endif
+	{
+		if (sock >= 0)
+			closesocket(sock);
+	}
 	if (recv_data) {
 		os_free(recv_data);
 		recv_data = NULL;
 	}
 
 	iperf_reset();
-	os_printf("iperf: iperf is stopped\n");
+	BK_LOGI(TAG, "iperf: iperf is stopped\n");
 	rtos_delete_thread(NULL);
 }
 
@@ -785,7 +921,10 @@ void iperf(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 		else
 			mode = IPERF_MODE_TCP_CLIENT;
 	}
-
+#if CONFIG_PSA_MBEDTLS_TEST
+	if (iperf_param_find(argc, argv, "-tls"))
+		is_tls = 1;
+#endif
 	/* config protocol port*/
 	id = iperf_param_find_id(argc, argv, "-p");
 	if (IPERF_INVALID_INDEX != id) {

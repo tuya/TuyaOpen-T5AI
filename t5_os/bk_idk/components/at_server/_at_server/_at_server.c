@@ -117,42 +117,22 @@ int _atsvr_register_commands(_atsvr_env_t *env,const struct _atsvr_command *comm
 
 void _atsvr_notice_ready(void)
 {
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
-	shell_cmd_ind_out(ATSVR_READY_MSG);
-#else
-	atsvr_cmd_ind_out(ATSVR_READY_MSG);
-#endif
-#else // !CONFIG_TUYA_GPIO_MAP
 #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 	shell_cmd_ind_out(ATSVR_READY_MSG);
 #else
 	atsvr_cmd_ind_out(ATSVR_READY_MSG);
 #endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 	return;
 }
 
 #if 0
 void _atsvr_cmd_analysis_notice_error(void)
 {
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
-	shell_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
-#else
-	atsvr_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
-#endif
-#else // !CONFIG_TUYA_GPIO_MAP
 #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 	shell_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
 #else
 	atsvr_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
 #endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 	return;
 }
 #endif
@@ -164,22 +144,12 @@ void _atsvr_cmd_rsp_ok(_atsvr_env_t *env)
 	{
 		env->setup_done = true;
 		env->setup_status = _ATSVR_SETUP_DONE;
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
+		#if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 		shell_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
 		#else
 		atsvr_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
 		#endif
-#else // !CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
-		shell_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
-		#else
-		atsvr_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
-		#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
-	}
+	}	
 	return;
 }
 
@@ -190,21 +160,11 @@ void _atsvr_cmd_rsp_error(_atsvr_env_t *env)
 	{
 		env->setup_done = true;
 		env->setup_status = _ATSVR_SETUP_ERROR;
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
+		#if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 			shell_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
 		#else
 			atsvr_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
 		#endif
-#else // !CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
-			shell_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
-		#else
-			atsvr_cmd_ind_out(ATSVR_CMDMSG_ERROR_RSP);
-		#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 	}
 	return;
 }
@@ -214,63 +174,35 @@ void _atsvr_cmd_rsp_timeout(_atsvr_env_t *env)
 	env->setup_done = false;
 	env->setup_status = _ATSVR_SETUP_TIMEOUT;
 
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    #if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
+	#if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 		shell_cmd_ind_out(ATSVR_CMDMSG_TIMEOUT);
 	#else
 		atsvr_cmd_ind_out(ATSVR_CMDMSG_TIMEOUT);
 	#endif
-#else // !CONFIG_TUYA_GPIO_MAP
-    #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
-		shell_cmd_ind_out(ATSVR_CMDMSG_TIMEOUT);
-	#else
-		atsvr_cmd_ind_out(ATSVR_CMDMSG_TIMEOUT);
-	#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 }
 
 void _atsvr_output_help(const char *msg)
 {
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
-	shell_cmd_ind_out(msg);
-#else
-	atsvr_cmd_ind_out(msg);
-#endif
-#else // !CONFIG_TUYA_GPIO_MAP
 #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 	shell_cmd_ind_out(msg);
 #else
 	atsvr_cmd_ind_out(msg);
 #endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
+
 }
 
 void _atsvr_output_msg(char *msg)
 {
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
-	shell_cmd_ind_out(msg);
-#else
-	atsvr_cmd_ind_out(msg);
-#endif
-#else // !CONFIG_TUYA_GPIO_MAP
 #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 	shell_cmd_ind_out(msg);
 #else
 	atsvr_cmd_ind_out(msg);
 #endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
+
 }
 
 
-void _atsvr_timeout_cb(void* cmd)
+static void _atsvr_timeout_cb(void* cmd)
 {
 	struct _atsvr_command* command = (struct _atsvr_command*)cmd;
 	if(command->bassert)
@@ -288,7 +220,7 @@ void _atsvr_timeout_cb(void* cmd)
 	return;
 }
 
-void proc_func_timeout_cb(void* ptr)
+static void proc_func_timeout_cb(void* ptr)
 {
 	ATSVRLOGE("[ATSVR]command_timer is too loong ,need check if use dead loop\r\n");
 	beken_timer_t* tptr = (beken_timer_t*)ptr;
@@ -298,7 +230,7 @@ void proc_func_timeout_cb(void* ptr)
 }
 
 
-const struct _atsvr_command *_atsvr_lookup_at_command(_atsvr_env_t *env,char *name, int len)
+static const struct _atsvr_command *_atsvr_lookup_at_command(_atsvr_env_t *env,char *name, int len)
 {
 
 
@@ -373,70 +305,40 @@ int _atsvc_command_handle(_atsvr_env_t *env,char argc,char **argv,int len)
 #if CONFIG_SYS_CPU0
 	if((strcmp("AT+BLE",argv[0]) == 0) || (strcmp("AT+WIFI",argv[0]) == 0) || (strcmp("AT+BT",argv[0]) == 0)  || (strcmp("AT+MAC",argv[0]) == 0))
 	{
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    #if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
+	#if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 		shell_cmd_ind_out(ATSVR_CMD_NEW_VERSION_NOTIFY);
 	#else
 		atsvr_cmd_ind_out(ATSVR_CMD_NEW_VERSION_NOTIFY);
 	#endif
-#else // !CONFIG_TUYA_GPIO_MAP
-    #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
-		shell_cmd_ind_out(ATSVR_CMD_NEW_VERSION_NOTIFY);
-	#else
-		atsvr_cmd_ind_out(ATSVR_CMD_NEW_VERSION_NOTIFY);
-	#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 		return ATSVR_OK;
 	}
 #endif
 #if (CONFIG_CPU_CNT > 1)
 #if CONFIG_SYS_CPU0
-#if CONFIG_AT_SUPPORT_MULTICORE
+#if CONFIG_AT_SUPPORT_MULTICORE	
 	/*add AT+PING = CPUX command,if we catch it,we need not to lookup,just send it to peer CPU*/
 	if(strcmp("AT+CPATH",argv[0]) == 0)
 	{
 		if(strcmp("0",argv[1])==0)
-		{
+		{ 
 			env->priority_cpu = _ATSVR_CPU0;
 			env->core_sel_model = false;
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
+		#if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 			shell_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
 		#else
 			atsvr_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
 		#endif
-#else // !CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
-			shell_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
-		#else
-			atsvr_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
-		#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 			return ATSVR_OK;
 		}
 		if(strcmp("1",argv[1])==0)
 		{
 			env->priority_cpu = _ATSVR_CPU1;
 			env->core_sel_model = true;
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
+		#if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
 			shell_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
 		#else
 			atsvr_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
 		#endif
-#else // !CONFIG_TUYA_GPIO_MAP
-        #if (CONFIG_UART_PRINT_PORT == AT_UART_PORT_CFG)
-			shell_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
-		#else
-			atsvr_cmd_ind_out(ATSVR_CMD_RSP_SUCCEED);
-		#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 			return ATSVR_OK;
 		}
 	}
@@ -660,7 +562,7 @@ typedef struct{
 	unsigned limQ : 1;
 }_atsvr_handle_input_stat;
 
-int _atsvr_handle_input(_atsvr_env_t *env,unsigned char *inbuf,int len)
+static int _atsvr_handle_input(_atsvr_env_t *env,unsigned char *inbuf,int len)
 {
 	_atsvr_handle_input_stat stat;
     char *argv[ATSVR_MAX_ARG];

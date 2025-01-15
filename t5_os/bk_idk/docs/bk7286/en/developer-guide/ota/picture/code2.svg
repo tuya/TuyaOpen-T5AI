@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- 由 Microsoft Visio, SVG Export 生成 code2.svg Page-1 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="10.6176in" height="9.0832in"
+		viewBox="0 0 764.47 653.991" xml:space="preserve" color-interpolation-filters="sRGB" class="st6">
+	<v:documentProperties v:langID="2052" v:metric="true" v:viewMarkup="false">
+		<v:userDefs>
+			<v:ud v:nameU="msvSubprocessMaster" v:prompt="" v:val="VT4(Rectangle)"/>
+			<v:ud v:nameU="msvNoAutoConnect" v:val="VT0(1):26"/>
+		</v:userDefs>
+	</v:documentProperties>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {visibility:visible}
+		.st2 {fill:#5b9bd5;fill-opacity:0.22;filter:url(#filter_2);stroke:#5b9bd5;stroke-opacity:0.22}
+		.st3 {fill:#5b9bd5;stroke:#c7c8c8;stroke-width:0.25}
+		.st4 {fill:#feffff;font-family:Courier New;font-size:1.5em;font-weight:bold}
+		.st5 {font-size:1em}
+		.st6 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Filters">
+		<filter id="filter_2">
+			<feGaussianBlur stdDeviation="2"/>
+		</filter>
+	</defs>
+	<g v:mID="0" v:index="1" v:groupContext="foregroundPage">
+		<v:userDefs>
+			<v:ud v:nameU="msvThemeOrder" v:val="VT0(0):26"/>
+		</v:userDefs>
+		<title>页-1</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<g id="shape1-1" v:mID="1" v:groupContext="shape" transform="translate(22.9999,-23.9722)">
+			<title>矩形</title>
+			<desc>{ .fa_id = FLASH_AREA_PRIMARY_MANIFEST_ID, .fa_device_id = FL...</desc>
+			<v:userDefs>
+				<v:ud v:nameU="visVersion" v:val="VT0(15):26"/>
+			</v:userDefs>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="360" cy="348.557" width="720" height="610.866"/>
+			<g id="shadow1-2" v:groupContext="shadow" v:shadowOffsetX="0.345598" v:shadowOffsetY="-1.97279" v:shadowType="1"
+					transform="matrix(1,0,0,1,0.345598,1.97279)" class="st1">
+				<rect x="0" y="43.1244" width="720" height="610.866" class="st2"/>
+			</g>
+			<rect x="0" y="43.1244" width="720" height="610.866" class="st3"/>
+			<text x="47.21" y="62.36" class="st4" v:langID="1033"><v:paragraph/><v:tabList/>{<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_id = FLASH_AREA_PRIMARY_MANIFEST_ID,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_device_id = FLASH_DEVICE_ID,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_driver = &#38;FLASH_DEV_NAME,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_off = CONFIG_PRIMARY_MANIFEST_PHY_PARTITION_OFFSET,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_size = CONFIG_PRIMARY_MANIFEST_PHY_PARTITION_SIZE,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">    </tspan>},<v:newlineChar/><tspan x="4" dy="1.2em" class="st5">    </tspan>{<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_id = FLASH_AREA_SECONDARY_MANIFEST_ID,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_device_id = FLASH_DEVICE_ID,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_driver = &#38;FLASH_DEV_NAME,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_off = CONFIG_SECONDARY_MANIFEST_PHY_PARTITION_OFFSET,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_size = CONFIG_SECONDARY_MANIFEST_PHY_PARTITION_SIZE,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">    </tspan>},<v:newlineChar/><tspan x="4" dy="1.2em" class="st5">    </tspan>{<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_id = FLASH_AREA_PRIMARY_BL2_ID,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_device_id = FLASH_DEVICE_ID,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_driver = &#38;FLASH_DEV_NAME,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_off = CONFIG_PRIMARY_BL2_PHY_PARTITION_OFFSET,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_size = CONFIG_PRIMARY_BL2_PHY_PARTITION_SIZE,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">    </tspan>},<v:newlineChar/><tspan x="4" dy="1.2em" class="st5">    </tspan>{<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_id = FLASH_AREA_SECONDARY_BL2_ID,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_device_id = FLASH_DEVICE_ID,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_driver = &#38;FLASH_DEV_NAME,<v:newlineChar/><tspan x="4"
+						dy="1.2em" class="st5">        </tspan>.fa_off = CONFIG_SECONDARY_BL2_PHY_PARTITION_OFFSET,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">        </tspan>.fa_size = CONFIG_SECONDARY_BL2_PHY_PARTITION_SIZE,<v:newlineChar/><tspan
+						x="4" dy="1.2em" class="st5">    </tspan>},</text>		</g>
+	</g>
+</svg>

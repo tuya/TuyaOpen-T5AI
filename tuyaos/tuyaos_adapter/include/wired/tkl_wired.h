@@ -32,6 +32,18 @@ typedef enum {
  */
 typedef void (*TKL_WIRED_STATUS_CHANGE_CB)(TKL_WIRED_STAT_E status);
 
+typedef struct {
+    TUYA_GPIO_NUM_E int_gpio;   ///< gpio number of SPI wired's interrupt
+}TKL_WIRED_BASE_CFG_T;
+
+/**
+ * @brief  init create wired link
+ *
+ * @param[in]   cfg: the configure for wired link
+ * 
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
+OPERATE_RET tkl_wired_init(TKL_WIRED_BASE_CFG_T *cfg);
 
 /**
  * @brief  get the link status of wired link
@@ -50,6 +62,16 @@ OPERATE_RET tkl_wired_get_status(TKL_WIRED_STAT_E *status);
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
 OPERATE_RET tkl_wired_set_status_cb(TKL_WIRED_STATUS_CHANGE_CB cb);
+
+/**
+ * @brief  set the ip address of the wired link, used for set the static ipaddress 
+ * 
+ * @param[in]   ip: the ip address
+ *
+ * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+ */
+OPERATE_RET tkl_wired_set_ip(NW_IP_S *ip);
+
 
 /**
  * @brief  get the ip address of the wired link

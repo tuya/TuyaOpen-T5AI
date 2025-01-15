@@ -77,6 +77,8 @@ void boot_platform_quit(struct boot_arm_vector_table *vt) __NO_RETURN;
 
 bool is_secureboot(void);
 
+void boot_show_version(void);
+
 #ifdef __cplusplus
 }
 #endif

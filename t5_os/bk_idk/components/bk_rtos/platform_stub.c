@@ -106,7 +106,6 @@ int __wrap_strncmp(const char *s1, const char *s2, size_t n)
 
 
 bool printf_is_init(void);
-void shell_log_out_port(int level, char *tag, const char *fmt, va_list args);
 int __wrap_printf(const char *fmt, ...)
 {
 
@@ -115,7 +114,7 @@ int __wrap_printf(const char *fmt, ...)
         return 0;
 
     va_start(args,fmt);
-    shell_log_out_port(BK_LOG_WARN, NULL, fmt, args);
+    shell_log_out_port(LOG_COMMON_MODE, BK_LOG_WARN, NULL, fmt, args);
 
     va_end(args);
 
@@ -130,7 +129,7 @@ int __wrap_iprintf(const char *fmt, ...)
         return 0;
 
     va_start(args,fmt);
-    shell_log_out_port(BK_LOG_WARN,NULL,fmt,args);
+    shell_log_out_port(LOG_COMMON_MODE, BK_LOG_WARN,NULL,fmt,args);
 
     va_end(args);
 

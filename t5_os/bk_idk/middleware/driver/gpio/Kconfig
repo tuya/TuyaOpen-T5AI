@@ -57,6 +57,10 @@ menu "GPIO"
 		help
 			If not open, gpio could not keep state when the always on power domain is off
 
+	config GPIO_RETENTION_DISPOSABLE
+		bool "Decide GPIO retention is disposable or permanent"
+		default y
+
 	config USR_GPIO_CFG_EN
 		bool "Enable user-defined GPIO config for each project"
 		depends on GPIO_DEFAULT_SET_SUPPORT

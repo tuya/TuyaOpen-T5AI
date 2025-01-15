@@ -22,22 +22,17 @@
 #include "decompress.h"
 
 
-uint8_t *decompress_in_memory(uint8_t *src, uint32_t src_len, decompress_type_t decompressor)
+uint8_t *decompress_in_memory(uint8_t *src, uint8_t *dest, uint32_t src_len, decompress_type_t decompressor)
 {
-	uint8_t *dest = NULL;
-
 	switch (decompressor) {
 		case DECOMPRESS_BY_LZMA:
 #if (CONFIG_LZMA1900 | CONFIG_LZMA2301)
 		{
 			size_t uncomp_size = *((size_t *)(src + 5));
 
-			dest = (uint8_t *)os_malloc(uncomp_size);
 			int ret = bk_lzma_decode(src, src_len, dest, uncomp_size);
 			if (ret) {
 				DEC_LOGE("lzma error code : %d \r\n", ret);
-				os_free(dest);
-				dest = NULL;
 			}
 
 			return dest;
@@ -50,8 +45,5 @@ uint8_t *decompress_in_memory(uint8_t *src, uint32_t src_len, decompress_type_t 
 			break;
 	}
 
-	if (dest == NULL) {
-		DEC_LOGE("decompress failed or no decompressor loaded");
-	}
 	return dest;
 }

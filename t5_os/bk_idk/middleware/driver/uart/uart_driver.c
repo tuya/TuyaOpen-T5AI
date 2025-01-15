@@ -1362,13 +1362,7 @@ bk_err_t bk_uart_disable_sw_fifo(uart_id_t id)
 
 uint32_t bk_uart_get_ate_detect_gpio(void)
 {
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-	return uart_hal_get_tx_pin(CONFIG_TUYA_UART_ATE_PORT);
-#else
 	return uart_hal_get_tx_pin(CONFIG_UART_ATE_PORT);
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 }
 
 gpio_id_t bk_uart_get_rx_gpio(uart_id_t id)
@@ -1487,8 +1481,6 @@ static void uart_isr_common(uart_id_t id)
 		}
 		else if (s_uart_rx_isr[id].callback)
 		{
-            //static uint32_t __rx_cnt = 0;
-            //bk_printf("rx %d %d\r\n", id, __rx_cnt++);
 				s_uart_rx_isr[id].callback(id, s_uart_rx_isr[id].param);
 		}
 		else

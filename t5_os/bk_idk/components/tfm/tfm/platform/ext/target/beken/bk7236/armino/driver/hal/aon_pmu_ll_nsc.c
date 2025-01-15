@@ -69,6 +69,15 @@ __tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r0_memchk
 	return tmp;
 }
 
+__tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r7b_memchk_bps(void) {
+	PRRO_AON_PMU_SECURE_DECLARATION();
+	PRRO_SET_AON_PMU_SECURE();
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	uint32_t tmp = r->memchk_bps;
+	PRRO_SET_AON_PMU_NON_SECURE();
+	return tmp;
+}
+
 __tfm_psa_secure_gateway_no_naked_attributes__ void aon_pmu_ll_set_r0_fast_boot(uint32_t v) {
 	PRRO_AON_PMU_SECURE_DECLARATION();
 	PRRO_SET_AON_PMU_SECURE();
@@ -81,6 +90,15 @@ __tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r0_fast_b
 	PRRO_AON_PMU_SECURE_DECLARATION();
 	PRRO_SET_AON_PMU_SECURE();
 	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	uint32_t tmp = r->fast_boot;
+	PRRO_SET_AON_PMU_NON_SECURE();
+	return tmp;
+}
+
+__tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r7b_fast_boot(void) {
+	PRRO_AON_PMU_SECURE_DECLARATION();
+	PRRO_SET_AON_PMU_SECURE();
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
 	uint32_t tmp = r->fast_boot;
 	PRRO_SET_AON_PMU_NON_SECURE();
 	return tmp;
@@ -99,6 +117,41 @@ __tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r0_gpio_s
 	PRRO_SET_AON_PMU_SECURE();
 	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
 	uint32_t tmp = r->gpio_sleep;
+	PRRO_SET_AON_PMU_NON_SECURE();
+	return tmp;
+}
+
+__tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r7b_gpio_sleep(void) {
+	PRRO_AON_PMU_SECURE_DECLARATION();
+	PRRO_SET_AON_PMU_SECURE();
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	uint32_t tmp = r->gpio_sleep;
+	PRRO_SET_AON_PMU_NON_SECURE();
+	return tmp;
+}
+
+__tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_set_r0_ota_finish(uint32_t v) {
+	PRRO_AON_PMU_SECURE_DECLARATION();
+	PRRO_SET_AON_PMU_SECURE();
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	r->ota_finish = v;
+	PRRO_SET_AON_PMU_NON_SECURE();
+}
+
+__tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r0_ota_finish(void) {
+	PRRO_AON_PMU_SECURE_DECLARATION();
+	PRRO_SET_AON_PMU_SECURE();
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x0 << 2));
+	uint32_t tmp = r->ota_finish;
+	PRRO_SET_AON_PMU_NON_SECURE();
+	return tmp;
+}
+
+__tfm_psa_secure_gateway_no_naked_attributes__ uint32_t aon_pmu_ll_get_r7b_ota_finish(void) {
+	PRRO_AON_PMU_SECURE_DECLARATION();
+	PRRO_SET_AON_PMU_SECURE();
+	aon_pmu_r0_t *r = (aon_pmu_r0_t*)(SOC_AON_PMU_REG_BASE + (0x7b << 2));
+	uint32_t tmp = r->ota_finish;
 	PRRO_SET_AON_PMU_NON_SECURE();
 	return tmp;
 }

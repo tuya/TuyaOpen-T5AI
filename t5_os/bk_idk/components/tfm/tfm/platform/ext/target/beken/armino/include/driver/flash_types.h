@@ -38,6 +38,7 @@ typedef enum
 typedef enum
 {
 	FLASH_PROTECT_NONE = 0,     /**< flash protect type none */
+	FLASH_PROTECT_APP,          /**< flash protect type app */
 	FLASH_PROTECT_ALL,          /**< flash protect type all */
 	FLASH_PROTECT_HALF,         /**< flash protect type half */
 	FLASH_UNPROTECT_LAST_BLOCK, /**< flash protect type unprotect last block */

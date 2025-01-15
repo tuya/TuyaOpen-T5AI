@@ -25,8 +25,9 @@
 #include "prot/ethernet.h"
 #include <os/str.h>
 #include <lwip/def.h>
+#include "rwnx_debug.h"
 
-void ethernetif_input(int iface, struct pbuf *p);
+void ethernetif_input(int iface, struct pbuf *p, int dst_idx);
 wifi_monitor_cb_t wifi_monitor_get_cb(void);
 #define LLC_ETHERTYPE_IPX            0x8137
 
@@ -80,8 +81,6 @@ extern struct llc_snap_short llc_bridge_tunnel_hdr;
     ((*(((uint8_t*)(addr1_ptr)) + 0) == 0x01) &&                                        \
      (*(((uint8_t*)(addr1_ptr)) + 1) == 0x00) &&                                        \
      (*(((uint8_t*)(addr1_ptr)) + 2) == 0x5E))
-
-void ethernetif_input(int iface, struct pbuf *p);
 
 static bool rwm_udp_filter(struct ipv4_hdr *ip_hdr)
 {
@@ -157,7 +156,7 @@ static bool rwm_block_bcmc(struct ethhdr *eth_hdr_ptr,uint8_t type)
 
 		default:
 			break;
-		
+
 	}
 	return false;
 }
@@ -232,8 +231,12 @@ UINT32 rwm_get_rx_free_node(uint32_t *host_id, int len)
 		buf_addr = 0;
 	}
 
-	//if (!buf_addr)
-	//    RWNX_LOGE("%s: xxxxxxxxxx oom\n", __func__);
+	if (!buf_addr)
+	{
+		//os_printf("%s: xxxxxxxxxx oom\n", __func__);
+		RWNX_MEM_STATS_INC(rx_err);
+	}
+
 	return buf_addr;
 }
 
@@ -504,9 +507,11 @@ void rwnx_upload_amsdu(struct fhost_rx_header *rxhdr)
 	uint32_t amsdu_hostids[NX_MAX_MSDU_PER_RX_AMSDU];
 	int iface = 0;
 	struct pbuf *q;
+	VIF_INF_PTR vif_entry;
 
 	os_memcpy(amsdu_hostids, rxhdr->amsdu_hostids, sizeof(amsdu_hostids));
 	iface = rxhdr->flags_vif_idx;
+	vif_entry = rwm_mgmt_vif_idx2ptr(rxhdr->flags_vif_idx);
 
 	// upload the other sub-MSDUs of A-MSDU
 	q = (struct pbuf *)(amsdu_hostids[i]);
@@ -516,8 +521,15 @@ void rwnx_upload_amsdu(struct fhost_rx_header *rxhdr)
 		/* preprocess for pbuf */
 		rwnx_rx_preprocess(iface, q);
 		#endif
-		/* upload to tcp/ip stack */
-		ethernetif_input(iface, q);
+
+		if (q->len > sizeof(struct eth_hdr)) {
+			struct eth_hdr *eth_hdr = (struct eth_hdr *)q->payload;
+			// for 802.3 frame, pass it to lwip, if the frame's src addr not equal to us.
+			if (vif_entry && os_memcmp(&eth_hdr->src, mac_vif_mgmt_get_mac_addr(vif_entry), ETH_ALEN)) {
+				/* upload to tcp/ip stack */
+				ethernetif_input(iface, q, rxhdr->flags_dst_idx);
+			}
+		}
 
 		/* get the next sub-MSDU */
 		q = (struct pbuf *)(amsdu_hostids[++i]);
@@ -550,9 +562,7 @@ UINT32 rwm_upload_data(void *host_id, uint32_t frame_len)
 	struct pbuf *q;
 	//struct mem *p_mem = NULL;
 	STA_INF_PTR sta_entry;
-#if (CONFIG_SOC_BK7236XX)
 	VIF_INF_PTR vif_entry;
-#endif
 
 	if (!host_id)
 		return BK_FAIL;
@@ -580,6 +590,8 @@ UINT32 rwm_upload_data(void *host_id, uint32_t frame_len)
 
 	/* record rssi */
 	sta_entry = rwm_mgmt_sta_idx2ptr(rxhdr->flags_sta_idx);
+	vif_entry = rwm_mgmt_vif_idx2ptr(rxhdr->flags_vif_idx);
+
 	if (sta_entry) {
 #if CONFIG_WIFI6
 		int8_t modf, mcs;
@@ -607,7 +619,6 @@ UINT32 rwm_upload_data(void *host_id, uint32_t frame_len)
 		sta_mgmt_set_freq_offset(sta_entry, 0xff);
 #endif
 #if (CONFIG_SOC_BK7236XX)
-		vif_entry = rwm_mgmt_vif_idx2ptr(rxhdr->flags_vif_idx);
 		if ((NULL != vif_entry) && (VIF_STA == mac_vif_mgmt_get_type(vif_entry))) {
 			bk7011_update_by_rx(sta_mgmt_get_rssi(sta_entry), sta_mgmt_get_freq_offset(sta_entry));
 		}
@@ -644,8 +655,18 @@ UINT32 rwm_upload_data(void *host_id, uint32_t frame_len)
 				return BK_OK;
 			}
 		}
-		/* for 802.3 frame, pass it to lwip */
-		ethernetif_input(rxhdr->flags_vif_idx, q);
+
+		if (q->len > sizeof(struct eth_hdr))
+		{
+			struct eth_hdr *eth_hdr = (struct eth_hdr *)p->payload;
+			// for 802.3 frame, pass it to lwip, if the frame's src addr not equal to us.
+			if (vif_entry && os_memcmp(&eth_hdr->src, mac_vif_mgmt_get_mac_addr(vif_entry), ETH_ALEN)) {
+				ethernetif_input(rxhdr->flags_vif_idx, q, rxhdr->flags_dst_idx);
+				return BK_OK;
+			}
+		}
+
+		pbuf_free(p);
 	}
 
 	return BK_OK;

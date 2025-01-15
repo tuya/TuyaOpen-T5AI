@@ -316,7 +316,7 @@ static void rwnx_set_more_data_flag(struct sk_buff *skb)
 
     if (unlikely(ps->active)) {
         ps->pkt_ready[txq->ps_id]--;
-        // sta->ps.sp_cnt[txq->ps_id]--;
+        ps->sp_cnt[txq->ps_id]--;
 
         // trace_ps_push(sta);
 
@@ -370,6 +370,9 @@ void rwnx_tx_push(struct sk_buff *skb)
 	txq->credits--;
 	if (txq->credits <= 0)
 		rwnx_txq_stop(txq, RWNX_TXQ_STOP_FULL);
+
+	if (txq->push_limit)
+		txq->push_limit--;
 
 	return;
 tx_exit:

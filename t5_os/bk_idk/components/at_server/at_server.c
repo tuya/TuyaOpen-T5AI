@@ -165,10 +165,7 @@ extern void cp1_atsvr_task( void *para );
 			goto init_general_err;
 		}
 	}
-
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#if (CONFIG_TUYA_UART_PRINT_PORT != AT_UART_PORT_CFG)
+#if (CONFIG_UART_PRINT_PORT != AT_UART_PORT_CFG)//temporary modify,cannot use for multicore
 #if CONFIG_FREERTOS_SMP
 	ret = rtos_create_thread_with_affinity(&msg_thread,-1,
 							 BEKEN_DEFAULT_WORKER_PRIORITY,
@@ -189,30 +186,6 @@ extern void cp1_atsvr_task( void *para );
         goto init_general_err;
     }
 #endif
-#else // !CONFIG_TUYA_GPIO_MAP
-#if (CONFIG_UART_PRINT_PORT != AT_UART_PORT_CFG)
-#if CONFIG_FREERTOS_SMP
-	ret = rtos_create_thread_with_affinity(&msg_thread,-1,
-							 BEKEN_DEFAULT_WORKER_PRIORITY,
-							 "atsvr_task",
-							 (beken_thread_function_t)atsvr_task,
-							 1024*3,
-							 0);
-#else
-	ret = rtos_create_thread(&msg_thread,
-							 BEKEN_DEFAULT_WORKER_PRIORITY,
-							 "atsvr_task",
-							 (beken_thread_function_t)atsvr_task,
-							 1024*3,
-							 0);
-#endif
-	if (ret != kNoErr) {
-        ATSVRLOGE("Error: Failed to create at thread: %d\r\n",ret);
-        goto init_general_err;
-    }
-#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 #if CONFIG_FREERTOS_SMP
 	ret = rtos_create_thread_with_affinity(&handler_thread,-1,
                              BEKEN_DEFAULT_WORKER_PRIORITY,

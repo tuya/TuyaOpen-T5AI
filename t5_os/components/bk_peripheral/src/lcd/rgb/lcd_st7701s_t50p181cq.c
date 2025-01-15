@@ -42,11 +42,11 @@ static void lcd_t50p181cq_config(void)
 #define SPI_WriteData lcd_spi_write_data
 
 	bk_gpio_set_output_high(LCD_SPI_RST);
-	delay(10);
+	Delay(10);
 	bk_gpio_set_output_low(LCD_SPI_RST);
-	delay(120);
+	Delay(120);
 	bk_gpio_set_output_high(LCD_SPI_RST);
-	delay(60);
+	Delay(60);
 
 	//****************************************************************************//
 	//========================//

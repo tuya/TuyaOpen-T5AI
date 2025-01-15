@@ -1846,11 +1846,6 @@ struct mbedtls_ssl_context {
      *          does not currently restore the user data.
      */
     mbedtls_ssl_user_data_t MBEDTLS_PRIVATE(user_data);
-
-    /* mbedtls ssl input buffer optimization flag */
-    /* min_memory_flag : ENABLE(1) : In buffer 4K, out buffer 4K */
-    /* min_memory_flag : DISABLE(0) : In buffer 16K, out buffer 4K */
-    int min_memory_flag;
 };
 
 /**

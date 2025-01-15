@@ -20,7 +20,7 @@ extern "C" {
 
 uint32_t prandom_get(void);
 
-void delay(INT32 num);
+void bk_delay(INT32 num);
 void delay_ms(UINT32 ms_count);
 void delay_sec(UINT32 ms_count);
 void delay_tick(UINT32 tick_count);

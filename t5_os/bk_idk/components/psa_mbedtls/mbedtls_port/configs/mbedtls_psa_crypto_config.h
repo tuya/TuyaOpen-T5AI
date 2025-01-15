@@ -12,6 +12,9 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+#ifndef MBEDTLS_PSA_CRYPTO_CONFIG_H
+#define MBEDTLS_PSA_CRYPTO_CONFIG_H
+
 #include <os/os.h>
 #include <os/mem.h>
 #include "sdkconfig.h"
@@ -3335,7 +3338,7 @@
  *
  * Comment to disable SHA-384
  */
-//#define MBEDTLS_SHA384_C
+#define MBEDTLS_SHA384_C
 
 /**
  * \def MBEDTLS_SHA512_C
@@ -3886,8 +3889,8 @@
 #define os_calloc(nmemb,size)   ((size) && (nmemb) > (~( unsigned int) 0)/(size))?0:os_zalloc((nmemb)*(size))
 /* To use the following function macros, MBEDTLS_PLATFORM_C must be enabled. */
 /* MBEDTLS_PLATFORM_XXX_MACRO and MBEDTLS_PLATFORM_XXX_ALT cannot both be defined */
-//#define MBEDTLS_PLATFORM_CALLOC_MACRO        os_calloc /**< Default allocator macro to use, can be undefined. See MBEDTLS_PLATFORM_STD_CALLOC for requirements. */
-//#define MBEDTLS_PLATFORM_FREE_MACRO            os_free /**< Default free macro to use, can be undefined. See MBEDTLS_PLATFORM_STD_FREE for requirements. */
+#define MBEDTLS_PLATFORM_CALLOC_MACRO        os_calloc /**< Default allocator macro to use, can be undefined. See MBEDTLS_PLATFORM_STD_CALLOC for requirements. */
+#define MBEDTLS_PLATFORM_FREE_MACRO            os_free /**< Default free macro to use, can be undefined. See MBEDTLS_PLATFORM_STD_FREE for requirements. */
 //#define MBEDTLS_PLATFORM_EXIT_MACRO            exit /**< Default exit macro to use, can be undefined */
 //#define MBEDTLS_PLATFORM_SETBUF_MACRO      setbuf /**< Default setbuf macro to use, can be undefined */
 //#define MBEDTLS_PLATFORM_TIME_MACRO            time /**< Default time macro to use, can be undefined. MBEDTLS_HAVE_TIME must be enabled */
@@ -4124,6 +4127,9 @@
 //#define MBEDTLS_X509_MAX_FILE_PATH_LEN     512 /**< Maximum length of a path/filename string in bytes including the null terminator character ('\0'). */
 
 /** \} name SECTION: Module configuration options */
+#if defined(CRYPTO_HW_ACCELERATOR) && !defined(CONFIG_TFM_CRYPTO)
+#include "mbedtls_accelerator_config.h"
+#endif
 /** Allow library to access its structs' private members.
  *
  * Although structs defined in header files are publicly available,
@@ -4132,3 +4138,5 @@
 #define MBEDTLS_ALLOW_PRIVATE_ACCESS
 
 #define MBEDTLS_ECP_HAVE_SECP256R1
+
+#endif

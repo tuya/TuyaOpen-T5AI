@@ -19,21 +19,14 @@
 
 bk_err_t rtos_init_event_ex(rtos_event_ext_t * event)
 {
-	if(event->event_inited != 0)
+	if(event->event_semaphore != NULL)
 		return BK_OK;
 
 	event->event_flag = 0;
 	
 	bk_err_t  result = rtos_init_semaphore(&event->event_semaphore, 1);
 	
-	if(result != BK_OK)
-	{
-		return result;
-	}
-	
-	event->event_inited = 1;
-
-	return BK_OK;
+	return result;
 }
 
 /* this API may be called from ISR. */
@@ -41,7 +34,7 @@ bk_err_t rtos_set_event_ex(rtos_event_ext_t * event, u32 event_flag)
 {
 	u32  int_mask;
 
-	if(event->event_inited == 0)
+	if(event->event_semaphore == NULL)
 		return BK_ERR_NOT_INIT;
 
 	if(event_flag == 0)
@@ -61,7 +54,7 @@ bk_err_t rtos_set_event_ex(rtos_event_ext_t * event, u32 event_flag)
 /* support only one task to wait on the event. */
 u32 rtos_wait_event_ex(rtos_event_ext_t * event, u32 event_flag, u32 any_event, u32 timeout)
 {
-	if(event->event_inited == 0)
+	if(event->event_semaphore == NULL)
 		return 0;
 
 	if(event_flag == 0)
@@ -80,19 +73,11 @@ u32 rtos_wait_event_ex(rtos_event_ext_t * event, u32 event_flag, u32 any_event, 
 	{
 		int_mask = port_enter_critical();
 
-		ret_flag = event->event_flag;
+		ret_flag = (event->event_flag) & event_flag;
 
-		if(any_event)
+		if(!any_event)  // all events required.
 		{
-			ret_flag &= event_flag;
-		}
-		else  // all events required.
-		{
-			if((ret_flag & event_flag) == event_flag)
-			{
-				ret_flag = event_flag;
-			}
-			else
+			if(ret_flag != event_flag)
 			{
 				ret_flag = 0;
 			}
@@ -139,6 +124,16 @@ u32 rtos_wait_event_ex(rtos_event_ext_t * event, u32 event_flag, u32 any_event, 
 
 	return 0;
 
+}
+
+bk_err_t rtos_deinit_event_ex(rtos_event_ext_t * event)
+{
+	if(event->event_semaphore == NULL)
+		return BK_OK;
+
+	bk_err_t  result = rtos_deinit_semaphore(&event->event_semaphore);
+
+	return result;
 }
 
 #define RTOS_HISR_MAX		32

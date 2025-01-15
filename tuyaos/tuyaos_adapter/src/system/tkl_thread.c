@@ -39,8 +39,9 @@ OPERATE_RET tkl_thread_create(TKL_THREAD_HANDLE* thread,
     if (!thread) {
         return OPRT_INVALID_PARM;
     }
-    
+
     BaseType_t ret = 0;
+    // thread stack default in sram
     ret = xTaskCreate(func, name, stack_size / sizeof(portSTACK_TYPE), (void *const)arg, priority, (TaskHandle_t * const )thread);
     if (ret != pdPASS) {
         return OPRT_OS_ADAPTER_THRD_CREAT_FAILED;
@@ -147,3 +148,38 @@ OPERATE_RET tkl_thread_diagnose(TKL_THREAD_HANDLE thread)
 {
     return OPRT_NOT_SUPPORTED;
 }
+
+/**
+* @brief Create thread in PSRAM
+*
+* @param[out] thread: thread handle
+* @param[in] name: thread name
+* @param[in] stack_size: stack size of thread
+* @param[in] priority: priority of thread
+* @param[in] func: the main thread process function
+* @param[in] arg: the args of the func, can be null
+*
+* @note This API is used for creating thread.
+*
+* @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
+*/
+OPERATE_RET tkl_thread_create_in_psram(TKL_THREAD_HANDLE* thread,
+                           const char* name,
+                           uint32_t stack_size,
+                           uint32_t priority,
+                           THREAD_FUNC_T func,
+                           void* const arg)
+{
+    if (!thread) {
+        return OPRT_INVALID_PARM;
+    }
+
+    BaseType_t ret = 0;
+    ret = xTaskCreateInPsram(func, name, stack_size / sizeof(portSTACK_TYPE), (void *const)arg, priority, (TaskHandle_t * const )thread);
+    if (ret != pdPASS) {
+        return OPRT_OS_ADAPTER_THRD_CREAT_FAILED;
+    }
+
+    return OPRT_OK;
+}
+

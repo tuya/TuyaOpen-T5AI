@@ -242,17 +242,17 @@ static void cli_gpio_set_keep_status_config(char *pcWriteBuffer, int xWriteBuffe
 
 	gpio_id = os_strtoul(argv[2], NULL, 10);
 
-	if(argc > 2)
+	if(argc > 3)
 		config.io_mode = os_strtoul(argv[3], NULL, 10);
 	else
 		config.io_mode = GPIO_IO_DISABLE;
 
-	if(argc > 3)
+	if(argc > 4)
 		config.pull_mode = os_strtoul(argv[4], NULL, 10);
 	else
 		config.pull_mode = GPIO_PULL_DISABLE;
 
-	if(argc > 4)
+	if(argc > 5)
 		config.func_mode = os_strtoul(argv[5], NULL, 10);
 	else
 		config.func_mode = GPIO_SECOND_FUNC_DISABLE;
@@ -290,7 +290,7 @@ static void cli_gpio_simulate_low_power_cmd(char *pcWriteBuffer, int xWriteBuffe
 		//means not switch GPIO to low power status just do save and restore
 		CLI_LOGD("mode:%d,0x%x\n", param, param);
 		int_level = rtos_enter_critical();
-		gpio_enter_low_power((void *)param);	
+		gpio_enter_low_power((void *)param);
 		rtos_exit_critical(int_level);
 
 		//TODO:simulate sytem entry low voltage.
@@ -311,7 +311,7 @@ static void cli_gpio_simulate_uart_write_cmd(char *pcWriteBuffer, int xWriteBuff
 {
 	uint32_t id = 0, div = 0;
 	uint32_t len = 8;
-	
+
 	if (argc < 4) {
 		cli_gpio_help();
 		return;
@@ -329,6 +329,31 @@ static void cli_gpio_int_isr(gpio_id_t id)
 {
 	CLI_LOGI("gpio isr index:%d\n",id);
 	bk_gpio_clear_interrupt(id);
+}
+
+static void cli_gpio_retention_test_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+{
+#if CONFIG_GPIO_RETENTION_SUPPORT
+	gpio_id_t gpio_id = GPIO_24;
+	GPIO_UP(gpio_id);
+
+#if !CONFIG_GPIO_RETENTION_DISPOSABLE
+	if (argc == 2)
+	{
+		uint32_t en = os_strtoul(argv[1], NULL, 10);
+		if (en)
+			bk_gpio_retention_set(gpio_id, GPIO_OUTPUT_STATE_HIGH);
+		else
+			bk_gpio_retention_clr(gpio_id);
+	}
+	else
+#endif
+	{
+		bk_gpio_retention_set(gpio_id, GPIO_OUTPUT_STATE_HIGH);
+	}
+#endif
+
+	bk_reboot();
 }
 
 static void cli_gpio_int_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -395,6 +420,7 @@ static const struct cli_command s_gpio_commands[] = {
 	{"gpio_kpsta", "gpio_kpsta [register/unregister][index][io_mode][pull_mode][func_mode]", cli_gpio_set_keep_status_config},
 	{"gpio_low_power", "gpio_low_power [simulate][param]", cli_gpio_simulate_low_power_cmd},
 #endif
+	{"gpio_retention_test", "gpio_retention_test", cli_gpio_retention_test_cmd},
 #if CONFIG_GPIO_SIMULATE_UART_WRITE
 	{"gpio_uart_write", "[index][div(baud_rate=1Mbps/(1+div))][string]", cli_gpio_simulate_uart_write_cmd}
 #endif

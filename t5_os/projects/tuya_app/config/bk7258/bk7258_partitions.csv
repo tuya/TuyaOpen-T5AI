@@ -4,8 +4,10 @@
 bootloader,,68k,code,TRUE,FALSE
 app,,2040k,code,TRUE,FALSE
 app1,,1700k,code,TRUE,FALSE
-usr_config,0x3C0000,2048K,data,TRUE,
-download,,24K,data,TRUE,
+#app2,,288k,code,TRUE,FALSE
+download,0x400000,2040K,data,TRUE,
+ota_mgr,,8K,data,TRUE,
+usr_config,0x600000,1836K,data,TRUE,
 easyflash,,8K,data,TRUE,
 rf_firmware,0x7fe000,4k,data,TRUE,
 net_param,0x7ff000,4k,data,TRUE,

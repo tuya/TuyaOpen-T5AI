@@ -600,6 +600,8 @@ bk_err_t lcd_display_open(lcd_open_t *lcd_config)
         conf.device_ppi = tkl_disp_get_ppi();
         conf.device_name = tkl_disp_get_lcd_name();
         config = &conf;
+
+        tuya_lcd_update_config((void *)lcd_config);
     } else
 #endif // CONFIG_TUYA_GPIO_MAP
     {

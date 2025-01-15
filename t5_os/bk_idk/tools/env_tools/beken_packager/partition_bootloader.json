@@ -25,8 +25,8 @@
             "magic": "0x45503130",
             "name": "download",
             "flash_name": "beken_onchip",
-            "offset": "0x005c0000",
-            "len": "24K"
+            "offset": "0x00400000",
+            "len": "2040K"
         }
     ]
 }

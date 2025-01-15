@@ -49,11 +49,14 @@ OPERATE_RET tkl_venc_init(int32_t vi_chn, TKL_VENC_CONFIG_T *pconfig, int32_t co
     bk_wifi_set_wifi_media_mode(true);
     bk_wifi_set_video_quality(0);
 
-    tuya_multimedia_power_on();
-    media_app_h264_pipeline_open();
+    // tuya_multimedia_power_on();
+    if (pconfig->enable_h264_pipeline) {
+        media_app_h264_pipeline_open();
+    }
 
-    if ((pconfig != NULL) && (pconfig->put_cb != NULL))
+    if ((pconfig != NULL) && (pconfig->put_cb != NULL)) {
         upper_trans_cb = pconfig->put_cb;
+    }
 
     transfer_app_task_init(__frame_test_cb);
     media_send_msg_sync(EVENT_TRANSFER_OPEN_IND, PIXEL_FMT_H264);
@@ -228,11 +231,13 @@ OPERATE_RET tkl_venc_stop( TKL_VI_CHN_E vi_chn, TKL_VENC_CHN_E venc_chn)
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_venc_uninit(TKL_VI_CHN_E vi_chn)
+OPERATE_RET tkl_venc_uninit(TKL_VI_CHN_E vi_chn, TKL_VENC_CONFIG_T *pconfig)
 {
     bk_wifi_set_video_quality(2);
     bk_wifi_set_wifi_media_mode(false);
-    media_send_msg_sync(EVENT_PIPELINE_H264_CLOSE_IND, 0);
+    if (pconfig->enable_h264_pipeline) {
+        media_app_h264_pipeline_close();
+    }
     return OPRT_OK;
 }
 

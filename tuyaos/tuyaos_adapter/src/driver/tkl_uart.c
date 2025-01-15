@@ -2,22 +2,16 @@
 
 #include "drv_model_pub.h"
 #include "uart_pub.h"
-// #include "BkDriverUart.h"
 #include <driver/uart.h>
 #include "uart_statis.h"
 #include "bk_uart.h"
-//#include "uart.h"
 #include <components/log.h>
-
-#define UART_TAG "uart"
-#define UART_LOGI(...) BK_LOGI(UART_TAG, ##__VA_ARGS__)
-#define UART_LOGW(...) BK_LOGW(UART_TAG, ##__VA_ARGS__)
-#define UART_LOGE(...) BK_LOGE(UART_TAG, ##__VA_ARGS__)
-#define UART_LOGD(...) BK_LOGD(UART_TAG, ##__VA_ARGS__)
 
 #define CLI_GETCHAR_TIMEOUT           (120000)
 
 volatile int g_test_mode = 1;
+
+extern void bk_printf(const char *fmt, ...);
 
 /**
  * @brief uart init
@@ -40,7 +34,7 @@ OPERATE_RET tkl_uart_init(TUYA_UART_NUM_E port_id, TUYA_UART_BASE_CFG_T *cfg)
     memset(&bkcfg, 0, sizeof(uart_config_t));
 
     if(CONFIG_UART_PRINT_PORT == port_num) {
-        bk_printf("tkl_uart_init: print port already init.\n");
+        // bk_printf("tkl_uart_init: print port already init.\n");
         return OPRT_OK;
     } else if (0 == port_num) {
         port = UART_ID_0;
@@ -116,9 +110,8 @@ OPERATE_RET tkl_uart_deinit(TUYA_UART_NUM_E port_id)
     int port_num = TUYA_UART_GET_PORT_NUMBER(port_id);
     uart_id_t port;
 
-    if( CONFIG_UART_PRINT_PORT == port_num)
-    {
-        UART_LOGI("tkl_uart_init: print port already inuse.\n");
+    if( CONFIG_UART_PRINT_PORT == port_num) {
+        // bk_printf("tkl_uart_init: print port already inuse.\n");
         return OPRT_INVALID_PARM;
     } else if ( 0 == port_num) {
         port = UART_ID_0;
@@ -254,8 +247,10 @@ void tkl_uart_rx_irq_cb_reg(TUYA_UART_NUM_E port_id, TUYA_UART_IRQ_CB rx_cb)
     int port_num = TUYA_UART_GET_PORT_NUMBER(port_id);
     uart_id_t port;
 
+    // bk_printf("tkl_uart_rx_irq_cb_reg: port_num(%d).rx_cb(%p).\n", port_num, rx_cb);
+
     if( CONFIG_UART_PRINT_PORT == port_num) {
-        UART_LOGI("tkl_uart_rx_irq_cb_reg: print port already inuse.\n");
+        // bk_printf("tkl_uart_rx_irq_cb_reg: print port already inuse.\n");
         return;
     } else if ( 0 == port_num) {
         port = UART_ID_0;

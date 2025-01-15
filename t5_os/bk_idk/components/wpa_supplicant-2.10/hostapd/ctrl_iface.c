@@ -3378,34 +3378,6 @@ static int hostapd_ctrl_driver_flags2(struct hostapd_iface *iface, char *buf,
 	return pos - buf;
 }
 
-
-static int hostapd_ctrl_iface_acl_del_mac(struct mac_acl_entry **acl, int *num,
-					  const char *txtaddr)
-{
-	u8 addr[ETH_ALEN];
-	struct vlan_description vlan_id;
-
-	if (!(*num))
-		return 0;
-
-	if (hwaddr_aton(txtaddr, addr))
-		return -1;
-
-	if (hostapd_maclist_found(*acl, *num, addr, &vlan_id))
-		hostapd_remove_acl_mac(acl, num, addr);
-
-	return 0;
-}
-
-
-static void hostapd_ctrl_iface_acl_clear_list(struct mac_acl_entry **acl,
-					      int *num)
-{
-	while (*num)
-		hostapd_remove_acl_mac(acl, num, (*acl)[0].addr);
-}
-
-
 static int hostapd_ctrl_iface_acl_show_mac(struct mac_acl_entry *acl, int num,
 					   char *buf, size_t buflen)
 {
@@ -3426,32 +3398,6 @@ static int hostapd_ctrl_iface_acl_show_mac(struct mac_acl_entry *acl, int num,
 	}
 	return len;
 }
-
-
-static int hostapd_ctrl_iface_acl_add_mac(struct mac_acl_entry **acl, int *num,
-					  const char *cmd)
-{
-	u8 addr[ETH_ALEN];
-	struct vlan_description vlan_id;
-	int ret = 0, vlanid = 0;
-	const char *pos;
-
-	if (hwaddr_aton(cmd, addr))
-		return -1;
-
-	pos = os_strstr(cmd, "VLAN_ID=");
-	if (pos)
-		vlanid = atoi(pos + 8);
-
-	if (!hostapd_maclist_found(*acl, *num, addr, &vlan_id)) {
-		ret = hostapd_add_acl_maclist(acl, num, vlanid, addr);
-		if (ret != -1 && *acl)
-			qsort(*acl, *num, sizeof(**acl), hostapd_acl_comp);
-	}
-
-	return ret < 0 ? -1 : 0;
-}
-
 
 static int hostapd_ctrl_iface_get_capability(struct hostapd_data *hapd,
 					     const char *field, char *buf,

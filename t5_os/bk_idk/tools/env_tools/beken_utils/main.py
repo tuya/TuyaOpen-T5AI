@@ -33,15 +33,25 @@ from scripts.solution_generator import *
 from scripts.copy_json_data_csv import *
 from scripts.image_info import *
 
+VERSION = '1.0.0.1'
+
 def set_debug(debug):
     if debug:
         logging.basicConfig()
         logging.getLogger().setLevel(logging.DEBUG)
         stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setLevel(logging.DEBUG)
+    else:
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.INFO)
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setLevel(logging.INFO)
+
+def get_version():
+    print(f"main.py, version: {VERSION}")
 
 @click.group()
-@click.version_option(version='1.0.0.0')
+@click.version_option(version=VERSION)
 def cli():
     """Beken security tools for generating code, signing, encrypting and packing"""
     pass
@@ -137,7 +147,7 @@ def gen_ota_command(otp_csv, outfile, debug):
 @gen.command("otp_efuse")
 @click.option("--flash_aes_type", type=click.Choice(['FIXED', 'RANDOM', 'NONE']), default='FIXED', required=True, help="Flash AES type.")
 @click.option("--flash_aes_key", type=str, required=False, default=None, help="flash AES key.")
-@click.option("--pubkey_pem_file", type=click.Path(exists=True, dir_okay=False), required=False, default='root_ec256_pubkey.pem', help="PEM secure boot public key file.")
+@click.option("--pubkey_pem_file", type=click.Path(exists=False, dir_okay=False), required=False, default='root_ec256_pubkey.pem', help="PEM secure boot public key file.")
 @click.option("--secure_boot", is_flag=True, help="Enable secure boot")
 @click.option("--outfile", type=str, required=False, default='otp_efuse_config.json', help="Output file")
 @click.option("--debug", is_flag=True, help="Enable debug")
@@ -197,22 +207,25 @@ def get_bin_hash_command(debug):
 
 @steps.command("sign_app_bin_hash")
 @click.option("--bl2_bin_hash", type=str, required=False, default=None, help="hash of BL2 binaries")
+@click.option("--bl2_b_bin_hash", type=str, required=False, default=None, help="hash of BL2_B binaries")
 @click.option("--app_bin_hash", type=str, required=False, default=None, help="hash of APP binaries")
 @click.option("--debug", is_flag=True, help="Enable debug")
-def sign_hash_command(bl2_bin_hash, app_bin_hash, debug):
+def sign_hash_command(bl2_bin_hash, bl2_b_bin_hash, app_bin_hash, debug):
     """Signing app binaries hash"""
     set_debug(debug)
-    sign_app_bin_hash(bl2_bin_hash, app_bin_hash)
+    sign_app_bin_hash(bl2_bin_hash, bl2_b_bin_hash, app_bin_hash)
 
 @steps.command("sign_from_app_sig")
-@click.option("--bl2_sig_s", type=str, required=False, default=None, help="BL2 sig s")
 @click.option("--bl2_sig_r", type=str, required=False, default=None, help="BL2 sig r")
+@click.option("--bl2_sig_s", type=str, required=False, default=None, help="BL2 sig s")
+@click.option("--bl2_b_sig_r", type=str, required=False, default=None, help="BL2_B sig r")
+@click.option("--bl2_b_sig_s", type=str, required=False, default=None, help="BL2_B sig s")
 @click.option("--app_sig", type=str, required=False, default=None, help="APP sig")
 @click.option("--debug", is_flag=True, help="Enable debug")
-def sign_from_sig_command(bl2_sig_s, bl2_sig_r, app_sig, debug):
+def sign_from_sig_command(bl2_sig_r, bl2_sig_s, bl2_b_sig_r, bl2_b_sig_s, app_sig, debug):
     """Create signed app bin based on signature"""
     set_debug(debug)
-    sign_from_app_sig(bl2_sig_s, bl2_sig_r, app_sig)
+    sign_from_app_sig(bl2_sig_r, bl2_sig_s, bl2_b_sig_r, bl2_b_sig_s, app_sig)
 
 @steps.command("get_ota_bin_hash")
 @click.option("--debug", is_flag=True, help="Enable debug")
@@ -247,10 +260,11 @@ def sign_from_ota_sig_command(ota_bin_sig, debug):
 @click.option("--boot_ota", is_flag=True, default=False, help="Indicate whether support bootloader OTA")
 @click.option("--ota_encrypt", is_flag=True, default=False, help="Indicate whether ota.bin is encrypted")
 @click.option("--pubkey_pem_file", type=str, default='root_ec256_privkey.pem', help="BL2 public key PEM file")
-def pack_command(debug, flash_aes_type, flash_aes_key, bl1_secureboot_en, ota_type, ota_security_counter, ota_encrypt, boot_ota, pubkey_pem_file):
+@click.option("--bl2_version", type=str, required=True, default=None, help="configuration bl2 version")
+def pack_command(debug, flash_aes_type, flash_aes_key, bl1_secureboot_en, ota_type, ota_security_counter, ota_encrypt, boot_ota, bl2_version, pubkey_pem_file):
     """Pack download bin"""
     set_debug(debug)
-    steps_pack(flash_aes_type, flash_aes_key, bl1_secureboot_en, ota_type, ota_security_counter, ota_encrypt, boot_ota, pubkey_pem_file)
+    steps_pack(flash_aes_type, flash_aes_key, bl1_secureboot_en, ota_type, ota_security_counter, ota_encrypt, boot_ota, bl2_version, pubkey_pem_file)
 
 @steps.command("pack_csv")
 @click.option("--debug", is_flag=True, help="Enable debug")
@@ -263,10 +277,11 @@ def pack_csv_command(debug):
 @click.option("--debug", is_flag=True, help="Enable debug")
 @click.option("--config_dir", type=click.Path(exists=True, dir_okay=True), required=False, default=None, help="configuration files dir")
 @click.option("--aes_key", type=str, required=False, default=None, help="configuration flash aes key")
-def pack_command(debug, config_dir, aes_key):
+@click.option("--pk_hash", is_flag=True, default=True, help="public key hash pack into the image")
+def pack_command(debug, config_dir, aes_key, pk_hash):
     """Pack downloadable bin in a single command"""
     set_debug(debug)
-    pack_all(config_dir, aes_key)
+    pack_all(config_dir, aes_key, pk_hash)
 
 @sign.command("bl1_sign_hash")
 @click.option("--privkey_pem_file", type=click.Path(exists=True, dir_okay=False), required=False, default='root_ec256_privkey.pem', help="PEM private key file.")
@@ -287,11 +302,12 @@ def bl1_sign_hash_command(privkey_pem_file, hash, outfile, debug):
 @click.option("--bin_file", type=click.Path(exists=True, dir_okay=False), required=False, default='bl2.bin', help="Binary file to be signed.")
 @click.option("--load_addr", type=str, required=True, default='0x0', help="BL2 load address.")
 @click.option("--outfile", type=str, required=False, default='primary_manifest.bin', help="Output file")
+@click.option("--bl2_ver", type=str, required=False, default=None, help="bl2 version number")
 @click.option("--debug", is_flag=True, help="Enable debug")
-def bl1_sign_command(action_type, key_type, privkey_pem_file, pubkey_pem_file, signature, bin_file, load_addr, outfile, debug):
+def bl1_sign_command(action_type, key_type, privkey_pem_file, pubkey_pem_file, signature, bin_file, load_addr, outfile, bl2_ver, debug):
     """sign or calculate binary hash for bl1."""
     set_debug(debug)
-    bl1_sign(action_type, key_type, privkey_pem_file, pubkey_pem_file, signature, bin_file, load_addr, load_addr, outfile)
+    bl1_sign(action_type, key_type, privkey_pem_file, pubkey_pem_file, signature, bin_file, load_addr, load_addr, outfile, bl2_ver)
 
 @sign.command("bl2_sign_hash")
 @click.option("-k", "--privkey_pem_file", type=click.Path(exists=True, dir_okay=False), required=False, default='root_ec256_privkey.pem', help="PEM private key file.")
@@ -308,6 +324,9 @@ def bl2_sign_hash_command(privkey_pem_file, hash, outfile, debug):
 @click.option("--key_type", type=click.Choice(['ec256']), default='ec256', required=False, help="Sign algorithm, currently only support ec256.")
 @click.option("--privkey_pem_file", type=click.Path(exists=True, dir_okay=False), required=False, default='root_ec256_privkey.pem', help="PEM private key file.")
 @click.option("--pubkey_pem_file", type=click.Path(exists=True, dir_okay=False), required=False, default='root_ec256_pubkey.pem', help="PEM public key file.")
+@click.option("--replace_pubkey_en", is_flag=True, default=False, help="Indicate whether enable key replacement")
+@click.option("--new_privkey", type=click.Path(exists=True, dir_okay=False), required=False, default='ec256_private_key.pem', help="PEM private key file.")
+@click.option("--new_pubkey", type=click.Path(exists=True, dir_okay=False), required=False, default='ec256_public_key.pem', help="PEM public key file.")
 @click.option("--signature", type=str, required=False, default=None, help="Signature of manifest hash.")
 @click.option("--bin_file", type=click.Path(exists=True, dir_okay=False), required=False, default='bl2.bin', help="Binary file to be signed.")
 @click.option("--partition_size", type=int, required=True, default=0, help="Partition size.")

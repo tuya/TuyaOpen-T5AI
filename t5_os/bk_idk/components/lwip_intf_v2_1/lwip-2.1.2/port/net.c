@@ -116,13 +116,13 @@ struct iface {
 };
 FUNCPTR sta_connected_func;
 
-static struct iface g_mlan = {{0}, .name = "sta"};
-static struct iface g_uap = {{0}, .name = "ap"};
+static struct iface g_mlan = {{.name = "s0",}, .name = "sta"};
+static struct iface g_uap = {{.name = "ap",}, .name = "ap"};
 #ifdef CONFIG_ETH
-static struct iface g_eth = {{0}, .name = "eth"};
+static struct iface g_eth = {{.name = "e0",}, .name = "eth"};
 #endif
 #if CONFIG_BRIDGE
-static struct iface g_br = {{0}, .name = "br"};
+static struct iface g_br = {{.name = "br"}, .name = "br"};
 #endif
 net_sta_ipup_cb_fn sta_ipup_cb = NULL;
 
@@ -504,6 +504,11 @@ void sta_ip_start(void)
 }
 
 #if CONFIG_BRIDGE
+void bridge_set_ip_start_flag(bool enable)
+{
+	bridge_ip_start_flag = enable;
+}
+
 void bridge_ip_start(void)
 {
 
@@ -514,21 +519,37 @@ void bridge_ip_start(void)
 		return;
 	}
 }
+
+extern void bridgeif_deinit(struct netif *netif);
+extern u8_t bridgeif_netif_client_id;
+
+static void beken_reset_bridge(struct netif *netif)
+{
+	netif_set_client_data((struct netif *)net_get_sta_handle(), bridgeif_netif_client_id, NULL);
+	netif_set_flags((struct netif *)net_get_sta_handle(), NETIF_FLAG_ETHARP);
+	netif_set_client_data((struct netif *)net_get_uap_handle(), bridgeif_netif_client_id, NULL);
+	netif_set_flags((struct netif *)net_get_uap_handle(), NETIF_FLAG_ETHARP);
+	LWIP_LOGI("bridg ip down\r\n");
+	netif_set_status_callback(&g_br.netif, NULL);
+}
+
 void bridge_ip_stop(void)
 {
 	if (bridge_ip_start_flag) {
-			LWIP_LOGI("bridg ip down\r\n");
-			bridge_ip_start_flag = false;
-			netif_set_status_callback(&g_br.netif, NULL);
-			netifapi_dhcp_stop(&g_br.netif);
-			netifapi_netif_set_down(&g_br.netif);
+		struct netif *br = (struct netif *)net_get_br_handle();
+
+		netifapi_netif_common(br, beken_reset_bridge, NULL);
+		netifapi_netif_remove(br);
+		netifapi_netif_common(br, bridgeif_deinit, NULL);
 #if LWIP_IPV6
-			for (u8_t addr_idx = 1; addr_idx < LWIP_IPV6_NUM_ADDRESSES; addr_idx++) {
-				netif_ip6_addr_set(&g_br.netif, addr_idx, (const ip6_addr_t *)IP6_ADDR_ANY);
-				g_br.netif.ip6_addr_state[addr_idx] = IP6_ADDR_INVALID;
-			}
-#endif
+		for (u8_t addr_idx = 1; addr_idx < LWIP_IPV6_NUM_ADDRESSES; addr_idx++) {
+			netif_ip6_addr_set(&g_br.netif, addr_idx, (const ip6_addr_t *)IP6_ADDR_ANY);
+			g_br.netif.ip6_addr_state[addr_idx] = IP6_ADDR_INVALID;
 		}
+#endif
+
+		bridge_ip_start_flag = false;
+	}
 }
 
 uint32_t bridge_ip_is_start(void)
@@ -1036,8 +1057,13 @@ int net_wlan_remove_netif(uint8_t *mac)
 
 #if CONFIG_WIFI6_CODE_STACK
 bool etharp_tmr_flag = false;
+bool g_bk_ap_connected = false;
 void net_begin_send_arp_reply(bool is_send_arp, bool is_allow_send_req)
 {
+	// If connected to beken repeater, don't send arp response
+	if (g_bk_ap_connected)
+		return;
+
 	//send reply
 	if (is_send_arp && !is_allow_send_req) {
 		etharp_tmr_flag = true;

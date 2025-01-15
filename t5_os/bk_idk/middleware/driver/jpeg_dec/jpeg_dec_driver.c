@@ -349,13 +349,13 @@ static void jpeg_decoder_isr(void)
 #endif
 
 #if (CONFIG_JPEGDEC_HW_SUPPORT_FFD9_CHECK)
-//                extern  void delay(int num);
+//                extern  void bk_delay(int num);
                 while(jpeg_dec_ll_get_reg0xd_state_dec_busy())
                 {
                     LOGE("%s %d dec_busy %x\n", __func__, __LINE__);
                 }
                                 
-//                delay(1);
+//                bk_delay(1);
                 result.size = jpeg_dec_ll_get_reg0x5d_value();
                 result.ok = result.size == jpeg_size;
 

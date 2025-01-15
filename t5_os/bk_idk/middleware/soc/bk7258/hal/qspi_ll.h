@@ -405,7 +405,7 @@ static inline void qspi_ll_io_read(qspi_hw_t *hw, void *data, uint32_t data_len)
 	} else {
 		size = (data_len / 4) + 1;
 	}
-
+	
 	for(uint32_t i = 0; i < size; i++) {
 		*((uint32_t *)data + i) = *((uint32_t *)(hw->fifo_data) + i);
 	}
@@ -416,6 +416,10 @@ static inline void qspi_ll_init_command(qspi_hw_t *hw, const qspi_cmd_t *cmd)
 	uint8_t addr_h;
 	uint8_t addr_m;
 	uint8_t addr_l;
+
+	// Modified by TUYA Start
+    uint8_t addr_hh;
+	// Modified by TUYA End
 
 if(QSPI_FLASH == cmd->device) {
 	if(INDIRECT_MODE == cmd->work_mode) {
@@ -436,6 +440,7 @@ if(QSPI_FLASH == cmd->device) {
 				}
 			} else if (FLASH_WR_EN_CMD == ((cmd->cmd) & QSPI_F_CMD1_M)) {
 				hw->cmd_c_cfg1.v = 0xc;
+
 			} else if(cmd->addr_valid_bit == QSPI_ADDR_VALID_BIT8) {
                 addr_l = cmd->addr & 0x0000ff;
                 hw->cmd_c_h.v &= (~(QSPI_F_CMD2_M << QSPI_F_CMD2_S));
@@ -450,6 +455,27 @@ if(QSPI_FLASH == cmd->device) {
 				hw->cmd_c_h.v &= (~(QSPI_F_CMD3_M << QSPI_F_CMD3_S));
 				hw->cmd_c_h.v |= ((addr_l & QSPI_F_CMD3_M) << QSPI_F_CMD3_S);
                 hw->cmd_c_cfg1.v = 0xc0;
+
+			// Modified by TUYA Start
+            }  else if (cmd->addr_valid_bit == QSPI_ADDR_VALID_BIT32) {
+                addr_hh = (cmd->addr & 0xff000000) >> 24;
+                addr_h = (cmd->addr & 0x00ff0000) >> 16;
+				addr_m = (cmd->addr & 0x0000ff00) >> 8;
+				addr_l = cmd->addr & 0x000000ff;
+                hw->cmd_c_h.v &= (~(QSPI_F_CMD2_M << QSPI_F_CMD2_S));
+				hw->cmd_c_h.v |= ((addr_hh & QSPI_F_CMD2_M) << QSPI_F_CMD2_S);
+				hw->cmd_c_h.v &= (~(QSPI_F_CMD3_M << QSPI_F_CMD3_S));
+				hw->cmd_c_h.v |= ((addr_h & QSPI_F_CMD3_M) << QSPI_F_CMD3_S);
+				hw->cmd_c_h.v &= (~(QSPI_F_CMD4_M << QSPI_F_CMD4_S));
+				hw->cmd_c_h.v |= ((addr_m & QSPI_F_CMD4_M) << QSPI_F_CMD4_S);
+				hw->cmd_c_l.v &= (~(QSPI_F_CMD1_M << QSPI_F_CMD1_S));
+				hw->cmd_c_l.v |= ((addr_l & QSPI_F_CMD1_M) << QSPI_F_CMD1_S);
+                if(QSPI_4WIRE == cmd->wire_mode) {
+					hw->cmd_c_cfg1.v = 0xea8;
+				} else {
+					hw->cmd_c_cfg1.v = 0x300;
+				}
+			// Modified by TUYA Start
 			} else {
 				addr_h = (cmd->addr & 0xff0000) >> 16;
 				addr_m = (cmd->addr & 0x00ff00) >> 8;
@@ -460,8 +486,8 @@ if(QSPI_FLASH == cmd->device) {
 				hw->cmd_c_h.v |= ((addr_m & QSPI_F_CMD3_M) << QSPI_F_CMD3_S);
 				hw->cmd_c_h.v &= (~(QSPI_F_CMD4_M << QSPI_F_CMD4_S));
 				hw->cmd_c_h.v |= ((addr_l & QSPI_F_CMD4_M) << QSPI_F_CMD4_S);
-
 				hw->cmd_c_cfg1.v = 0x300;
+
 			}
 			hw->cmd_c_cfg2.data_len = cmd->data_len;
 			hw->cmd_c_cfg2.data_line = cmd->wire_mode;
@@ -483,11 +509,34 @@ if(QSPI_FLASH == cmd->device) {
 			if((FLASH_RD_S0_S7_CMD == cmd->cmd) || (FLASH_RD_S8_S15_CMD == cmd->cmd) ||
                 ((FLASH_READ_ID_CMD == cmd->cmd) && (cmd->addr_valid_bit == QSPI_ADDR_INVALID))) {
 				hw->cmd_d_cfg1.v = 0xc;
+
 			} else if(cmd->addr_valid_bit == QSPI_ADDR_VALID_BIT8) {
                 addr_l = cmd->addr & 0x0000ff;
                 hw->cmd_d_h.v &= (~(QSPI_F_CMD2_M << QSPI_F_CMD2_S));
 				hw->cmd_d_h.v |= ((addr_l & QSPI_F_CMD2_M) << QSPI_F_CMD2_S);
                 hw->cmd_d_cfg1.v = 0x30;
+
+			// Modified by TUYA Start
+            }  else if (cmd->addr_valid_bit == QSPI_ADDR_VALID_BIT32) {
+                addr_hh = (cmd->addr & 0xff000000) >> 24;
+                addr_h = (cmd->addr & 0x00ff0000) >> 16;
+				addr_m = (cmd->addr & 0x0000ff00) >> 8;
+				addr_l = cmd->addr & 0x000000ff;
+                hw->cmd_d_h.v &= (~(QSPI_F_CMD2_M << QSPI_F_CMD2_S));
+				hw->cmd_d_h.v |= ((addr_hh & QSPI_F_CMD2_M) << QSPI_F_CMD2_S);
+				hw->cmd_d_h.v &= (~(QSPI_F_CMD3_M << QSPI_F_CMD3_S));
+				hw->cmd_d_h.v |= ((addr_h & QSPI_F_CMD3_M) << QSPI_F_CMD3_S);
+				hw->cmd_d_h.v &= (~(QSPI_F_CMD4_M << QSPI_F_CMD4_S));
+				hw->cmd_d_h.v |= ((addr_m & QSPI_F_CMD4_M) << QSPI_F_CMD4_S);
+				hw->cmd_d_l.v &= (~(QSPI_F_CMD1_M << QSPI_F_CMD1_S));
+				hw->cmd_d_l.v |= ((addr_l & QSPI_F_CMD1_M) << QSPI_F_CMD1_S);
+                if(QSPI_4WIRE == cmd->wire_mode) {
+					hw->cmd_d_cfg1.v = 0xea8;
+				} else {
+					hw->cmd_d_cfg1.v = 0x300;
+				}
+			// Modified by TUYA End
+
 			} else {
 				addr_h = (cmd->addr & 0xff0000) >> 16;
 				addr_m = (cmd->addr & 0x00ff00) >> 8;
@@ -499,7 +548,10 @@ if(QSPI_FLASH == cmd->device) {
 				hw->cmd_d_h.v &= (~(QSPI_F_CMD4_M << QSPI_F_CMD4_S));
 				hw->cmd_d_h.v |= ((addr_l & QSPI_F_CMD4_M) << QSPI_F_CMD4_S);
 				if(QSPI_4WIRE == cmd->wire_mode) {
-					hw->cmd_d_cfg1.v = 0xea8;
+					// Modified by TUYA Start
+					//hw->cmd_d_cfg1.v = 0xea8;
+					hw->cmd_d_cfg1.v = 0x300;
+					// Modified by TUYA End
 				} else {
 					hw->cmd_d_cfg1.v = 0x300;
 				}
@@ -508,7 +560,9 @@ if(QSPI_FLASH == cmd->device) {
 			hw->cmd_d_cfg2.data_line = cmd->wire_mode;
 			hw->cmd_d_cfg2.dummy_clock = cmd->dummy_cycle;
 			if (cmd->dummy_cycle) {
-				hw->cmd_d_cfg2.dummy_mode = 5;
+				// Modified by TUYA Start
+				hw->cmd_d_cfg2.dummy_mode = 4;
+				// Modified by TUYA End
 			} else {
 				hw->cmd_d_cfg2.dummy_mode = 0;
 			}
