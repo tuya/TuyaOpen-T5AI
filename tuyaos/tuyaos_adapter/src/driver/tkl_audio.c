@@ -115,7 +115,7 @@ OPERATE_RET tkl_ai_init(TKL_AUDIO_CONFIG_T *pconfig, int32_t count)
     }
 
     if (pconfig->enable) {
-        if ((pconfig->sample != 8000) || (pconfig->sample != 16000)) {
+        if ((pconfig->sample != 8000) && (pconfig->sample != 16000)) {
             bk_printf("voice only support 8k/16k sample, set value %d\r\n", pconfig->sample);
             return -1;
         }
