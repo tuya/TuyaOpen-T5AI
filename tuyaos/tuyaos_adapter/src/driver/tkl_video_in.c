@@ -180,12 +180,6 @@ OPERATE_RET tkl_vi_init(TKL_VI_CONFIG_T *pconfig, int count)
         device.ty_param[4] = __vi_dvp_i2c_clk;
         device.ty_param[5] = __vi_dvp_i2c_sda;
     }
-    // tuya_multimedia_power_on();
-    ret = media_app_camera_open(&device);
-
-    if (ret != OPRT_OK) {
-        return ret;
-    }
 
     if (device.type == UVC_CAMERA)
         vi_uvc_status = 1;
