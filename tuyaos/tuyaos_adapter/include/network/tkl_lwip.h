@@ -45,6 +45,8 @@ OPERATE_RET tkl_ethernetif_output(TKL_NETIF_HANDLE netif, TKL_PBUF_HANDLE p);
  */
 OPERATE_RET tkl_ethernetif_recv(TKL_NETIF_HANDLE netif, TKL_PBUF_HANDLE p);
 
+struct netif *tkl_lwip_get_netif_by_index(int net_if_idx);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

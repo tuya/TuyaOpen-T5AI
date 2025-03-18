@@ -30,6 +30,7 @@
 #include "gpio_driver.h"
 // Modified by TUYA Start
 #include "gpio_map.h"
+#include "tkl_video_in.h"
 // Modified by TUYA End
 #include "bk_misc.h"
 #include <modules/pm.h>
@@ -851,13 +852,13 @@ static void uvc_camera_power_on(void)
 	bk_usb_mailbox_sw_master_init();
 #endif
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t usb_ldo, active_level;
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	bk_usb_power_ops(usb_ldo, 1);
 #else
 	bk_usb_power_ops(CONFIG_USB_VBAT_CONTROL_GPIO_ID, 1);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 
 	void *parameter = (void *)uvc_camera_connect;
@@ -1404,13 +1405,13 @@ static void uvc_camera_deinit(void)
 	os_memset(uvc_frame_id, 0x00, sizeof(uvc_frame_id)*sizeof(uint32_t));
 
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t usb_ldo, active_level;
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	bk_usb_power_ops(usb_ldo, 0);
 #else
 	bk_usb_power_ops(CONFIG_USB_VBAT_CONTROL_GPIO_ID, 0);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 
 	bk_pm_module_vote_cpu_freq(PM_DEV_ID_USB_1, PM_CPU_FRQ_DEFAULT);

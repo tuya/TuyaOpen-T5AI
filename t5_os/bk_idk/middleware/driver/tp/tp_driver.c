@@ -63,11 +63,6 @@
 #define TP_THREAD_PRIORITY   (4)
 #define TP_THREAD_STACK_SIZE (1024)
 
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-extern int tkl_display_ll_tp_config(int type);
-#endif
-// Modified by TUYA End
 
 static beken_semaphore_t tp_sema = NULL;
 static beken_thread_t tp_thread_handle = NULL;
@@ -139,7 +134,8 @@ void bk_tp_set_sensor_devices_list(const tp_sensor_config_t **list, uint16_t siz
 {
     tp_sensor_devices_list = list;
     tp_sensor_devices_size = size;
-}
+
+}
 
 int tp_i2c_read_uint8(uint8_t addr, uint8_t reg, uint8_t *buff, uint16_t len)
 {
@@ -301,16 +297,8 @@ bk_err_t bk_tp_gpio_init(const tp_config_t *config)
 	}
 
 	gpio_config_t mode = {0};
-
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-	gpio_id_t rst_id = tkl_display_ll_tp_config(0);
-	gpio_id_t int_id = tkl_display_ll_tp_config(1);
-#else
 	gpio_id_t rst_id = TP_RST_GPIO_ID;
 	gpio_id_t int_id = TP_INT_GPIO_ID;
-#endif
-// Modified by TUYA End
 
 	// INT GPIO - output high
 	BK_LOG_ON_ERR(gpio_dev_unmap(int_id));
@@ -369,14 +357,7 @@ static void tp_int_gpio_isr(gpio_id_t id)
 
 	if (false != tp_driver_init_flag)
 	{
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-	    gpio_id_t int_id = tkl_display_ll_tp_config(1);
-		bk_gpio_disable_interrupt(int_id);
-#else
 		bk_gpio_disable_interrupt(TP_INT_GPIO_ID);
-#endif
-// Modified by TUYA End
 		rtos_set_semaphore(&tp_sema);
 	}
 }
@@ -417,14 +398,7 @@ bk_err_t bk_tp_int_init(const tp_config_t *config)
 	}
 
 	gpio_config_t mode = {0};
-
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-	gpio_id_t int_id = tkl_display_ll_tp_config(1);
-#else
 	gpio_id_t int_id = TP_INT_GPIO_ID;
-#endif
-// Modified by TUYA End
 	gpio_int_type_t int_type = 0;
 
 	BK_LOG_ON_ERR(gpio_dev_unmap(int_id));
@@ -457,14 +431,7 @@ bk_err_t bk_tp_int_init(const tp_config_t *config)
 
 bk_err_t bk_tp_int_deinit(void)
 {
-
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-	gpio_id_t int_id = tkl_display_ll_tp_config(1);
-#else
 	gpio_id_t int_id = TP_INT_GPIO_ID;
-#endif
-// Modified by TUYA End
 
 	BK_LOG_ON_ERR(bk_gpio_disable_interrupt(int_id));
 
@@ -511,14 +478,8 @@ void tp_process_task(beken_thread_arg_t arg)
 			}
 		}
 
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-		gpio_id_t int_id = tkl_display_ll_tp_config(1);
-		BK_LOG_ON_ERR(bk_gpio_enable_interrupt(int_id));
-#else
-		BK_LOG_ON_ERR(bk_gpio_enable_interrupt(TP_INT_GPIO_ID));
-#endif
-// Modified by TUYA End
+
+	BK_LOG_ON_ERR(bk_gpio_enable_interrupt(TP_INT_GPIO_ID));
 	}
 }
 

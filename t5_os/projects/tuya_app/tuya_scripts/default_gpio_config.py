@@ -1,66 +1,109 @@
+#! /usr/bin/env python3
+# vim:fenc=utf-8
+#
+# Copyright © 2025 cc <cc@tuya>
+#
+# Distributed under terms of the MIT license.
+
+
 import json
-import argparse
 import os
 
-def generate_h_file(json_file, output_path):
-    # 读取 JSON 文件
-    with open(json_file) as file:
-        data = json.load(file)
+def load_json_files(file_paths):
+    total_gpio = {}
+    for file_path in file_paths:
+        print("file:{}".format(file_path))
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+            for item in data['gpio_map']:
+                gpio_id = item['gpio_id']
+                if gpio_id in total_gpio:
+                    # 更新现有项，仅覆盖提供的字段
+                    total_gpio[gpio_id].update(item)
+                else:
+                    # 新项，直接添加
+                    total_gpio[gpio_id] = item.copy()
+    return total_gpio
 
-    gpio_map = data['gpio_map']
+def sort_gpio_items(gpio_dict):
+    items = list(gpio_dict.values())
+    items.sort(key=lambda x: int(x['gpio_id'].split('_')[1]))
+    return items
 
-    # C 头文件生成
-    h_code = """
-#ifndef GPIO_CONFIG_H
+def group_by_core(sorted_items):
+    core_groups = {}
+    for item in sorted_items:
+        core = item['bind_core']
+        if core not in core_groups:
+            core_groups[core] = []
+        core_groups[core].append(item)
+    return core_groups
+
+def generate_header_file(core, items, output_dir):
+    field_order = [
+        'gpio_id',
+        'second_func_en',
+        'second_func_dev',
+        'io_mode',
+        'pull_mode',
+        'int_en',
+        'int_type',
+        'low_power_io_ctrl',
+        'driver_capacity'
+    ]
+    lines = []
+    for item in items:
+        try:
+            values = [item[field] for field in field_order]
+        except KeyError as e:
+            raise KeyError(f"字段 {e} 在GPIO配置项 {item['gpio_id']} 中缺失，请确保所有配置项完整。")
+        line = "    {" + ", ".join(values) + "},\\"
+        lines.append(line)
+
+    header_content = f"""#ifndef GPIO_CONFIG_H
 #define GPIO_CONFIG_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C" {{
 #endif
 
 #define GPIO_DEFAULT_DEV_CONFIG  \\
-{ \\
+{{ \\
+{chr(10).join(lines)}
+}}
+
+#ifdef __cplusplus
+}}
+#endif
+
+#endif // GPIO_CONFIG_H
 """
-
-    # 遍历 GPIO 配置，生成结构体初始化
-    for i, gpio in enumerate(gpio_map):
-        h_code += f"    {{{gpio['gpio_id']}, {gpio['second_func_en']}, {gpio['second_func_dev']}, {gpio['io_mode']}, {gpio['pull_mode']}, {gpio['int_en']}, {gpio['int_type']}, {gpio['low_power_io_ctrl']}, {gpio['driver_capacity']}}}"
-
-        # 如果不是最后一个元素，添加逗号
-        if i < len(gpio_map) - 1:
-            h_code += ",\\\n"
-        else:
-            h_code += "\\\n"  # 最后一个元素后不加逗号
-
-    # 结束定义
-    h_code += "}\n"
-
-    h_code += "#endif // GPIO_CONFIG_H\n"
-
-    h_code += "#ifdef __cplusplus\n"
-    h_code += "}\n"
-    h_code += "#endif\n"
-
-
-    # 生成的 C 文件名
-    h_file_name = os.path.join(output_path, "usr_gpio_cfg.h")
-
-    # 写入头文件
-    with open(h_file_name, 'w') as h_file:
-        h_file.write(h_code)
-
-    print(f"H file has been generated as '{h_file_name}'")
+    output_path = os.path.join(output_dir, f"usr_gpio_cfg{core}.h")
+    with open(output_path, 'w') as f:
+        f.write(header_content)
 
 def main():
-    # 设置命令行参数解析
-    parser = argparse.ArgumentParser(description='Generate a C header file with GPIO configuration from a JSON file.')
-    parser.add_argument('json_file', type=str, help='Path to the JSON file')
-    parser.add_argument('output_path', type=str, help='Path to save the generated header file')
+    import sys
+    if len(sys.argv) < 3:
+        print("用法: python script.py <输出目录> <JSON文件1> <JSON文件2> ...")
+        sys.exit(1)
 
-    args = parser.parse_args()
+    output_dir = sys.argv[1]
+    json_files = sys.argv[2:]
 
-    # 调用生成 H 文件的函数
-    generate_h_file(args.json_file, args.output_path)
+    try:
+        total_gpio = load_json_files(json_files)
+        sorted_items = sort_gpio_items(total_gpio)
+        core_groups = group_by_core(sorted_items)
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        for core, items in core_groups.items():
+            generate_header_file(core, items, output_dir)
+        print(f"成功生成配置文件到目录: {output_dir}")
+    except Exception as e:
+        print(f"错误发生: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

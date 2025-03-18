@@ -16,9 +16,11 @@
 #include "bk_wifi.h"
 #include <components/system.h>
 #include <modules/wifi.h>
-#if CONFIG_LWIP
-#include "lwip/ping.h"
-#endif
+// Modified by TUYA Start
+// #if CONFIG_LWIP
+// #include "lwip/ping.h"
+// #endif
+// Modified by TUYA End
 
 
 static void at_base_command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)

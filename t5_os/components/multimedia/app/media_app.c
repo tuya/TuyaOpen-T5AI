@@ -69,8 +69,44 @@ typedef struct {
 
 static jpeg_decode_pipeline_param_t jpeg_decode_pipeline_param = {0};
 
+#if CONFIG_TUYA_LOGIC_MODIFY
+#include "tkl_mutex.h"
+static TKL_MUTEX_HANDLE media_mutex = NULL;
+static bk_err_t tuya_single_core_send_media_msg(uint32_t event, uint32_t param)
+{
+    int ret = 0;
+
+    media_msg_t msg;
+    media_mailbox_msg_t mb_msg;
+
+    // TODO �����룬����
+
+    if (media_mutex == NULL) {
+        ret = tkl_mutex_create_init(&media_mutex);
+        if(ret) {
+            return ret;
+        }
+    }
+
+    tkl_mutex_lock(media_mutex);
+
+    msg.param = (uint32_t)&mb_msg;
+    msg.event = event;
+    mb_msg.event = event;
+    mb_msg.param = param;
+    media_send_msg(&msg);
+
+    tkl_mutex_unlock(media_mutex);
+
+    return ret;
+}
+#endif // CONFIG_TUYA_LOGIC_MODIFY
+
 bk_err_t media_send_msg_sync(uint32_t event, uint32_t param)
 {
+#if CONFIG_TUYA_LOGIC_MODIFY
+    return tuya_single_core_send_media_msg(event, param);
+#else
 	int ret = BK_FAIL;
 	ret = msg_send_req_to_media_app_mailbox_sync(event, param, NULL);
 	if (ret != BK_OK)
@@ -78,10 +114,15 @@ bk_err_t media_send_msg_sync(uint32_t event, uint32_t param)
 		LOGE("%s failed 0x%x\n", __func__, ret);
 	}
 	return ret;
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 }
 
 uint32_t media_send_msg_sync_return_param(uint32_t event, uint32_t in_param, uint32_t *out_param)
 {
+#if CONFIG_TUYA_LOGIC_MODIFY
+    *(uint32_t *)out_param = 0; // TODO
+    return tuya_single_core_send_media_msg(event, in_param);
+#else
 	int ret = BK_FAIL;
 
 	ret = msg_send_req_to_media_app_mailbox_sync(event, in_param, out_param);
@@ -91,6 +132,7 @@ uint32_t media_send_msg_sync_return_param(uint32_t event, uint32_t in_param, uin
 	}
 
 	return ret;
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 }
 
 bk_err_t media_app_camera_open(media_camera_device_t *device)
@@ -141,7 +183,9 @@ bk_err_t media_app_camera_open(media_camera_device_t *device)
 #endif
 #endif
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	if (compress_factor.enable)
 	{
@@ -193,7 +237,9 @@ bk_err_t media_app_camera_open(media_camera_device_t *device)
 	}
 	else
 	{
+#if !CONFIG_TUYA_LOGIC_MODIFY
 		bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	}
 
 	LOGI("%s complete\n", __func__);
@@ -229,7 +275,9 @@ bk_err_t media_app_camera_close(camera_type_t type)
 			break;
 	}
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	if (ret == BK_OK)
 	{
@@ -264,7 +312,9 @@ bk_err_t media_app_uvc_register_info_notify_cb(uvc_device_info_t cb)
 {
 	int ret = BK_FAIL;
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	uvc_device_info_cb = cb;
 
@@ -327,7 +377,9 @@ bk_err_t media_app_rtsp_open(video_config_t *config)
 			config->device->mode, config->device->type);
 	dvp_camera_dma_config(config);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	ret = media_send_msg_sync(EVENT_CAM_RTSP_OPEN_IND, (uint32_t)config->device);
 
@@ -370,7 +422,9 @@ bk_err_t media_app_rtsp_close()
 
 	ret = media_send_msg_sync(EVENT_CAM_RTSP_CLOSE_IND, 0);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	if (ret == BK_OK)
 	{
@@ -442,7 +496,9 @@ bk_err_t media_app_lcd_fmt(pixel_format_t fmt)
 {
 	bk_err_t ret;
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync(EVENT_LCD_SET_FMT_IND, fmt);
 
 	LOGI("%s complete\n", __func__);
@@ -498,7 +554,9 @@ bk_err_t media_app_lcd_pipeline_disp_open(void *config)
 		return BK_FAIL;
 	}
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	ret = media_send_msg_sync(EVENT_PIPELINE_LCD_DISP_OPEN_IND, (uint32_t)config);
 	LOGI("%s complete %x\n", __func__, ret);
@@ -512,7 +570,9 @@ bk_err_t media_app_lcd_pipeline_disp_close(void)
 
 	ret = media_send_msg_sync(EVENT_PIPELINE_LCD_DISP_CLOSE_IND, 0);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	LOGI("%s complete %x\n", __func__, ret);
 
@@ -529,7 +589,9 @@ bk_err_t media_app_lcd_pipeline_jdec_open(void)
 #endif
 #endif
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
     bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_DE, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
     ret = media_send_msg_sync(EVENT_PIPELINE_SET_ROTATE_IND, jpeg_decode_pipeline_param.rotate);
     LOGI("%s set rotate %x\n", __func__, ret);
@@ -550,7 +612,9 @@ bk_err_t media_app_lcd_startup_frame_open(void *config)
 #endif
 #endif
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_APP, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	ret = media_send_msg_sync(EVENT_PIPELINE_STARTUP_OPEN_IND, (uint32_t)config);
 	LOGI("%s complete %x\n", __func__, ret);
@@ -564,7 +628,9 @@ bk_err_t media_app_lcd_startup_frame_close(void)
 
 	ret = media_send_msg_sync(EVENT_PIPELINE_STARTUP_CLOSE_IND, 0);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_APP, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	LOGI("%s complete %x\n", __func__, ret);
 
@@ -578,7 +644,9 @@ bk_err_t media_app_lcd_pipeline_jdec_close(void)
 
 	ret = media_send_msg_sync(EVENT_PIPELINE_LCD_JDEC_CLOSE_IND, 0);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_DE, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	LOGI("%s complete %x\n", __func__, ret);
 
@@ -595,7 +663,9 @@ bk_err_t media_app_lcd_pipline_scale_open(void *config)
 #endif
 #endif
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_SCALE, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	ret = media_send_msg_sync(EVENT_PIPELINE_LCD_SCALE_IND, (uint32_t)config);
 
@@ -610,7 +680,9 @@ bk_err_t media_app_lcd_pipline_scale_close(void)
 
 	ret = media_send_msg_sync(EVENT_PIPELINE_LCD_SCALE_IND, 0);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_SCALE, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	LOGI("%s complete %x\n", __func__, ret);
 
@@ -766,7 +838,9 @@ bk_err_t media_app_lcd_rotate(media_rotate_t rotate)
 	bk_err_t ret;
 
 	LOGI("%s\n", __func__);
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync(EVENT_LCD_ROTATE_ENABLE_IND, rotate);
 
 	LOGI("%s complete\n", __func__);
@@ -779,7 +853,9 @@ bk_err_t media_app_lcd_decode(media_decode_mode_t decode_mode)
 	bk_err_t ret;
 
 	LOGI("%s\n", __func__);
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	ret = media_send_msg_sync(EVENT_LCD_DECODE_MODE_IND, decode_mode);
 
@@ -809,13 +885,17 @@ uint32_t media_app_get_lcd_devices_num(void)
 {
 	uint32_t num;
 	bk_err_t ret;
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync_return_param(EVENT_LCD_GET_DEVICES_NUM_IND, 0, &num);
 	if (ret != BK_OK)
 	{
 		LOGE("%s error\n", __func__);
 	}
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	return num;
 }
 
@@ -824,13 +904,17 @@ uint32_t media_app_get_lcd_devices_list(void)
 {
 	uint32_t device_addr = 0;
 	bk_err_t ret;
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync_return_param(EVENT_LCD_GET_DEVICES_LIST_IND, 0, &device_addr);
 	if (ret != BK_OK)
 	{
 		LOGE("%s error\n", __func__);
 	}
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	return device_addr;
 }
 
@@ -838,13 +922,17 @@ uint32_t media_app_get_lcd_device_by_id(uint32_t id)
 {
 	uint32_t lcd_device = 0;
 	bk_err_t ret;
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync_return_param(EVENT_LCD_GET_DEVICES_IND, id, &lcd_device);
 	if (ret != BK_OK)
 	{
 		LOGE("%s error\n", __func__);
 	}
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	return lcd_device;
 }
 
@@ -852,13 +940,17 @@ bk_err_t media_app_get_lcd_status(void)
 {
 	uint32_t lcd_status = 0;
 	bk_err_t ret;
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync_return_param(EVENT_LCD_GET_STATUS_IND, 0, &lcd_status);
 	if (ret != BK_OK)
 	{
 		LOGE("%s error\n", __func__);
 	}
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	return lcd_status;
 }
 
@@ -866,13 +958,17 @@ bk_err_t media_app_get_uvc_camera_status(void)
 {
 	uint32_t camera_status = 0;
 	bk_err_t ret;
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync_return_param(EVENT_GET_UVC_STATUS_IND, 0, &camera_status);
 	if (ret != BK_OK)
 	{
 		LOGE("%s error\n", __func__);
 	}
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	return camera_status;
 }
 
@@ -881,13 +977,17 @@ bk_err_t media_app_get_usb_connect_status(void)
 {
 	uint32_t camera_status = 0;
 	bk_err_t ret;
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	ret = media_send_msg_sync_return_param(EVENT_GET_USB_STATUS_IND, 0, &camera_status);
 	if (ret != BK_OK)
 	{
 		LOGE("%s error\n", __func__);
 	}
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_GET_MEDIA_MSG, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 	return camera_status;
 }
 // Modified by TUYA End
@@ -907,7 +1007,9 @@ bk_err_t media_app_lcd_open(void *lcd_open)
 	os_memcpy(ptr, (lcd_open_t *)lcd_open, sizeof(lcd_open_t));
 #endif
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	// ret = media_send_msg_sync(EVENT_LCD_OPEN_IND, (uint32_t)ptr);
 	ret = media_send_msg_sync(EVENT_LCD_OPEN_IND, (uint32_t)lcd_open);
@@ -1043,7 +1145,9 @@ bk_err_t media_app_lcd_close(void)
 
 	ret = media_send_msg_sync(EVENT_LCD_CLOSE_IND, 0);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	LOGI("%s complete\n", __func__);
 
@@ -1078,7 +1182,9 @@ bk_err_t media_app_storage_enable(app_camera_type_t type, uint8_t enable)
 			return ret;
 		}
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 		bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_VIDP_JPEG_EN, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 		msg.event = EVENT_STORAGE_OPEN_IND;
 		ret = storage_app_event_handle(&msg);
@@ -1246,7 +1352,9 @@ bk_err_t media_app_lvgl_open(void *lcd_open)
 	}
 	os_memcpy(ptr, (lcd_open_t *)lcd_open, sizeof(lcd_open_t));
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_LVGL, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	ret = media_send_msg_sync(EVENT_LVGL_OPEN_IND, (uint32_t)ptr);
 
@@ -1268,7 +1376,9 @@ bk_err_t media_app_lvgl_close(void)
 
 	ret = media_send_msg_sync(EVENT_LVGL_CLOSE_IND, 0);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_LVGL, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	LOGI("%s complete %x\n", __func__, ret);
 

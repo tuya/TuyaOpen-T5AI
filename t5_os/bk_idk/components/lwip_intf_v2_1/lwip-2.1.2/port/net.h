@@ -4,6 +4,9 @@
 extern "C" {
 #endif
 
+// Modified by TUYA Start
+#include "stdbool.h"
+// Modified by TUYA End
 #include "lwip_netif_address.h"
 
 extern void uap_ip_down(void);

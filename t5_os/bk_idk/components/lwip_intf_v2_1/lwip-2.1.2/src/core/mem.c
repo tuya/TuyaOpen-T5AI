@@ -67,6 +67,32 @@
 #endif
 
 #include <os/mem.h>
+
+
+#if MEM_TRX_DYNAMIC_EN
+struct mem_with_limit_t {
+  mem_size_t size;
+  u8_t type;
+};
+#endif
+
+struct mem {
+  /** index (-> ram[next]) of the next struct */
+  mem_size_t next;
+  /** index (-> ram[prev]) of the previous struct */
+  mem_size_t prev;
+  /** 1: this area is used; 0: this area is unused */
+  u8_t used;
+#if MEM_TRX_DYNAMIC_EN
+  u8_t type;
+#endif
+#if MEM_OVERFLOW_CHECK
+  /** this keeps track of the user allocation size for guard checks */
+  mem_size_t user_size;
+#endif
+};
+
+
 /* This is overridable for tests only... */
 #ifndef LWIP_MEM_ILLEGAL_FREE
 #define LWIP_MEM_ILLEGAL_FREE(msg)         LWIP_ASSERT(msg, 0)
@@ -227,6 +253,7 @@ mem_malloc(mem_size_t size)
 {
   void *ret = NULL;
 
+    bk_printf("%s %d\r\n", __func__, __LINE__);
   #if LWIP_STATS && MEM_STATS
   if (lwip_stats.mem.used + size > MEM_SIZE) {
     MEM_STATS_INC_LOCKED(err);
@@ -255,7 +282,9 @@ mem_malloc(mem_size_t size)
   }
   #endif
 
+    bk_printf("%s %d\r\n", __func__, __LINE__);
   ret = mem_clib_malloc(size + MEM_LIBC_STATSHELPER_SIZE);
+    bk_printf("%s %d\r\n", __func__, __LINE__);
   if (ret == NULL) {
     MEM_STATS_INC_LOCKED(err);
     #if MEM_TRX_DYNAMIC_EN
@@ -288,6 +317,7 @@ mem_malloc(mem_size_t size)
     #endif
 #endif
   }
+    bk_printf("%s %d\r\n", __func__, __LINE__);
   return ret;
 }
 
@@ -692,7 +722,7 @@ get_mem_size(void *rmem)
 {
   struct mem *mem;
   u32_t len=0;
-  
+
   if (rmem == NULL) {
     LWIP_DEBUGF(MEM_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_LEVEL_SERIOUS, ("get_mem_size(p == NULL) was called.\n"));
     return 0;
@@ -728,7 +758,7 @@ get_mem_size(void *rmem)
 uint32_t
 mem_sanity_check(void *mem)
 {
-  if (mem) 
+  if (mem)
   {
     if (((u8_t *)mem > ram) && ((struct mem *)mem < ram_end)){
       return true;

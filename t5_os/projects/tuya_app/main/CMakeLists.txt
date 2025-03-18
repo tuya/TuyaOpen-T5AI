@@ -4,6 +4,7 @@ set(srcs app_main.c)
 list(APPEND incs
     $ENV{ARMINO_PATH}/../../../../adapter/utilities/include
     $ENV{ARMINO_PATH}/../../../../include/base/include
+    $ENV{ARMINO_PATH}/../../../../include/base/include/tal_lwip/include
 )
 
 

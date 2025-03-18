@@ -91,9 +91,9 @@ OPERATE_RET tkl_io_pinmux_config(TUYA_PIN_NAME_E pin, TUYA_PIN_FUNC_E pin_func)
     }
     return OPRT_OK;
 }
-int32_t tkl_io_pin_to_func(uint32_t pin, TUYA_PIN_TYPE_E pin_type)
+int tkl_io_pin_to_func(uint32_t pin, TUYA_PIN_TYPE_E pin_type)
 {
-	int32_t port_channel = OPRT_NOT_SUPPORTED;
+	int port_channel = OPRT_NOT_SUPPORTED;
     
     switch (pin_type) {
         case TUYA_IO_TYPE_PWM:                  // all pwm channels belong to one port

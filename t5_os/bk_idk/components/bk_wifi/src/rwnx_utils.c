@@ -130,6 +130,8 @@ UINT8 rwm_mgmt_get_hwkeyidx(UINT8 vif_idx, UINT8 staid)
 #if CONFIG_NO_HOSTED
 UINT8 rwm_mgmt_vif_name2idx(char *name)
 {
+// Modified by TUYA Start
+#if LWIP_NETIF_HOSTNAME
 	VIF_INF_PTR vif_entry = NULL;
 	const char *hostname;
 	UINT8 vif_idx = 0xff;
@@ -150,6 +152,10 @@ UINT8 rwm_mgmt_vif_name2idx(char *name)
 		vif_idx = i;
 
 	return vif_idx;
+#else
+    return 0xff;
+#endif
+// Modified by TUYA Start
 }
 
 #if 0

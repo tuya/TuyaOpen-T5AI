@@ -85,7 +85,7 @@ typedef struct
 
 typedef struct                                            
 {                                                         
-    int32_t cur_irmode;                               // current dn mode
+    int cur_irmode;                               // current dn mode
     uint32_t dayToNight;                              // day to night threshold
     uint32_t nightToDay;                              // night to day threshold
     uint32_t dnSwitchOffset;                          // day and night switch offset
@@ -103,19 +103,19 @@ typedef struct
     FLOAT_T  coffR[6];                                // coefficient - R
     FLOAT_T  coffG[6];                                // coefficient - G
     FLOAT_T  coffB[6];                                // coefficient - B
-    uint16_t GlobalR;                                 // global R mean
-    uint16_t GlobalG;                                 // global G mean
-    uint16_t GlobalB;                                 // global B mean
-    uint16_t RGain;                                   // RGain
-    uint16_t BGain;                                   // BGain
-    uint16_t GrGain;                                  // GrGain
-    uint16_t GbGain;                                  // GbGain
-    int32_t ExpTime;                                  // sensor exposure time
-    int32_t AGain;                                    // sensor analog gain
-    int32_t DGain;                                    // sensor digital gain
-    int32_t ISPDGain;                                 // ISP gain
-    int32_t ISO;                                      // sensor total gain, again*dgain*ispdgain
-    int32_t OverExpFlag;                              // over exposure flag
+    UINT16_T GlobalR;                                 // global R mean
+    UINT16_T GlobalG;                                 // global G mean
+    UINT16_T GlobalB;                                 // global B mean
+    UINT16_T RGain;                                   // RGain
+    UINT16_T BGain;                                   // BGain
+    UINT16_T GrGain;                                  // GrGain
+    UINT16_T GbGain;                                  // GbGain
+    int ExpTime;                                  // sensor exposure time
+    int AGain;                                    // sensor analog gain
+    int DGain;                                    // sensor digital gain
+    int ISPDGain;                                 // ISP gain
+    int ISO;                                      // sensor total gain, again*dgain*ispdgain
+    int OverExpFlag;                              // over exposure flag
     FLOAT_T RGBComponent;                             // sum of RGB
     FLOAT_T Illumination;                             // temporary illumination
     FLOAT_T Exposure;                                 // total exposure value
@@ -159,7 +159,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t irmode;                                       // day and night mode
+    int irmode;                                       // day and night mode
     TKL_ISP_FIG_STYLE_CONFIG_T isp_fig_style_day;         // user style config in day
     TKL_ISP_FIG_STYLE_CONFIG_T isp_fig_style_night;       // user style config in night
     TKL_ISP_AWB_CONFIG_T isp_awb_config;                  // user awb style config
@@ -175,12 +175,12 @@ typedef struct
 typedef struct
 {
     /*AWB*/
-    int32_t isAwbStable;
-    uint16_t colorTemp;
-    uint16_t RGain;
-    uint16_t BGain;
+    int isAwbStable;
+    UINT16_T colorTemp;
+    UINT16_T RGain;
+    UINT16_T BGain;
     /*AE*/
-    int32_t isAeStable;
+    int isAeStable;
     uint32_t US;
     uint32_t SensorGain;
     uint32_t ISPGain;
@@ -240,7 +240,7 @@ OPERATE_RET tkl_vi_isp_set_color_to_gray(TKL_VI_CHN_E chn, int gray_flag);
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_vi_dnswitch_get_illumin(TKL_VI_CHN_E chn, TKL_ISP_DN_MODE_E irmode, int32_t *illumin_result);
+OPERATE_RET tkl_vi_dnswitch_get_illumin(TKL_VI_CHN_E chn, TKL_ISP_DN_MODE_E irmode, int *illumin_result);
 
 /**
 * @brief vi isp get sensor fps
@@ -250,7 +250,7 @@ OPERATE_RET tkl_vi_dnswitch_get_illumin(TKL_VI_CHN_E chn, TKL_ISP_DN_MODE_E irmo
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_vi_isp_get_sensor_fps(TKL_VI_CHN_E chn, int32_t *sensor_fps);
+OPERATE_RET tkl_vi_isp_get_sensor_fps(TKL_VI_CHN_E chn, int *sensor_fps);
 
 /**
 * @brief vi isp set sensor fps
@@ -260,7 +260,7 @@ OPERATE_RET tkl_vi_isp_get_sensor_fps(TKL_VI_CHN_E chn, int32_t *sensor_fps);
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_vi_isp_set_sensor_fps(TKL_VI_CHN_E chn, int32_t sensor_fps);
+OPERATE_RET tkl_vi_isp_set_sensor_fps(TKL_VI_CHN_E chn, int sensor_fps);
 
 /**
 * @brief vi isp get param
@@ -303,7 +303,7 @@ OPERATE_RET tkl_vi_isp_get_fig_style_config(TKL_VI_CHN_E chn, TKL_ISP_FIG_STYLE_
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_vi_isp_set_wdr(TKL_VI_CHN_E chn, int32_t mode, int32_t strength);
+OPERATE_RET tkl_vi_isp_set_wdr(TKL_VI_CHN_E chn, int mode, int strength);
 
 /**
 * @brief vi isp get WDR params
@@ -314,7 +314,7 @@ OPERATE_RET tkl_vi_isp_set_wdr(TKL_VI_CHN_E chn, int32_t mode, int32_t strength)
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 * */
-OPERATE_RET tkl_vi_isp_get_wdr(TKL_VI_CHN_E chn, int32_t *mode, int32_t *strength);
+OPERATE_RET tkl_vi_isp_get_wdr(TKL_VI_CHN_E chn, int *mode, int *strength);
 
 #ifdef __cplusplus
 } // extern "C"

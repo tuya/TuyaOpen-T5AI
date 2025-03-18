@@ -92,6 +92,39 @@ static const unsigned int PCM_8000[] = {
 };
 */
 
+#if CONFIG_TUYA_LOGIC_MODIFY
+#include "tkl_mutex.h"
+static TKL_MUTEX_HANDLE aud_mutex = NULL;
+extern bk_err_t audio_event_handle(media_mailbox_msg_t * msg);
+static bk_err_t tuya_single_core_aud(uint32_t event, void *param)
+{
+    int ret = 0;
+    media_mailbox_msg_t msg;
+
+    // TODO 防重入，加锁
+    msg.event = event;
+    msg.param = (uint32_t)param;
+
+    if (aud_mutex == NULL) {
+        ret = tkl_mutex_create_init(&aud_mutex);
+        if(ret) {
+            bk_printf("%s %d fail\n", __func__, __LINE__);
+            return ret;
+        }
+    }
+
+    tkl_mutex_lock(aud_mutex);
+    ret = audio_event_handle(&msg);
+    tkl_mutex_unlock(aud_mutex);
+
+    if (ret != 0) {
+        bk_printf("%s %d fail\n", __func__, __LINE__);
+    }
+
+    return ret;
+}
+#endif // CONFIG_TUYA_LOGIC_MODIFY
+
 static bk_err_t aud_intf_voc_write_spk_data(uint8_t *dac_buff, uint32_t size);
 
 static void *audio_intf_malloc(uint32_t size)
@@ -111,12 +144,19 @@ static void audio_intf_free(void *mem)
 bk_err_t mailbox_media_aud_send_msg(media_event_t event, void *param)
 {
 	bk_err_t ret = BK_OK;
-
+#if CONFIG_TUYA_LOGIC_MODIFY
+	ret = tuya_single_core_aud(event, param);
+	if (ret != 0)
+	{
+		LOGE("%s, %d, fail, ret: 0x%x\n", __func__, __LINE__, ret);
+	}
+#else
 	ret = msg_send_req_to_media_app_mailbox_sync(event, (uint32_t)param, NULL);
 	if (ret != kNoErr)
 	{
 		LOGE("%s, %d, fail, ret: 0x%x\n", __func__, __LINE__, ret);
 	}
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 
 	aud_intf_info.api_info.busy_status = false;
 	return ret;
@@ -777,6 +817,7 @@ bk_err_t bk_aud_intf_spk_deinit(void)
 	bk_err_t ret = BK_OK;
 	CHECK_AUD_INTF_BUSY_STA();
 	ret = mailbox_media_aud_send_msg(EVENT_AUD_SPK_DEINIT_REQ, NULL);
+
 	if (ret == BK_OK)
 		aud_intf_info.spk_status = AUD_INTF_SPK_STA_NULL;
 
@@ -1276,7 +1317,9 @@ bk_err_t bk_aud_intf_drv_init(aud_intf_drv_setup_t *setup)
 	bk_err_t ret = BK_OK;
 	bk_err_t err = BK_ERR_AUD_INTF_FAIL;
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_AUDP_AUDIO, PM_POWER_MODULE_STATE_ON);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 //	rtos_delay_milliseconds(100);
 
 	if (aud_intf_info.drv_status != AUD_INTF_DRV_STA_NULL) {
@@ -1332,7 +1375,9 @@ bk_err_t bk_aud_intf_drv_deinit(void)
 
 	aud_intf_info.drv_status = AUD_INTF_DRV_STA_NULL;
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_module_vote_boot_cp1_ctrl(PM_BOOT_CP1_MODULE_NAME_AUDP_AUDIO, PM_POWER_MODULE_STATE_OFF);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	return BK_ERR_AUD_INTF_OK;
 }

@@ -1658,7 +1658,7 @@ bk_err_t dvp_camera_yuv_buf_config_init(dvp_driver_handle_t *handle, yuv_mode_t 
 		{
 			return ret;
 		}
-		
+
 		resize_config.emr_base_addr = handle->emr_base_addr;
 		ret = bk_yuv_buf_set_resize(&resize_config);
 	}
@@ -1840,17 +1840,15 @@ static void dvp_camera_register_isr_function(dvp_driver_handle_t *handle)
 // Modified by TUYA End
 const dvp_sensor_config_t *bk_dvp_camera_enumerate(void)
 {
-	i2c_config_t i2c_config = {0};
 	const dvp_sensor_config_t *sensor = NULL;
 
 	// step 1: power on video modules
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
     uint8_t dvp_ldo = 56, dvp_active_level = 0;
     tkl_vi_get_power_info(DVP_CAMERA, &dvp_ldo, &dvp_active_level);
 	bk_video_power_on(dvp_ldo, dvp_active_level);
-    bk_printf("--- trace %s %d\r\n", __func__, __LINE__);
 #else
 	bk_video_power_on(CONFIG_CAMERA_CTRL_POWER_GPIO_ID, 1);
 #endif
@@ -1862,14 +1860,16 @@ const dvp_sensor_config_t *bk_dvp_camera_enumerate(void)
 	// step 3: enable mclk for i2c communicate with dvp
 	bk_video_dvp_mclk_enable(YUV_MODE);
 
+    // Modified by TUYA Start
+#if CONFIG_TUYA_LOGIC_MODIFY
+    // do nothing
+#else
+	i2c_config_t i2c_config = {0};
+
 	// step 4: init i2c
 	i2c_config.baud_rate = I2C_BAUD_RATE_100KHZ;
 	i2c_config.addr_mode = I2C_ADDR_MODE_7BIT;
 
-    // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    // do nothing
-#else
 	bk_i2c_init(CONFIG_DVP_CAMERA_I2C_ID, &i2c_config);
 #endif
     // Modified by TUYA End
@@ -1888,7 +1888,7 @@ const dvp_sensor_config_t *bk_dvp_camera_enumerate(void)
 	bk_video_encode_stop(YUV_MODE);
 
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
 	bk_video_power_off(dvp_ldo, !dvp_active_level);
 #else
 	bk_video_power_off(CONFIG_CAMERA_CTRL_POWER_GPIO_ID, 0);
@@ -2298,7 +2298,7 @@ static bk_err_t dvp_camera_pingpang_buf_init(dvp_driver_handle_t *handle)
 		}
 #endif
 	}
-	
+
 	if (config->device->mode == JPEG_MODE || config->device->mode == JPEG_YUV_MODE)
 	{
 		handle->yuv_pingpong_length = config->device->info.resolution.width * 16 * 2;
@@ -2471,7 +2471,7 @@ static bk_err_t dvp_camera_init(dvp_driver_handle_t *handle)
 	}
 
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
     uint8_t dvp_ldo = 56, dvp_active_level = 0;
     tkl_vi_get_power_info(DVP_CAMERA, &dvp_ldo, &dvp_active_level);

@@ -66,8 +66,8 @@ TKL_WATCHDOG_DESC_T* tkl_watchdog_desc_get(void);
  * @brief the description of tuya kernel adapter layer flash
  */
 typedef struct {
-    OPERATE_RET     (*read)                 (const uint32_t addr, UCHAR_T *dst, const uint32_t size);
-    OPERATE_RET     (*write)                (const uint32_t addr, const UCHAR_T *src, const uint32_t size);
+    OPERATE_RET     (*read)                 (const uint32_t addr, uint8_t *dst, const uint32_t size);
+    OPERATE_RET     (*write)                (const uint32_t addr, const uint8_t *src, const uint32_t size);
     OPERATE_RET     (*erase)                (const uint32_t addr, const uint32_t size);
     OPERATE_RET     (*lock)                 (const uint32_t addr, const uint32_t size);
     OPERATE_RET     (*unlock)               (const uint32_t addr, const uint32_t size);

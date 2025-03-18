@@ -1,4 +1,7 @@
 #include "pbuf.h"
+// Modified by TUYA Start
+#include "stdbool.h"
+// Modified by TUYA End
 
 /**
  * @ingroup pbuf
@@ -15,11 +18,13 @@
  * @see pbuf_chain()
  * If Wi-Fi is disable, make this function is NULL
  */
+#if 0
 void
 pbuf_cat(struct pbuf *h, struct pbuf *t)
 {
 	return;
 }
+#endif
 
 /**
  * Security Check Interface : To check the contents of hostids
@@ -31,6 +36,7 @@ mem_sanity_check(void *mem)
 	return true;
 }
 
+#if 0
 /**
  * Convert an u16_t from host- to network byte order.
  *
@@ -54,6 +60,7 @@ lwip_htonl(u32_t n)
 {
   return n;
 }
+#endif
 
 /**
  * @ingroup pbuf
@@ -89,7 +96,10 @@ lwip_htonl(u32_t n)
  * 1->1->1 becomes .......
  *
  */
+#if 0
 u8_t
 pbuf_free(struct pbuf *p) {
 	return 0;
 }
+#endif
+

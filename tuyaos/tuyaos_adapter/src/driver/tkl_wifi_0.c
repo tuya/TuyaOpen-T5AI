@@ -23,6 +23,7 @@
 #include <driver/aon_rtc.h>
 // #include "event.h"
 #include <components/bluetooth/bk_dm_bluetooth.h>
+#include "tkl_ipc.h"
 
 
 #if CONFIG_SAVE_BOOT_TIME_POINT
@@ -61,7 +62,6 @@ typedef struct {
 }wifi_mgnt_frame;
 
 static WF_WK_MD_E wf_mode = WWM_POWERDOWN;
-static TKL_SEM_HANDLE scanHandle = NULL;
 static SNIFFER_CALLBACK snif_cb = NULL;
 static WIFI_REV_MGNT_CB mgnt_recv_cb = NULL;
 static WIFI_EVENT_CB wifi_event_cb = NULL;
@@ -70,6 +70,8 @@ static unsigned char first_set_flag = TRUE;
 static BOOL_T wifi_lp_flag = FALSE;
 
 extern BOOL_T ble_init_flag;
+
+static char *scan_ap_ssid = NULL;
 
 wifi_country_t country_code[] =
 {
@@ -84,55 +86,24 @@ wifi_country_t country_code[] =
 static int wifi_event_init = 1;
 static int lp_wifi_cfg_flag = 0;
 
+static FAST_WF_CONNECTED_AP_INFO_T *p_fast_ap_info = NULL;
+
 static void tkl_wifi_powersave_disable(void);
 static void tkl_wifi_powersave_enable(void);
 
+static void __tkl_wifi_client(struct ipc_msg_s *msg, int *result);
+static uint8_t _bk_wifi_security_to_ty(wifi_security_t bk_security);
+
 extern void os_mem_dump(const char *title, unsigned char *data, uint32_t data_len);
-extern void etharp_remove_all_static(void);
+// TODO
+// extern void etharp_remove_all_static(void);
 extern void _bk_rtc_wakeup_register(unsigned int rtc_time) ;
 extern void _bk_rtc_wakeup_unregister() ;
 extern void bk_printf(const char *fmt, ...);
+extern OPERATE_RET tuya_ipc_send_sync(struct ipc_msg_s *msg);
+extern OPERATE_RET tuya_ipc_send_no_sync(struct ipc_msg_s *msg);
 
-
-void static __fast_connect_ap_info_dump(char *tag, struct wlan_fast_connect_info *fci)
-{
-    bk_printf("----------------------------------------------------------------------------------------\r\n");
-    if (tag != NULL) {
-        bk_printf("%s\r\n", tag);
-    }
-    bk_printf("ssid: %s\r\n", fci->ssid);
-    bk_printf("bssid: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
-            fci->bssid[0], fci->bssid[1], fci->bssid[2], fci->bssid[3], fci->bssid[4], fci->bssid[5]);
-    bk_printf("security: %d, chan: %d\r\n", fci->security, fci->channel);
-    bk_printf("psk: ********************************, pmf: %d\r\n", fci->pmf);
-    bk_printf("pwd: ****************\r\n");
-    bk_printf("ip: %d.%d.%d.%d\r\n", fci->ip_addr[0], fci->ip_addr[1], fci->ip_addr[2], fci->ip_addr[3]);
-    bk_printf("netmask: %d.%d.%d.%d\r\n", fci->netmask[0], fci->netmask[1], fci->netmask[2], fci->netmask[3]);
-    bk_printf("gw: %d.%d.%d.%d\r\n", fci->gw[0], fci->gw[1], fci->gw[2], fci->gw[3]);
-    bk_printf("dns1: %d.%d.%d.%d\r\n", fci->dns1[0], fci->dns1[1], fci->dns1[2], fci->dns1[3]);
-
-#if CONFIG_WLAN_FAST_CONNECT_WITHOUT_SCAN
-    bk_printf("freq: %d, beacon_int: %d, caps: %d, level: %d, ie_len: %d\r\n", fci->freq, fci->beacon_int, fci->caps, fci->level, fci->ie_len);
-#endif
-
-#if CONFIG_WLAN_FAST_CONNECT_WPA3
-    bk_printf("====== wpa3 ======\r\n");
-    bk_printf("pmk_len: %d, pmk:\r\n", fci->pmk_len);
-    for (int i = 0; i < fci->pmk_len; i++) {
-        bk_printf("%02x", fci->pmk[i]);
-    }
-    bk_printf("\r\npmkid:\r\n");
-    for (int i = 0; i < 16; i++) {
-        bk_printf("%02x\r\n", fci->pmkid[i]);
-    }
-    bk_printf("\r\n");
-    bk_printf("akmp: %x\r\n", fci->akmp);
-#endif
-    bk_printf("----------------------------------------------------------------------------------------\r\n");
-
-}
-
-static __notify_wifi_event(WF_EVENT_E event, void *arg)
+static __notify_wifi_event(WF_EVENT_E event, VOID_T *arg)
 {
     if (wifi_event_cb == NULL) {
         return;
@@ -142,7 +113,181 @@ static __notify_wifi_event(WF_EVENT_E event, void *arg)
     }
 }
 
-BOOL_T tkl_get_lp_flag(void)
+void tkl_wifi_ipc_func(struct ipc_msg_s *msg)
+{
+    OPERATE_RET ret = 0;
+    switch(msg->subtype) {
+        case TKL_IPC_TYPE_WF_SCAN:
+        {
+            AP_IF_S *ap_ary = NULL;
+            uint32_t num = 0;
+            SCHAR_T *ssid = (SCHAR_T *)msg->req_param;
+            ret = tkl_wifi_scan_ap(ssid, &ap_ary, &num);//异步？。。。待确认
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_SCAN_FREE_MEM:
+        {
+            AP_IF_S *ap = (AP_IF_S *)msg->req_param;
+            ret = tkl_wifi_release_ap(ap);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_AP_START:
+        {
+            WF_AP_CFG_IF_S *cfg = msg->req_param;
+            ret = tkl_wifi_start_ap(cfg);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_AP_STOP:
+            ret = tkl_wifi_stop_ap();
+            break;
+
+        case TKL_IPC_TYPE_WF_CHANNEL_SET:
+        {
+            uint8_t chan = *(uint8_t *)(msg->req_param);
+            ret = tkl_wifi_set_cur_channel(chan);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_CHANNEL_GET:
+        {
+            uint8_t *chan = (uint8_t *)msg->res_param;
+            ret = tkl_wifi_get_cur_channel(chan);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_MAC_SET:
+        {
+            struct ipc_msg_param_s *param = NULL;
+            param = (struct ipc_msg_param_s *)msg->req_param;
+            WF_IF_E wf =  *(uint8_t *)(param->p1);
+            NW_MAC_S *mac = (NW_MAC_S *)param->p2;
+            ret = tkl_wifi_set_mac(wf, mac);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_MAC_GET:
+        {
+            WF_IF_E wf =  *(uint8_t *)(msg->req_param);
+            NW_MAC_S *mac = (NW_MAC_S *)msg->res_param;
+            ret = tkl_wifi_get_mac(wf, mac);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_WORKMODE_SET:
+        {
+            WF_WK_MD_E mode = *(WF_WK_MD_E *)(msg->req_param);
+            ret = tkl_wifi_set_work_mode(mode);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_WORKMODE_GET:
+        {
+            WF_WK_MD_E *mode = (WF_WK_MD_E *)(msg->res_param);
+            ret = tkl_wifi_get_work_mode(mode);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_FASTCONN_INFO_GET:
+        {
+            FAST_WF_CONNECTED_AP_INFO_T *fast_ap_info = NULL;
+            ret = tkl_wifi_get_connected_ap_info(&fast_ap_info);
+            msg->res_param = fast_ap_info;
+            msg->res_len = sizeof(FAST_WF_CONNECTED_AP_INFO_T) + sizeof(struct wlan_fast_connect_info);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_BSSID_GET:
+        {
+            uint8_t *mac = (uint8_t *)msg->res_param;
+            ret = tkl_wifi_get_bssid(mac);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_CCODE_SET:
+        {
+            COUNTRY_CODE_E ccode = *(COUNTRY_CODE_E *)(msg->req_param);
+            ret = tkl_wifi_set_country_code(ccode);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_CCODE_GET:
+        {
+            COUNTRY_CODE_E *ccode = (COUNTRY_CODE_E *)msg->res_param;
+            ret = tkl_wifi_get_country_code(ccode);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_RF_CALIBRATED_SET:
+            ret = tkl_wifi_set_rf_calibrated();
+            break;
+
+        case TKL_IPC_TYPE_WF_LP_MODE_SET:
+        {
+            struct ipc_msg_param_s *param = (struct ipc_msg_param_s *)msg->req_param;
+            uint8_t enable = *(uint8_t *)(param->p1);
+            uint8_t dtim = *(uint8_t *)(param->p2);
+            ret = tkl_wifi_set_lp_mode(enable, dtim);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_FAST_CONNECT:
+        {
+            FAST_WF_CONNECTED_AP_INFO_T *fast_ap_info = msg->req_param;
+            ret = tkl_wifi_station_fast_connect(fast_ap_info);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_CONNECT:
+        {
+            struct ipc_msg_param_s *param = msg->req_param;
+            uint8_t *ssid = (uint8_t *)param->p1;
+            uint8_t *passwd = (uint8_t *)param->p2;
+            ret = tkl_wifi_station_connect(ssid, passwd);//异步？。。。 待确认
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_DISCONNECT:
+            ret = tkl_wifi_station_disconnect();
+            break;
+
+        case TKL_IPC_TYPE_WF_RSSI_GET:
+        {
+            s8 *rssi = (s8 *)msg->res_param;
+            ret = tkl_wifi_station_get_conn_ap_rssi(rssi);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_STATION_STATUS_GET:
+        {
+            WF_STATION_STAT_E *stat = (WF_STATION_STAT_E *)msg->res_param;
+            ret = tkl_wifi_station_get_status(stat);
+        }
+            break;
+
+        case TKL_IPC_TYPE_WF_SNIFFER_SET:
+        case TKL_IPC_TYPE_WF_IP_GET:
+        case TKL_IPC_TYPE_WF_IPv6_GET:
+        case TKL_IPC_TYPE_WF_IP_SET:
+        case TKL_IPC_TYPE_WF_MGNT_SEND:
+        case TKL_IPC_TYPE_WF_RECV_MGNT_SET:
+        case TKL_IPC_TYPE_WF_IOCTL:
+
+            break;
+
+        default:
+            break;
+    }
+
+    msg->ret_value = ret;
+    tuya_ipc_send_no_sync(msg);
+
+    return 0;
+}
+
+BOOL_T tkl_get_lp_flag(VOID)
 {
     return wifi_lp_flag;
 }
@@ -153,10 +298,9 @@ BOOL_T tkl_get_lp_flag(void)
  * @param[in]      cb        the wifi station work status changed callback
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
+
 OPERATE_RET tkl_wifi_init(WIFI_EVENT_CB cb)
 {
-    bk_printf("%s\r\n", __func__);
-    wifi_event_cb = cb;
 
     return OPRT_OK;
 }
@@ -168,21 +312,137 @@ OPERATE_RET tkl_wifi_init(WIFI_EVENT_CB cb)
  * @return  OPRT_OS_ADAPTER_OK: success  Other: fail
  */
 static int scan_cb(void *arg, event_module_t event_module,
-								  int event_id, void *_event_data)
+        int event_id, void *_event_data)
 {
-	uint32_t thread_id = (uint32_t)arg;
-	wifi_event_scan_done_t *event_data = _event_data;
+    int i, j;
+    AP_IF_S *array = NULL;
+    AP_IF_S *item = NULL;
+    uint32_t thread_id = (uint32_t)arg;
+    wifi_event_scan_done_t *event_data = _event_data;
+    wifi_scan_result_t scan_result = {0};
+    wifi_scan_config_t scan_config = {0};
+    struct ipc_msg_s wf_ipc_msg = {0};
+    struct ipc_msg_param_s param = {0};
+    uint32_t ssid_len = 0, scan_cnt;
 
-	if (thread_id == event_data->scan_id) {
-        if(scanHandle) {
-            tkl_semaphore_post(scanHandle);
-        }
+    // TODO send response
+
+    memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
+    wf_ipc_msg.type = TKL_IPC_TYPE_WIFI;
+    wf_ipc_msg.subtype = TKL_IPC_TYPE_WF_SCAN_RES;
+
+    if ((bk_wifi_scan_get_result(&scan_result) != 0) || (0 == scan_result.ap_num)) {
+        bk_printf("scan err %s %d\r\n", __func__, __LINE__);
+        goto SCAN_ERR;
     }
 
-    return 0;
+    if(0 == scan_result.ap_num) {
+        bk_printf("scan err %s %d\r\n", __func__, __LINE__);
+        goto SCAN_ERR;
+    }
+
+    if (scan_ap_ssid != NULL) {
+        scan_cnt = 1;
+        array = ( AP_IF_S *)tkl_system_malloc(SIZEOF(AP_IF_S));
+    } else {
+        scan_cnt = scan_result.ap_num;
+        if (scan_cnt > SCAN_MAX_AP) {
+            scan_cnt = SCAN_MAX_AP;
+        }
+
+        array = ( AP_IF_S *)tkl_system_malloc(SIZEOF(AP_IF_S) * scan_cnt);
+    }
+    if(NULL == array){
+        bk_printf("scan err %s %d\r\n", __func__, __LINE__);
+        goto SCAN_ERR;
+    }
+
+    tkl_system_memset(array, 0, (sizeof(AP_IF_S) * scan_cnt));
+    array[0].rssi = -100;
+
+    for (i = 0; i < scan_result.ap_num; i++) {
+
+        item = &array[i];
+
+        if (scan_ap_ssid != NULL) {
+            /* skip non-matched ssid */
+            if (os_strcmp(scan_result.aps[i].ssid, (char *)scan_ap_ssid))
+                continue;
+
+            /* found */
+            if (scan_result.aps[i].rssi < item->rssi) { /* rssi 信号强度比较 */
+                continue;
+            }
+
+            j++;
+        }
+
+        item->security = _bk_wifi_security_to_ty(scan_result.aps[i].security);
+        item->channel = scan_result.aps[i].channel;
+        item->rssi = scan_result.aps[i].rssi;
+        os_memcpy(item->bssid, scan_result.aps[i].bssid, 6);
+
+        ssid_len = os_strlen(scan_result.aps[i].ssid);
+        if (ssid_len > WIFI_SSID_LEN) {
+            ssid_len = WIFI_SSID_LEN;
+        }
+
+        memset(item->ssid, 0, ssid_len);
+        os_strncpy((char *)item->ssid, scan_result.aps[i].ssid, ssid_len);
+        item->s_len = ssid_len;
+    }
+
+    if ((j == 0) && (scan_ap_ssid != NULL)) {
+        bk_printf("scan err %s %d\r\n", __func__, __LINE__);
+        goto SCAN_ERR;
+    }
+
+    if (scan_result.aps != NULL) {
+        tkl_system_free(scan_result.aps);
+    }
+
+    if (scan_ap_ssid) {
+        scan_ap_ssid = NULL;
+    }
+
+    param.p1 = array;
+    param.p2 = &scan_cnt;
+
+    wf_ipc_msg.req_param = &param;
+    wf_ipc_msg.req_len = sizeof(param);
+
+    bk_printf("cpu0 send scan res %d %p\r\n", scan_cnt, scan_cnt);
+    OPERATE_RET ret = tuya_ipc_send_sync(&wf_ipc_msg);
+    if(ret)
+        return ret;
+
+    return  OPRT_OK;
+
+SCAN_ERR:
+    if (scan_result.aps != NULL) {
+        tkl_system_free(scan_result.aps);
+        scan_result.aps = NULL;
+    }
+
+    if(array) {
+        tkl_system_free(array);
+        array = NULL;
+    }
+
+    param.p1 = NULL;
+    param.p2 = NULL;
+
+    wf_ipc_msg.req_param = &param;
+    wf_ipc_msg.req_len = sizeof(param);
+
+    ret = tuya_ipc_send_sync(&wf_ipc_msg);
+    if(ret)
+        return ret;
+
+    return OPRT_OS_ADAPTER_COM_ERROR;
 }
 
-static UCHAR_T _bk_wifi_security_to_ty(wifi_security_t bk_security)
+static uint8_t _bk_wifi_security_to_ty(wifi_security_t bk_security)
 {
     switch(bk_security)  {
         case WIFI_SECURITY_NONE:
@@ -217,6 +477,7 @@ static UCHAR_T _bk_wifi_security_to_ty(wifi_security_t bk_security)
             return WAAM_UNKNOWN;
         break;
     }
+    return WAAM_UNKNOWN;
 }
 
 /**
@@ -229,98 +490,33 @@ static UCHAR_T _bk_wifi_security_to_ty(wifi_security_t bk_security)
  */
 static OPERATE_RET tkl_wifi_all_ap_scan(AP_IF_S **ap_ary, unsigned int *num)
 {
-    AP_IF_S *item;
-    AP_IF_S *array = NULL;
-    OPERATE_RET ret;
-    int i;
-    int scan_cnt;
-    int ssid_len;
-    wifi_scan_result_t scan_result = {0};
-    uint32_t semaphore_timeout = 5000;  //ms
-
-    if((NULL == ap_ary) || (NULL == num) || NULL != scanHandle) {
+    if((NULL == ap_ary) || (NULL == num)) {
         return OPRT_OS_ADAPTER_INVALID_PARM;
-    }
-
-    ret = tkl_semaphore_create_init(&scanHandle, 0, 1);
-    if (ret !=  OPRT_OK) {
-        return ret;
     }
 
     bk_event_register_cb(EVENT_MOD_WIFI, EVENT_WIFI_SCAN_DONE,
             scan_cb, rtos_get_current_thread());
     BK_LOG_ON_ERR(bk_wifi_scan_start(NULL));
 
-    ret = tkl_semaphore_wait(scanHandle,semaphore_timeout);
-    tkl_semaphore_release(scanHandle);
-    scanHandle = NULL;
-    if (ret !=  OPRT_OK) {
-        //bk_printf("scan wait sem error\r\n");
-        return ret;
-    }
-
-    if ((bk_wifi_scan_get_result(&scan_result) != 0) || (0 == scan_result.ap_num)) {
-        bk_printf("scan err\r\n");
-        goto SCAN_ERR;
-    }
-
-    scan_cnt = scan_result.ap_num;
-
-    if (scan_cnt > SCAN_MAX_AP) {
-        scan_cnt = SCAN_MAX_AP;
-    }
-
-    if(0 == scan_cnt) {
-        goto SCAN_ERR;
-    }
-
-    array = ( AP_IF_S *)tkl_system_malloc(SIZEOF(AP_IF_S) * scan_cnt);
-    if(NULL == array){
-        goto SCAN_ERR;
-    }
-
-    tkl_system_memset(array, 0, (sizeof(AP_IF_S) * scan_cnt));
-    for (i = 0; i < scan_cnt; i++) {
-        item = &array[i];
-
-        item->security = _bk_wifi_security_to_ty(scan_result.aps[i].security);
-        item->channel = scan_result.aps[i].channel;
-        item->rssi = scan_result.aps[i].rssi;
-        os_memcpy(item->bssid, scan_result.aps[i].bssid, 6);
-
-        ssid_len = os_strlen(scan_result.aps[i].ssid);
-        if (ssid_len > WIFI_SSID_LEN) {
-            ssid_len = WIFI_SSID_LEN;
-        }
-
-        memset(item->ssid, 0, ssid_len);
-        os_strncpy((char *)item->ssid, scan_result.aps[i].ssid, ssid_len);
-        item->s_len = ssid_len;
-
-    }
-
-    *ap_ary = array;
-    *num = scan_cnt & 0xff;
-    if (scan_result.aps != NULL) {
-        tkl_system_free(scan_result.aps);
-    }
-
     return  OPRT_OK;
-
-SCAN_ERR:
-    if (scan_result.aps != NULL) {
-        tkl_system_free(scan_result.aps);
-        scan_result.aps = NULL;
-    }
-
-    if(array) {
-        tkl_system_free(array);
-        array = NULL;
-    }
-
-    return OPRT_OS_ADAPTER_COM_ERROR;
 }
 
+static OPERATE_RET tkl_wifi_single_ap_scan(const SCHAR_T *ssid, AP_IF_S **ap_ary, uint32_t *num)
+{
+    if((NULL == ssid) || (NULL == ap_ary)) {
+        return OPRT_OS_ADAPTER_INVALID_PARM;
+    }
+
+    bk_event_register_cb(EVENT_MOD_WIFI, EVENT_WIFI_SCAN_DONE,
+            scan_cb, rtos_get_current_thread());
+
+    wifi_scan_config_t scan_config = {0};
+    strncpy(scan_config.ssid, (char*)ssid, WIFI_SSID_STR_LEN);
+
+    BK_LOG_ON_ERR(bk_wifi_scan_start(&scan_config));
+
+    return OPRT_OK;
+}
 
 
 /**
@@ -343,104 +539,12 @@ OPERATE_RET tkl_wifi_scan_ap(const SCHAR_T *ssid, AP_IF_S **ap_ary, uint32_t *nu
         first_set_flag = FALSE;
     }
 
-    if(NULL == ssid)
-    {
+    scan_ap_ssid = ssid;
+    if(NULL == ssid) {
         return tkl_wifi_all_ap_scan(ap_ary, num);
+    } else {
+        return tkl_wifi_single_ap_scan(ssid, ap_ary, num);
     }
-
-    AP_IF_S *array = NULL;
-    OPERATE_RET ret;
-    int i = 0, j = 0, ssid_len;
-    wifi_scan_result_t apList;
-    uint32_t semaphore_timeout = 5000;  //ms
-
-    tkl_system_memset(&apList, 0, sizeof(wifi_scan_result_t));
-
-    if((NULL == ssid) || (NULL == ap_ary) ||  NULL != scanHandle) {
-        return OPRT_OS_ADAPTER_INVALID_PARM;
-    }
-
-    ret = tkl_semaphore_create_init(&scanHandle, 0, 1);
-    if ( ret !=  OPRT_OK ) {
-        return ret;
-    }
-
-    bk_event_register_cb(EVENT_MOD_WIFI, EVENT_WIFI_SCAN_DONE,
-            scan_cb, rtos_get_current_thread());
-    wifi_scan_config_t scan_config = {0};
-    strncpy(scan_config.ssid, (char*)ssid, WIFI_SSID_STR_LEN);
-    BK_LOG_ON_ERR(bk_wifi_scan_start(&scan_config));
-
-    ret = tkl_semaphore_wait(scanHandle,semaphore_timeout);
-    tkl_semaphore_release(scanHandle);
-    scanHandle = NULL;
-
-    if (ret !=  OPRT_OK) {
-        //bk_printf("scan wait sem error\r\n");
-        return ret;
-    }
-
-    if ((bk_wifi_scan_get_result(&apList) != 0) || (0 == apList.ap_num)) {
-        bk_printf("scan err\r\n");
-        goto SCAN_ERR;
-    }
-
-    array = (AP_IF_S *)tkl_system_malloc(sizeof(AP_IF_S));
-    if(NULL == array) {
-        goto SCAN_ERR;
-    }
-
-    tkl_system_memset(array, 0, sizeof(AP_IF_S));
-    array->rssi = -100;
-
-    for (i = 0; i < apList.ap_num ; i++) {
-        /* skip non-matched ssid */
-        if (os_strcmp(apList.aps[i].ssid, (char *)ssid))
-            continue;
-
-        /* found */
-        if (apList.aps[i].rssi < array->rssi) { /* rssi 信号强度比较 */
-            continue;
-        }
-
-        array->security = _bk_wifi_security_to_ty(apList.aps[i].security);
-        array->channel = apList.aps[i].channel;
-        array->rssi = apList.aps[i].rssi;
-        os_memcpy(array->bssid, apList.aps[i].bssid, 6);
-
-        ssid_len = os_strlen(apList.aps[i].ssid);
-        if (ssid_len > WIFI_SSID_LEN) {
-            ssid_len = WIFI_SSID_LEN;
-        }
-
-        memset(array->ssid, 0, ssid_len);
-        os_strncpy((char *)array->ssid, apList.aps[i].ssid, ssid_len);
-        array->s_len = ssid_len;
-
-        j++;
-    }
-
-    if (j == 0) {
-        goto SCAN_ERR;
-    }
-    *ap_ary = array;
-    if (apList.aps != NULL) {
-        tkl_system_free(apList.aps);
-    }
-
-    return OPRT_OK;
-
-SCAN_ERR:
-    if (apList.aps != NULL) {
-        tkl_system_free(apList.aps);
-        apList.aps = NULL;
-    }
-
-    if (array) {
-        tkl_system_free(array);
-        array = NULL;
-    }
-    return OPRT_OS_ADAPTER_COM_ERROR;
 }
 
 /**
@@ -543,7 +647,7 @@ OPERATE_RET tkl_wifi_start_ap(const WF_AP_CFG_IF_S *cfg)
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_stop_ap(void)
+OPERATE_RET tkl_wifi_stop_ap(VOID_T)
 {
     BK_LOG_ON_ERR(bk_wifi_ap_stop());
     return OPRT_OK;
@@ -555,7 +659,7 @@ OPERATE_RET tkl_wifi_stop_ap(void)
  * @param[in]       chan        the channel to set
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_set_cur_channel(const UCHAR_T chan)
+OPERATE_RET tkl_wifi_set_cur_channel(const uint8_t chan)
 {
     int status;
     wifi_channel_t channel = {0};
@@ -585,7 +689,7 @@ OPERATE_RET tkl_wifi_set_cur_channel(const UCHAR_T chan)
  * @param[out]      chan        the channel wifi works
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_get_cur_channel(UCHAR_T *chan)
+OPERATE_RET tkl_wifi_get_cur_channel(uint8_t *chan)
 {
     *chan = (unsigned char)bk_wifi_get_channel();
     return OPRT_OK;
@@ -808,6 +912,7 @@ OPERATE_RET tkl_wifi_set_work_mode(const WF_WK_MD_E mode)
     OPERATE_RET ret = OPRT_OK;
     WF_WK_MD_E current_mode;
 
+    bk_printf("%s %d\r\n", __func__, __LINE__);
     if(first_set_flag) {
         //extern void extended_app_waiting_for_launch(void);
         //extended_app_waiting_for_launch(); /* 首次等待wifi初始化OK */
@@ -848,19 +953,20 @@ OPERATE_RET tkl_wifi_get_connected_ap_info(FAST_WF_CONNECTED_AP_INFO_T **fast_ap
 {
 	int ret;
 	struct wlan_fast_connect_info *fci;
-	FAST_WF_CONNECTED_AP_INFO_T *ap_info = NULL;
 	wifi_sta_config_t sta_cfg;
 
 	if (!fast_ap_info)
 		return OPRT_COM_ERROR;
 
 	// 外部调用完成后释放
-	ap_info = (FAST_WF_CONNECTED_AP_INFO_T *)tkl_system_malloc(sizeof(FAST_WF_CONNECTED_AP_INFO_T) + sizeof(struct wlan_fast_connect_info));
-	if (ap_info == NULL) {
-		return OPRT_COM_ERROR;
-	}
+    if(!p_fast_ap_info) {
+        p_fast_ap_info = tkl_system_malloc(sizeof(FAST_WF_CONNECTED_AP_INFO_T) + sizeof(struct wlan_fast_connect_info));
+        if (p_fast_ap_info == NULL) {
+            return OPRT_COM_ERROR;
+        }
+    }
 
-    os_memset(ap_info, 0, sizeof(FAST_WF_CONNECTED_AP_INFO_T) + sizeof(struct wlan_fast_connect_info));
+    os_memset(p_fast_ap_info, 0, sizeof(FAST_WF_CONNECTED_AP_INFO_T) + sizeof(struct wlan_fast_connect_info));
 
 	os_memset(&sta_cfg, 0, sizeof(sta_cfg));
 	ret = bk_wifi_sta_get_config(&sta_cfg);
@@ -868,8 +974,8 @@ OPERATE_RET tkl_wifi_get_connected_ap_info(FAST_WF_CONNECTED_AP_INFO_T **fast_ap
 		return OPRT_COM_ERROR;
 	}
 
-	ap_info->len = sizeof(struct wlan_fast_connect_info);
-	fci = (struct wlan_fast_connect_info *)ap_info->data;
+	p_fast_ap_info->len = sizeof(struct wlan_fast_connect_info);
+	fci = (struct wlan_fast_connect_info *)p_fast_ap_info->data;
 
 	os_memcpy(fci->ssid, sta_cfg.ssid, WIFI_SSID_STR_LEN);
 	os_memcpy(fci->bssid, sta_cfg.bssid, WIFI_BSSID_LEN);
@@ -884,9 +990,7 @@ OPERATE_RET tkl_wifi_get_connected_ap_info(FAST_WF_CONNECTED_AP_INFO_T **fast_ap
 	fci->pmf = sta_cfg.pmf;
 	os_memcpy(fci->tk, sta_cfg.tk, 16);
 
-	__fast_connect_ap_info_dump("get connected ap info", fci);
-
-	*fast_ap_info = ap_info;
+	*fast_ap_info = p_fast_ap_info;
 
 	return OPRT_OK;
 
@@ -898,7 +1002,7 @@ OPERATE_RET tkl_wifi_get_connected_ap_info(FAST_WF_CONNECTED_AP_INFO_T **fast_ap
  * @param[out]      mac         uplink mac
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_get_bssid(UCHAR_T *mac)
+OPERATE_RET tkl_wifi_get_bssid(uint8_t *mac)
 {
     int ret = OPRT_OK;
     wifi_link_status_t link_status;
@@ -942,7 +1046,7 @@ OPERATE_RET tkl_wifi_set_country_code(const COUNTRY_CODE_E ccode)
  * @param[in]       ccode  country code
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_set_country_code_v2(const UCHAR_T *ccode)
+OPERATE_RET tkl_wifi_set_country_code_v2(const uint8_t *ccode)
 {
     bk_printf("%s: set country code [%s]\r\n", __func__, ccode);
     COUNTRY_CODE_E country_code = COUNTRY_CODE_CN;
@@ -986,7 +1090,7 @@ OPERATE_RET tkl_wifi_set_country_code_v2(const UCHAR_T *ccode)
  * @param[in]       ccode   country code buffer to restore
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_get_country_code(UCHAR_T *ccode)
+OPERATE_RET tkl_wifi_get_country_code(uint8_t *ccode)
 {
 	uint8_t country_code[3] = {0};
 
@@ -1007,7 +1111,7 @@ OPERATE_RET tkl_wifi_get_country_code(UCHAR_T *ccode)
  *
  * @return true on success. faile on failure
  */
-BOOL_T tkl_wifi_set_rf_calibrated(void)
+BOOL_T tkl_wifi_set_rf_calibrated(VOID_T)
 {
     int stat = bk_wifi_manual_cal_rfcali_status();
 
@@ -1048,10 +1152,10 @@ static void tkl_wifi_powersave_disable(void)
  * @param[in]       dtim     the wifi dtim
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_set_lp_mode(const BOOL_T enable, const UCHAR_T dtim)
+OPERATE_RET tkl_wifi_set_lp_mode(const BOOL_T enable, const uint8_t dtim)
 {
     bk_printf("-- wifi lp set enable: %d, dtim:%d\r\n", enable, dtim);
-    static int lp_enable = FALSE;
+    static int lp_enable = 0xff;
 
     if(dtim == 10 || dtim == 20 || dtim == 30) {
         // wifi_lp_flag = TRUE;
@@ -1080,12 +1184,12 @@ OPERATE_RET tkl_wifi_set_lp_mode(const BOOL_T enable, const UCHAR_T dtim)
     } else {
         bk_wifi_send_listen_interval_req(dtim);
         if(TRUE == enable) {
-            if(!lp_enable) {
+            if(!lp_enable || lp_enable == 0xff) {
                 lp_enable = TRUE;
                 tkl_wifi_powersave_enable();
             }
         }else {
-            if(lp_enable) {
+            if(lp_enable || lp_enable == 0xff) {
                 lp_enable = FALSE;
                 tkl_wifi_powersave_disable();
             }
@@ -1099,59 +1203,31 @@ static int fast_connect_flag = FALSE;
 int _wifi_event_cb(void *arg, event_module_t event_module,
 					  int event_id, void *event_data)
 {
+    int disconnect_reason, event = event_id;
 	wifi_event_sta_disconnected_t *sta_disconnected;
+    struct ipc_msg_s wf_ipc_msg = {0};
+    wf_ipc_msg.type = TKL_IPC_TYPE_WIFI;
+    wf_ipc_msg.subtype = TKL_IPC_TYPE_WF_CONNECT_RES;
 
-    bk_printf("_wifi_event_cb %d\r\n", event_id);
-	switch (event_id) {
-	case EVENT_WIFI_STA_CONNECTED:
-		bk_printf("EVENT_WIFI_STA_CONNECTED %d\r\n", event_id);
+    struct ipc_msg_param_s param = {0};
+    param.p1 = &event;
+
+    if (event_id == EVENT_WIFI_STA_CONNECTED) {
         bk_wifi_send_arp_set_rate_req(60); //set arp keepalive to 6Mbps
-		break;
-	case EVENT_WIFI_STA_DISCONNECTED:
-		sta_disconnected = (wifi_event_sta_disconnected_t *)event_data;
-        etharp_remove_all_static();
-        if(sta_disconnected->disconnect_reason == 0)
-            break;
+    }
 
-        if(tkl_get_lp_flag()) {
-            _bk_rtc_wakeup_register(1000);  //由于默认设置cpu是处于sleep模式， 当资源释放后进入idle线程，cpu就会进入睡眠。需要先设置rtc唤醒，否则再不能唤醒cpu，导致程序异常
-            if(!ble_init_flag) {  //当 tuyaos 没有初始化使用蓝牙时候，进低功耗前需要先把 ble ctrl 资源释放掉
-                bk_bluetooth_deinit();
-            }
-            bk_wifi_sta_stop(); //针对保活低功耗， 进低功耗前需要释放wifi资源。所以在连接路由器失败后释放 wifi 资源
-        }
-        switch(sta_disconnected->disconnect_reason) {
-            case WIFI_REASON_DEAUTH_LEAVING:
-            case WIFI_REASON_NO_AP_FOUND:
-            case WIFI_REASON_DISASSOC_AP_BUSY:
-            case WIFI_REASON_PREV_AUTH_NOT_VALID:
-            case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
-            case WIFI_REASON_MICHAEL_MIC_FAILURE:
-            case WIFI_REASON_WRONG_PASSWORD:
-            case WIFI_REASON_DHCP_TIMEOUT:
-                bk_printf("RW_EVT_STA_CONNECT_FAILED %d\r\n", sta_disconnected->disconnect_reason);
-                __notify_wifi_event(WFE_CONNECT_FAILED, NULL);
-            break;
-            default:
-                bk_printf("WFE_DISCONNECTED %d\r\n", sta_disconnected->disconnect_reason);
-                __notify_wifi_event(WFE_DISCONNECTED, NULL);
-            break;
-        }
+    if (event_id == EVENT_WIFI_STA_DISCONNECTED) {
+        sta_disconnected = (wifi_event_sta_disconnected_t *)event_data;
+        disconnect_reason = sta_disconnected->disconnect_reason;
+        param.p2 = &disconnect_reason;
+    }
 
-		break;
+    wf_ipc_msg.req_param = &param;
+    wf_ipc_msg.req_len = sizeof(struct ipc_msg_param_s);
 
-	case EVENT_WIFI_AP_CONNECTED:
-		//ap_connected = (wifi_event_ap_connected_t *)event_data;
-		break;
-
-	case EVENT_WIFI_AP_DISCONNECTED:
-		//ap_disconnected = (wifi_event_ap_disconnected_t *)event_data;
-		break;
-
-	default:
-		bk_printf("rx event <%d %d>\r\n", event_module, event_id);
-		break;
-	}
+    OPERATE_RET ret = tuya_ipc_send_sync(&wf_ipc_msg);
+    if(ret)
+        return ret;
 
 	return BK_OK;
 }
@@ -1172,7 +1248,7 @@ int _netif_event_cb(void *arg, event_module_t event_module,
 		break;
     case EVENT_NETIF_DHCP_TIMEOUT:
         bk_printf("WFE_CONNECT_FAILED %d\r\n", event_id);
-        etharp_remove_all_static();
+        // etharp_remove_all_static();
         __notify_wifi_event(WFE_CONNECT_FAILED, NULL);
         break;
 	default:
@@ -1204,11 +1280,10 @@ OPERATE_RET tkl_wifi_station_fast_connect(const FAST_WF_CONNECTED_AP_INFO_T *fas
     if(wifi_event_init) {
         wifi_event_init = 0;
         bk_event_register_cb(EVENT_MOD_WIFI, EVENT_ID_ALL, _wifi_event_cb, NULL);
-        bk_event_register_cb(EVENT_MOD_NETIF, EVENT_ID_ALL, _netif_event_cb, NULL);
+//        bk_event_register_cb(EVENT_MOD_NETIF, EVENT_ID_ALL, _netif_event_cb, NULL);
     }
 
 	fci = (struct wlan_fast_connect_info *)fast_ap_info->data;
-	//__fast_connect_ap_info_dump("last connected ap info", fci);
 
 	os_memcpy(sta_config.ssid, fci->ssid, sizeof(sta_config.ssid));
 	os_memcpy(sta_config.password, fci->pwd, sizeof(sta_config.password));
@@ -1259,7 +1334,7 @@ OPERATE_RET tkl_wifi_station_fast_connect(const FAST_WF_CONNECTED_AP_INFO_T *fas
  */
 OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd)
 {
-    bk_printf("%s\r\n", __func__);
+    bk_printf("%s %d\r\n", __func__, __LINE__);
     int ret = OPRT_COM_ERROR;
     wifi_sta_config_t sta_config = WIFI_DEFAULT_STA_CONFIG();
 
@@ -1270,7 +1345,7 @@ OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd)
     if(wifi_event_init) {
         wifi_event_init = 0;
         bk_event_register_cb(EVENT_MOD_WIFI, EVENT_ID_ALL, _wifi_event_cb, NULL);
-        bk_event_register_cb(EVENT_MOD_NETIF, EVENT_ID_ALL, _netif_event_cb, NULL);
+//        bk_event_register_cb(EVENT_MOD_NETIF, EVENT_ID_ALL, _netif_event_cb, NULL);
     }
 
     os_strcpy((char *)sta_config.ssid, (const char *)ssid);
@@ -1303,10 +1378,10 @@ OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd)
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_disconnect(void)
+OPERATE_RET tkl_wifi_station_disconnect(VOID_T)
 {
     bk_printf("station disconnect ap\r\n");
-    etharp_remove_all_static();
+    // etharp_remove_all_static();
     bk_wifi_sta_stop(); /* 不需要实现，由于在start中一开始就会停止 */
     return OPRT_OK;
 }
@@ -1365,7 +1440,7 @@ OPERATE_RET tkl_wifi_station_get_status(WF_STATION_STAT_E *stat)
     WF_WK_MD_E mode;
 
     tkl_wifi_get_work_mode(&mode);
-    if (mode == WWM_SOFTAP) {
+    if (mode != WWM_STATION) {
         *stat = WSS_IDLE;
         return OPRT_OK;
     }
@@ -1419,7 +1494,7 @@ OPERATE_RET tkl_wifi_station_get_status(WF_STATION_STAT_E *stat)
  * @param[in]       len         length of buffer
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_send_mgnt(const UCHAR_T *buf, const uint32_t len)
+OPERATE_RET tkl_wifi_send_mgnt(const uint8_t *buf, const uint32_t len)
 {
     int ret = bk_wifi_send_raw((uint8_t *)buf, len);
     if(ret < 0) {
@@ -1472,7 +1547,9 @@ OPERATE_RET tkl_wifi_register_recv_mgnt_callback(const BOOL_T enable, const WIFI
  * @param[in]       args    args associated with the command
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_ioctl(WF_IOCTL_CMD_E cmd,  void *args)
+OPERATE_RET tkl_wifi_ioctl(WF_IOCTL_CMD_E cmd,  VOID *args)
 {
     return OPRT_NOT_SUPPORTED;
 }
+
+

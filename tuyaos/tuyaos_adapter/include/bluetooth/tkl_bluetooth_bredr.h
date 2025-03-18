@@ -162,23 +162,23 @@ typedef enum {
  ********************* struct ******************************************
  **********************************************************************/
 typedef struct {
-    UCHAR_T                             type;           /**< Mac Address Type, Refer to @ TKL_BLE_GAP_ADDR_TYPE_PUBLIC or TKL_BLE_GAP_ADDR_TYPE_RANDOM*/
-    UCHAR_T                             addr[6];        /**< Mac Address, Address size, 6 bytes */
+    uint8_t                             type;           /**< Mac Address Type, Refer to @ TKL_BLE_GAP_ADDR_TYPE_PUBLIC or TKL_BLE_GAP_ADDR_TYPE_RANDOM*/
+    uint8_t                             addr[6];        /**< Mac Address, Address size, 6 bytes */
 } TUYA_BT_GAP_ADDR_T;
 
 typedef struct {
     TUYA_BT_PAIR_MODE_E                 mode;           /**< Bond Manager Pairing Modes */
 	TUYA_BT_PAIR_IO_CAP_E               io_cap;         /**< Bond Manager I/O Capabilities Refer to @TUYA_BT_PAIR_IO_CAP_E */
 
-	UCHAR_T                             oob_data;
-	UCHAR_T                             mitm;           /**< Man In The Middle mode enalbe/disable */
+	uint8_t                             oob_data;
+	uint8_t                             mitm;           /**< Man In The Middle mode enalbe/disable */
     BOOL_T                              ble_secure_conn;/**< BLE Secure Simple Pairing, also called Secure Connection mode. Enable or not */
     uint32_t                              passkey;        /**< Init passkey. */
 } TUYA_BT_PAIR_INIT_PARAM_T;
 
 typedef struct {
 	TUYA_BT_GAP_ADDR_T                  addr;           /**< Address of the remote device. */
-    UCHAR_T                             link_key[16];   /**< security keys. */
+    uint8_t                             link_key[16];   /**< security keys. */
 
     void                                *user_data;
 } TUYA_BT_PAIR_BOND_INFO_T;
@@ -204,8 +204,8 @@ typedef struct {
 
 typedef struct {
     TUYA_BT_GAP_ADDR_T                  addr;           /**< Address of the remote device. */
-    UCHAR_T                             *name;          /**< BT name of the remote device. */
-    UCHAR_T                             name_len;
+    uint8_t                             *name;          /**< BT name of the remote device. */
+    uint8_t                             name_len;
     void                                *user_data;
 } TUYA_BT_PAIR_INQUIRY_EVT_T;
 
@@ -346,7 +346,7 @@ OPERATE_RET tkl_bt_gap_address_get(TUYA_BT_GAP_ADDR_T *p_peer_addr);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_bt_gap_name_set(char *name);
+OPERATE_RET tkl_bt_gap_name_set(CHAR_T *name);
 
 /**
  * @brief   Get the BT GAP Name
@@ -355,7 +355,7 @@ OPERATE_RET tkl_bt_gap_name_set(char *name);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_bt_gap_name_get(char *name);
+OPERATE_RET tkl_bt_gap_name_get(CHAR_T *name);
 
 /**
  * @brief   Request the pair while in BT-Master Mode.
@@ -421,7 +421,7 @@ OPERATE_RET tkl_bt_gap_disconnect(TUYA_BT_PAIR_BOND_INFO_T *bond_info);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_bt_bredr_control(TUYA_BT_BREDR_CONTROL_E crtl_event, UCHAR_T *user_data, USHORT_T data_len);
+OPERATE_RET tkl_bt_bredr_control(TUYA_BT_BREDR_CONTROL_E crtl_event, uint8_t *user_data, USHORT_T data_len);
 
 /**
  * @brief   Control the bredr eq
@@ -432,7 +432,7 @@ OPERATE_RET tkl_bt_bredr_control(TUYA_BT_BREDR_CONTROL_E crtl_event, UCHAR_T *us
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_bt_bredr_equalizer_set(UCHAR_T eq_mode, UCHAR_T *eq_data, USHORT_T eq_data_len);
+OPERATE_RET tkl_bt_bredr_equalizer_set(uint8_t eq_mode, uint8_t *eq_data, USHORT_T eq_data_len);
 
 /**
  * @brief   Swicth the bredr eq mode
@@ -442,7 +442,7 @@ OPERATE_RET tkl_bt_bredr_equalizer_set(UCHAR_T eq_mode, UCHAR_T *eq_data, USHORT
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_bt_bredr_equalizer_switch(UCHAR_T eq_mode, BOOL_T enable);
+OPERATE_RET tkl_bt_bredr_equalizer_switch(uint8_t eq_mode, BOOL_T enable);
 
 /**
  * @brief   Control the bredr noise
@@ -452,7 +452,7 @@ OPERATE_RET tkl_bt_bredr_equalizer_switch(UCHAR_T eq_mode, BOOL_T enable);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_bt_bredr_noise_set(UCHAR_T noise_mode, USHORT_T noise_data);
+OPERATE_RET tkl_bt_bredr_noise_set(uint8_t noise_mode, USHORT_T noise_data);
 
 /**
  * @brief   Swicth the bredr noise mode
@@ -462,7 +462,7 @@ OPERATE_RET tkl_bt_bredr_noise_set(UCHAR_T noise_mode, USHORT_T noise_data);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_bt_bredr_noise_switch(UCHAR_T noise_mode, BOOL_T enable);
+OPERATE_RET tkl_bt_bredr_noise_switch(uint8_t noise_mode, BOOL_T enable);
 
 
 #ifdef __cplusplus

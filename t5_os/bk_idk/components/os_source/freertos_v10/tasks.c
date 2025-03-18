@@ -43,6 +43,15 @@
 #include <os/mem.h>
 #include <modules/pm.h>
 
+// Modified by TUYA Start
+// lwipopts.h条件包含需要放在#include "FreeRTOS.h"之后，宏 CONFIG_SYS_CPU0 依赖其
+// 包含的sdkconfig.h , FreeRTOS.h ---> FreeRTOSConfig.h ---> sdkconfig.h
+#if (CONFIG_CPU_INDEX == 1)
+//#include "lwipopts.h"
+#include "lwip/opt.h"
+#endif // CONFIG_CPU_INDEX == 1
+// Modified by TUYA End
+
 /* Lint e9021, e961 and e750 are suppressed as a MISRA exception justified
  * because the MPU ports require MPU_WRAPPERS_INCLUDED_FROM_API_FILE to be defined
  * for the header files above, but not in this file, in order to generate the
@@ -782,7 +791,7 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
             return pdFAIL;
 #endif //#if CONFIG_PSRAM_AS_SYS_MEMORY
             break;
-        
+
         case HEAP_MEM_TYPE_DEFAULT:
         default:
             {
@@ -852,7 +861,7 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
             return pdFAIL;
 #endif //#if CONFIG_PSRAM_AS_SYS_MEMORY
             break;
-        
+
         case HEAP_MEM_TYPE_DEFAULT:
         default:
             {
@@ -900,6 +909,16 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
             #endif /* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */
 
             prvInitialiseNewTask( pxTaskCode, pcName, ( uint32_t ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, NULL );
+
+// Modified by TUYA Start
+#if (CONFIG_CPU_INDEX == 1)
+#if (LWIP_NETCONN_SEM_PER_THREAD == 1)
+            extern int8_t lwip_socket_thread_init(void *task);
+            lwip_socket_thread_init(pxNewTCB);
+#endif // LWIP_NETCONN_SEM_PER_THREAD == 1
+#endif // CONFIG_CPU_INDEX == 1
+// Modified by TUYA End
+
             prvAddNewTaskToReadyList( pxNewTCB );
             xReturn = pdPASS;
         }
@@ -1270,6 +1289,15 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
     void vTaskDelete( TaskHandle_t xTaskToDelete )
     {
         TCB_t * pxTCB;
+
+// Modified by TUYA Start
+#if (CONFIG_CPU_INDEX == 1)
+#if (1 == LWIP_NETCONN_SEM_PER_THREAD)
+		extern int8_t lwip_socket_thread_cleanup(void *task);
+		lwip_socket_thread_cleanup(xTaskToDelete);
+#endif // LWIP_NETCONN_SEM_PER_THREAD == 1
+#endif // CONFIG_CPU_INDEX == 1
+// Modified by TUYA End
 
         taskENTER_CRITICAL();
         {
@@ -2416,7 +2444,7 @@ BaseType_t xTaskResumeAll( void )
                                     xPendedCounts = xConstTickNext + 1;
                                 }
                             }
-                          
+
                             if( xTaskIncrementTick() != pdFALSE )
                             {
                                 xYieldPending = pdTRUE;
@@ -3243,7 +3271,7 @@ typedef struct  task_list_recorder
 
     uint32_t stack_top;
 
-    uint32_t stack_bottom; 
+    uint32_t stack_bottom;
 
     uint32_t stack_size;
 
@@ -3324,9 +3352,9 @@ void vTaskSwitchContext( void )
 
             task_recorder[task_cnt].stack_top = (uint32_t) pxCurrentTCB->pxTopOfStack;
 
-            task_recorder[task_cnt].stack_bottom = (uint32_t)(pxCurrentTCB->pxStack + pxCurrentTCB->ulStackSize);    
+            task_recorder[task_cnt].stack_bottom = (uint32_t)(pxCurrentTCB->pxStack + pxCurrentTCB->ulStackSize);
 
-            task_recorder[task_cnt].stack_size   = pxCurrentTCB->ulStackSize;              
+            task_recorder[task_cnt].stack_size   = pxCurrentTCB->ulStackSize;
 
             task_cnt++;
 

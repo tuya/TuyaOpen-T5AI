@@ -7,12 +7,13 @@
 
 #include "media_app.h"
 #include "media_evt.h"
-#include "tkl_display.h"
 #include "tkl_video_in.h"
 #include "tkl_semaphore.h"
+#include "tkl_pinmux.h"
+#include "tkl_i2c.h"
+#include "tkl_system.h"
 
 extern void tuya_multimedia_power_on(void);
-extern volatile uint8_t display_startup_image;
 
 // default
 static uint8_t __vi_uvc_power_pin = TUYA_GPIO_NUM_28;
@@ -73,7 +74,7 @@ int tkl_vi_set_dvp_i2c_pin(uint8_t clk, uint8_t sda)
     return 0;
 }
 
-int tkl_vi_get_dvp_i2c_idx(uint8_t *clk, uint8_t *sda)
+int tkl_vi_get_dvp_i2c_idx(void)
 {
     return TUYA_I2C_NUM_0;
 }
@@ -107,17 +108,10 @@ void tkl_vi_update_ll_config(TKL_VI_CONFIG_T *pconfig)
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_vi_init(TKL_VI_CONFIG_T *pconfig, int32_t count)
+OPERATE_RET tkl_vi_init(TKL_VI_CONFIG_T *pconfig, int count)
 {
     OPERATE_RET ret;
 
-    bk_printf("--- trace %s %d\r\n", __func__, __LINE__);
-    if (display_startup_image) {
-        bk_printf("startup image display, wait && retry\r\n");
-        return OPRT_COM_ERROR;
-    }
-
-    bk_printf("--- trace %s %d\r\n", __func__, __LINE__);
     media_camera_device_t device = {0};
     // TODO pconfig->isp.width / pconfig->isp.height
     // init camera
@@ -209,11 +203,8 @@ OPERATE_RET tkl_vi_init(TKL_VI_CONFIG_T *pconfig, int32_t count)
 OPERATE_RET tkl_vi_uninit(TKL_VI_CAMERA_TYPE_E device_type)
 {
     OPERATE_RET ret;
-    TKL_DISP_BLEND_INFO_S cfg;
-    cfg.type = TKL_DISP_BLEND_ALL;
-    tkl_disp_cancel_blend_info(NULL, &cfg);
+    camera_type_t type = UNKNOW_CAMERA;
 
-    camera_type_t type;
     if (device_type == TKL_VI_CAMERA_TYPE_UVC) {
         type = UVC_CAMERA;
         vi_uvc_status = 2;

@@ -15,7 +15,7 @@ extern "C" {
  * @return  SUCCESS             Initialized successfully.
  *          ERROR
  * */
-OPERATE_RET tkl_ble_stack_init(UCHAR_T role);
+OPERATE_RET tkl_ble_stack_init(uint8_t role);
 
 /**
  * @brief   Function for de-initializing the ble stack features
@@ -25,7 +25,7 @@ OPERATE_RET tkl_ble_stack_init(UCHAR_T role);
  * @return  SUCCESS             Deinitialized successfully.
  *          ERROR
  * */
-OPERATE_RET tkl_ble_stack_deinit(UCHAR_T role);
+OPERATE_RET tkl_ble_stack_deinit(uint8_t role);
 
 /**
  * @brief   Function for getting the GATT Link-Support.
@@ -210,7 +210,7 @@ OPERATE_RET tkl_ble_gap_connect(TKL_BLE_GAP_ADDR_T const *p_peer_addr, TKL_BLE_G
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gap_disconnect(USHORT_T conn_handle, UCHAR_T hci_reason);
+OPERATE_RET tkl_ble_gap_disconnect(USHORT_T conn_handle, uint8_t hci_reason);
 
 /**
  * @brief   Start to update connection parameters
@@ -229,7 +229,7 @@ OPERATE_RET tkl_ble_gap_conn_param_update(USHORT_T conn_handle, TKL_BLE_GAP_CONN
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gap_tx_power_set(UCHAR_T role, int tx_power);
+OPERATE_RET tkl_ble_gap_tx_power_set(uint8_t role, int tx_power);
 
 /**
  * @brief   Get the received signal strength for the last connection event.
@@ -245,7 +245,7 @@ OPERATE_RET tkl_ble_gap_rssi_get(USHORT_T conn_handle);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_gap_name_set(char *p_name);
+OPERATE_RET tkl_ble_gap_name_set(CHAR_T *p_name);
 
 /**
  * @brief   Add Ble Gatt Service
@@ -278,7 +278,7 @@ OPERATE_RET tkl_ble_gatts_service_change(USHORT_T conn_handle, USHORT_T start_ha
  *
  * @note Values other than system attributes can be set at any time, regardless of whether any active connections exist. 
  * */ 
-OPERATE_RET tkl_ble_gatts_value_set(USHORT_T conn_handle, USHORT_T char_handle, UCHAR_T *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_set(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
 
 /**
  * @brief   Get the value of a given attribute.
@@ -287,7 +287,7 @@ OPERATE_RET tkl_ble_gatts_value_set(USHORT_T conn_handle, USHORT_T char_handle, 
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_value_get(USHORT_T conn_handle, USHORT_T char_handle, UCHAR_T *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_get(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
 
 /**
  * @brief   Notify an attribute value.
@@ -298,7 +298,7 @@ OPERATE_RET tkl_ble_gatts_value_get(USHORT_T conn_handle, USHORT_T char_handle, 
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_value_notify(USHORT_T conn_handle, USHORT_T char_handle, UCHAR_T *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_notify(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
 
 /**
  * @brief   Indicate an attribute value.
@@ -309,7 +309,7 @@ OPERATE_RET tkl_ble_gatts_value_notify(USHORT_T conn_handle, USHORT_T char_handl
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_value_indicate(USHORT_T conn_handle, USHORT_T char_handle, UCHAR_T *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_indicate(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
 
 /**
  * @brief   Reply to an ATT_MTU exchange request by sending an Exchange MTU Response to the client.
@@ -367,7 +367,7 @@ OPERATE_RET tkl_ble_gattc_char_desc_discovery(USHORT_T conn_handle, USHORT_T sta
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gattc_write_without_rsp(USHORT_T conn_handle, USHORT_T char_handle, UCHAR_T *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gattc_write_without_rsp(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
 
 /**
  * @brief   [Ble Central] Write Data with response
@@ -378,7 +378,7 @@ OPERATE_RET tkl_ble_gattc_write_without_rsp(USHORT_T conn_handle, USHORT_T char_
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_gattc_write(USHORT_T conn_handle, USHORT_T char_handle, UCHAR_T *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gattc_write(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
 
 /**
  * @brief   [Ble Central] Read Data
@@ -430,7 +430,7 @@ OPERATE_RET tkl_ble_vendor_command_control(USHORT_T opcode, void *user_data, USH
  * @param[in]       mode       the ble mode
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_ble_set_mode(const BOOL_T enable, const UCHAR_T mode);
+OPERATE_RET tkl_ble_set_mode(const BOOL_T enable, const uint8_t mode);
 
 #ifdef __cplusplus
 }

@@ -25,6 +25,7 @@
 #include <components/uvc_uac_api_common.h>
 // Modified by TUYA Start
 #include <gpio_map.h>
+#include "tkl_video_in.h"
 // Modified by TUYA End
 
 
@@ -41,13 +42,13 @@ bk_err_t bk_aud_uac_driver_init(void)
 {
 #if CONFIG_USB_UAC
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t usb_ldo, active_level;
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
     bk_usb_power_ops(usb_ldo, 1);
 #else
     bk_usb_power_ops(CONFIG_USB_VBAT_CONTROL_GPIO_ID, 1);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 
 	bk_usb_open(0);
@@ -65,13 +66,13 @@ bk_err_t bk_aud_uac_driver_deinit(void)
 	bk_usb_device_set_using_status(0, USB_UAC_SPEAKER_DEVICE);
 	bk_usb_close();
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t usb_ldo, active_level;
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	return bk_usb_power_ops(usb_ldo, 0);
 #else
 	return bk_usb_power_ops(CONFIG_USB_VBAT_CONTROL_GPIO_ID, 0);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 
 #else

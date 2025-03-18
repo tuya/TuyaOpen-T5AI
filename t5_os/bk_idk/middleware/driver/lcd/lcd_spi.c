@@ -108,7 +108,7 @@ void lcd_spi_init_gpio(void)
 {
 // Modified by TUYA Start
 // TODO 兼容原厂开发板，及后续涂鸦PCBA，此处宏需要修改
-#if !CONFIG_TUYA_GPIO_MAP || (CONFIG_TUYA_GPIO_MAP)
+#if !CONFIG_TUYA_LOGIC_MODIFY || (CONFIG_TUYA_LOGIC_MODIFY)
     bk_printf("lcd spi rst: %d\r\n", LCD_SPI_RST);
 	gpio_dev_unmap(LCD_SPI_RST);
 	bk_gpio_set_capacity(LCD_SPI_RST, 0);

@@ -2,7 +2,9 @@
 #include "bk_wifi_types.h"
 #include "bk_private/bk_wifi.h"
 #if CONFIG_LWIP
-#include "lwip/ping.h"
+// Modified by TUYA Start
+// #include "lwip/ping.h"
+// Modified by TUYA End
 #include "lwip/etharp.h"
 #endif
 #include <components/netif.h>
@@ -224,6 +226,8 @@ void arp_Command(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv
 	os_memcpy(pcWriteBuffer, msg, os_strlen(msg));
 }
 
+// Modified by TUYA Start
+#if 0
 void cli_ping_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
 #if CONFIG_LWIP
@@ -259,6 +263,8 @@ error:
 
 #endif
 }
+#endif
+// Modified by TUYA End
 
 #if CONFIG_ALI_MQTT
 extern void test_mqtt_start(const char *host_name, const char *username,
@@ -374,7 +380,9 @@ static const struct cli_command s_netif_commands[] = {
 	{"ip", "ip [sta|ap][{ip}{mask}{gate}{dns}]", cli_ip_cmd},
 	{"ipconfig", "ipconfig [sta|ap][{ip}{mask}{gate}{dns}]", cli_ip_cmd},
 	{"dhcpc", "dhcpc", cli_dhcpc_cmd},
-	{"ping", "ping <ip>", cli_ping_cmd},
+// Modified by TUYA Start
+//	{"ping", "ping <ip>", cli_ping_cmd},
+// Modified by TUYA End
 #if CONFIG_LWIP
 	{"arp", "arp [-s] [-d]<ip>", cli_arp_cmd},
 #endif
@@ -399,7 +407,9 @@ static const struct cli_command s_netif_commands[] = {
 	{"per_packet_info", "per_packet_info [per_packet_info_output_bitmap(base 16)]", cli_per_packet_info_output_cmd},
 #else
 	{"ip", "ip [sta|ap][{ip}{mask}{gate}{dns}]", cli_ip_cmd},
-	{"ping", "ping <ip>", cli_ping_cmd},
+// Modified by TUYA Start
+//	{"ping", "ping <ip>", cli_ping_cmd},
+// Modified by TUYA End
 #endif
 
 };

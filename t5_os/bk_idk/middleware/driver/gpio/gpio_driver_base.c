@@ -39,7 +39,6 @@
 
 // Modified by TUYA Start
 #include "driver/media_types.h"
-#include "tkl_display.h"
 #include "tkl_video_in.h"
 // Modified by TUYA End
 
@@ -440,14 +439,13 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
 					BK_LOG_ON_ERR(bk_gpio_set_output_high(s_gpio_ctrl_ldo_output[i].gpio_id));
 				}
                 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
                 else {
-                    uint8_t usb_ldo = 56, dvp_ldo = 56, lcd_ldo = 56;
-                    uint8_t lcd_active_level = 0, dvp_active_level = 0, usb_active_level = 0;
+                    uint8_t usb_ldo = 56, dvp_ldo = 56;
+                    uint8_t dvp_active_level = 0, usb_active_level = 0;
                     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &usb_active_level);
                     tkl_vi_get_power_info(DVP_CAMERA, &dvp_ldo, &dvp_active_level);
-                    tkl_display_power_ctrl_pin(&lcd_ldo, &lcd_active_level);
-                    if ((gpio_id == lcd_ldo) || (gpio_id == usb_ldo) || (gpio_id == dvp_ldo)) {
+                    if ((gpio_id == usb_ldo) || (gpio_id == dvp_ldo)) {
                         /*gpio dev unmap*/
                         BK_LOG_ON_ERR(bk_gpio_disable_output(gpio_id));
                         BK_LOG_ON_ERR(bk_gpio_disable_input(gpio_id));
@@ -459,12 +457,7 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
                         BK_LOG_ON_ERR(bk_gpio_disable_input(gpio_id));
                         BK_LOG_ON_ERR(bk_gpio_enable_output(gpio_id));
 
-                        if (gpio_id == lcd_ldo) {
-                            if (lcd_active_level)
-                                BK_LOG_ON_ERR(bk_gpio_set_output_high(gpio_id));
-                            else
-                                BK_LOG_ON_ERR(bk_gpio_set_output_low(gpio_id));
-                        } else if (gpio_id == usb_ldo) {
+						if (gpio_id == usb_ldo) {
                             if (usb_active_level)
                                 BK_LOG_ON_ERR(bk_gpio_set_output_high(gpio_id));
                             else
@@ -472,7 +465,7 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
                         }
                     }
                 }
-#endif  // CONFIG_TUYA_GPIO_MAP
+#endif  // CONFIG_TUYA_LOGIC_MODIFY
                 // Modified by TUYA End
 			}
 		}
@@ -502,14 +495,13 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
 						BK_LOG_ON_ERR(bk_gpio_set_output_low(s_gpio_ctrl_ldo_output[i].gpio_id));
 					}
                     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
                     else {
-                        uint8_t usb_ldo = 56, dvp_ldo = 56, lcd_ldo = 56;
-                        uint8_t lcd_active_level = 0, dvp_active_level = 0, usb_active_level = 0;
+                        uint8_t usb_ldo = 56, dvp_ldo = 56;
+                        uint8_t dvp_active_level = 0, usb_active_level = 0;
                         tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &usb_active_level);
                         tkl_vi_get_power_info(DVP_CAMERA, &dvp_ldo, &dvp_active_level);
-                        tkl_display_power_ctrl_pin(&lcd_ldo, &lcd_active_level);
-                        if ((gpio_id == lcd_ldo) || (gpio_id == usb_ldo) || (gpio_id == dvp_ldo)) {
+                        if ((gpio_id == usb_ldo) || (gpio_id == dvp_ldo)) {
                             /*gpio dev unmap*/
                             BK_LOG_ON_ERR(bk_gpio_disable_output(gpio_id));
                             BK_LOG_ON_ERR(bk_gpio_disable_input(gpio_id));
@@ -521,12 +513,7 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
                             BK_LOG_ON_ERR(bk_gpio_disable_input(gpio_id));
                             BK_LOG_ON_ERR(bk_gpio_enable_output(gpio_id));
 
-                            if (gpio_id == lcd_ldo) {
-                                if (lcd_active_level)
-                                    BK_LOG_ON_ERR(bk_gpio_set_output_low(gpio_id));
-                                else
-                                    BK_LOG_ON_ERR(bk_gpio_set_output_high(gpio_id));
-                            } else if (gpio_id == usb_ldo) {
+							if (gpio_id == usb_ldo) {
                                 if (usb_active_level)
                                     BK_LOG_ON_ERR(bk_gpio_set_output_low(gpio_id));
                                 else
@@ -534,7 +521,7 @@ bk_err_t bk_gpio_ctrl_external_ldo(gpio_ctrl_ldo_module_e module,gpio_id_t gpio_
                             }
                         }
                     }
-#endif  // CONFIG_TUYA_GPIO_MAP
+#endif  // CONFIG_TUYA_LOGIC_MODIFY
                     // Modified by TUYA End
 				}
 			}

@@ -69,10 +69,10 @@ bk_err_t bk_uvc_camera_open(media_camera_device_t *device)
 		os_memset(uvc_camera_config_st, 0, sizeof(uvc_camera_config_t));
 	}
 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
 extern int tkl_vi_set_power_info(uint8_t io, uint8_t active);
     tkl_vi_set_power_info(device->ty_param[0], device->ty_param[1]);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 // Modified by TUYA End
 
 	// first set uvc_stat_flag to ture, to avoid confusion caused by abnormal disconnection during the opening of uvc

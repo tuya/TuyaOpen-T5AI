@@ -4,6 +4,9 @@
 #include "bk_posix.h"
 #include "sdkconfig.h"
 #include "driver/qspi_flash_common.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "tuya_cloud_types.h"
 #include "tkl_system.h"
 
 #if CONFIG_QSPI
@@ -250,7 +253,11 @@ void cli_littlefs_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char *
             return;
         }
 
+        SYS_TIME_T t0 = tkl_system_get_millisecond();
         __cli_lfs_read(file_path, buf, data_len);
+        SYS_TIME_T t1 = tkl_system_get_millisecond();
+        bk_printf("read %d, time: %lld = %lld - %lld\r\n", data_len, t1 - t0, t1, t0);
+
         uint32_t debug_len = (data_len < 64)? data_len: 64;
         bk_printf("read data <display 64 bytes at most>:\r\n");
         for(int i = 0; i < debug_len; i++) {
@@ -296,6 +303,8 @@ void cli_littlefs_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char *
             bk_printf("last option in progress, wait and retry\r\n");
             return;
         }
+#define WT_USE_PSRAM    1
+
         huge_file_test_in_progress = 1;
         // write file test
         uint32_t test_cnt = 0;
@@ -309,15 +318,28 @@ void cli_littlefs_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char *
         bk_printf("test file length: %dKB\r\n", test_buf_len);
 
         test_buf_len <<= 10;
+        #if WT_USE_PSRAM
         uint8_t *wbuf = psram_malloc(test_buf_len);
+        #else
+        uint8_t *wbuf = tkl_system_malloc(test_buf_len);
+        #endif
         if (wbuf == NULL) {
             bk_printf("malloc test buffer failed\r\n");
             return;
         }
+
+        #if WT_USE_PSRAM
         uint8_t *check_buf = psram_malloc(test_buf_len);
+        #else
+        uint8_t *check_buf = tkl_system_malloc(test_buf_len);
+        #endif
         if (check_buf == NULL) {
             bk_printf("malloc test buffer failed\r\n");
+            #if WT_USE_PSRAM
             psram_free(wbuf);
+            #else
+            tkl_system_free(wbuf);
+            #endif
             wbuf = NULL;
             return;
         }
@@ -327,16 +349,24 @@ void cli_littlefs_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char *
             wbuf[i] = i;
         }
 
+        extern SYS_TIME_T tkl_system_get_millisecond(void);
         do {
             bk_printf("============> test start, %d\r\n", test_cnt++);
 
             bk_printf("====== write ====== \r\n");
+            SYS_TIME_T t0 = tkl_system_get_millisecond();
             __cli_lfs_write("/test_file", wbuf, test_buf_len, 0);
+            SYS_TIME_T t1 = tkl_system_get_millisecond();
+            bk_printf("====== write time: %lld = %lld - %lld\r\n", t1 - t0, t1, t0);
 
             memset(check_buf, 0x5a, test_buf_len);
-            bk_printf("====== read ====== \r\n");
+            bk_printf("====== read ======\r\n");
+            SYS_TIME_T t2 = tkl_system_get_millisecond();
             __cli_lfs_read("/test_file", check_buf, test_buf_len);
+            SYS_TIME_T t3 = tkl_system_get_millisecond();
+            bk_printf("====== read time: %lld = %lld - %lld\r\n", t3 - t2, t3, t2);
 
+            bk_printf("====== check ======\r\n");
             for (int i = 0; i < test_buf_len; i++) {
                 if (wbuf[i] != check_buf[i]) {
                     bk_printf("!!!!!! file check error %d: %d %d !!!!!!\r\n", i, wbuf[i], check_buf[i]);
@@ -350,10 +380,17 @@ void cli_littlefs_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char *
             tkl_system_sleep(50);
         } while (0);
 
+        #if WT_USE_PSRAM
         psram_free(wbuf);
         wbuf = NULL;
         psram_free(check_buf);
         check_buf = NULL;
+        #else
+        tkl_system_free(wbuf);
+        wbuf = NULL;
+        tkl_system_free(check_buf);
+        check_buf = NULL;
+        #endif
 
         huge_file_test_in_progress = 0;
     }
