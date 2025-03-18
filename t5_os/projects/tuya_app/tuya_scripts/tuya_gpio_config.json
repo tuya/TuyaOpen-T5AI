@@ -9,7 +9,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_3"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_3",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_1",
@@ -20,40 +21,44 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_3"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_3",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_2",
-            "second_func_en": "GPIO_SECOND_FUNC_DISABLE",
+            "second_func_en": "GPIO_SECOND_FUNC_ENABLE",
             "second_func_dev": "GPIO_DEV_SDIO_HOST_CLK",
             "io_mode": "GPIO_IO_DISABLE",
             "pull_mode": "GPIO_PULL_UP_EN",
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_3"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_3",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_3",
-            "second_func_en": "GPIO_SECOND_FUNC_DISABLE",
+            "second_func_en": "GPIO_SECOND_FUNC_ENABLE",
             "second_func_dev": "GPIO_DEV_SDIO_HOST_CMD",
             "io_mode": "GPIO_IO_DISABLE",
             "pull_mode": "GPIO_PULL_UP_EN",
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_3"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_3",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_4",
-            "second_func_en": "GPIO_SECOND_FUNC_DISABLE",
+            "second_func_en": "GPIO_SECOND_FUNC_ENABLE",
             "second_func_dev": "GPIO_DEV_SDIO_HOST_DATA0",
             "io_mode": "GPIO_IO_DISABLE",
             "pull_mode": "GPIO_PULL_UP_EN",
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_3"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_3",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_5",
@@ -64,7 +69,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_6",
@@ -75,7 +81,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_7",
@@ -86,7 +93,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_8",
@@ -97,7 +105,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_KEEP_INPUT_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_9",
@@ -108,7 +117,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_KEEP_INPUT_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_10",
@@ -119,7 +129,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_11",
@@ -130,7 +141,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_12",
@@ -141,7 +153,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_13",
@@ -152,7 +165,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_14",
@@ -163,7 +177,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_3"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_3",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_15",
@@ -174,7 +189,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_16",
@@ -185,7 +201,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_17",
@@ -196,7 +213,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_18",
@@ -207,7 +225,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_19",
@@ -218,7 +237,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_20",
@@ -229,7 +249,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_21",
@@ -240,7 +261,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_22",
@@ -251,7 +273,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_23",
@@ -262,7 +285,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_24",
@@ -273,7 +297,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_25",
@@ -284,7 +309,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_26",
@@ -295,7 +321,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_27",
@@ -306,7 +333,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_28",
@@ -317,7 +345,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_29",
@@ -328,7 +357,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_30",
@@ -339,7 +369,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_31",
@@ -350,7 +381,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_32",
@@ -361,7 +393,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_33",
@@ -372,7 +405,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_34",
@@ -383,7 +417,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_35",
@@ -394,7 +429,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_36",
@@ -405,7 +441,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_37",
@@ -416,18 +453,20 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_38",
             "second_func_en": "GPIO_SECOND_FUNC_DISABLE",
-            "second_func_dev": "GPIO_DEV_JPEG_PXDATA6",
+            "second_func_dev": "GPIO_DEV_INVALID",
             "io_mode": "GPIO_IO_DISABLE",
             "pull_mode": "GPIO_PULL_DISABLE",
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_39",
@@ -438,7 +477,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_0"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_0",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_40",
@@ -449,7 +489,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_41",
@@ -460,7 +501,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_42",
@@ -471,7 +513,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_43",
@@ -482,7 +525,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_44",
@@ -493,7 +537,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_45",
@@ -504,7 +549,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_46",
@@ -515,7 +561,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_47",
@@ -526,7 +573,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_48",
@@ -537,7 +585,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_49",
@@ -548,7 +597,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_50",
@@ -559,7 +609,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_51",
@@ -570,7 +621,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_52",
@@ -581,7 +633,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_53",
@@ -592,7 +645,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_54",
@@ -603,7 +657,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         },
         {
             "gpio_id": "GPIO_55",
@@ -614,7 +669,8 @@
             "int_en": "GPIO_INT_DISABLE",
             "int_type": "GPIO_INT_TYPE_LOW_LEVEL",
             "low_power_io_ctrl": "GPIO_LOW_POWER_DISCARD_IO_STATUS",
-            "driver_capacity": "GPIO_DRIVER_CAPACITY_1"
+            "driver_capacity": "GPIO_DRIVER_CAPACITY_1",
+            "bind_core":"1"
         }
     ]
 }

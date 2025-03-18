@@ -2,6 +2,7 @@
 set(tuya_build $ENV{TUYA_APP_NAME})
 if (NOT ${tuya_build} STREQUAL "")
 if (CONFIG_SOC_BK7258) # CONFIG_SOC_BK7258
+if (CONFIG_LVGL)
 if (CONFIG_SYS_CPU1)
 file(GLOB_RECURSE c_srcs src/eez/*.cpp)
 file(GLOB_RECURSE cpp_srcs src/eez/*.c)
@@ -34,5 +35,6 @@ armino_component_register(
 
 if (CONFIG_SYS_CPU1)
 target_compile_options(${COMPONENT_LIB} PRIVATE -DEEZ_FOR_LVGL -DLV_LVGL_H_INCLUDE_SIMPLE )
+endif()
 endif()
 endif()

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
 #include <os/os.h>
 #include <os/mem.h>
 #include <components/log.h>
@@ -141,11 +143,16 @@ static void media_debug_dump(void)
 
 static void media_major_cpu1_free(void)
 {
+#if !CONFIG_TUYA_LOGIC_MODIFY
+    bk_printf("%s %d\r\n", __func__, __LINE__);
 	msg_send_req_to_media_major_mailbox_sync(EVENT_MEDIA_CPU1_POWEROFF_IND, APP_MODULE, 0, NULL);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	bk_pm_module_vote_psram_ctrl(PM_POWER_PSRAM_MODULE_NAME_MEDIA, PM_POWER_MODULE_STATE_OFF);
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
 	bk_pm_cp1_recovery_response(PM_CP1_RECOVERY_CMD, PM_CP1_PREPARE_CLOSE_MODULE_NAME_MEDIA,PM_CP1_MODULE_RECOVERY_STATE_FINISH);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 }
 
 
@@ -224,7 +231,10 @@ static void media_ui_task_main(beken_thread_arg_t data)
 {
 	int ret = kNoErr;
 
+#if !CONFIG_TUYA_LOGIC_MODIFY
+    bk_printf("%s %d\r\n", __func__, __LINE__);
 	msg_send_req_to_media_major_mailbox_sync(EVENT_MEDIA_CPU1_POWERUP_IND, APP_MODULE, (uint32_t)&media_share, NULL);
+#endif // !CONFIG_TUYA_LOGIC_MODIFY
 
 	rtos_init_timer(&media_debug_timer, DEBUG_INTERVAL * 1000, (timer_handler_t)media_ui_timer_debug_handle, NULL);
 	rtos_start_timer(&media_debug_timer);

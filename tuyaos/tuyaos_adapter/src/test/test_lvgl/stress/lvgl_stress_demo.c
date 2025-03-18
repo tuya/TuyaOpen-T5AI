@@ -19,18 +19,18 @@
  **********************/
 
 /**********************
- *  static PROTOTYPES
+ *  STATIC PROTOTYPES
  **********************/
 static lv_timer_t *tuya_gui_timer = NULL;
 static void auto_del(lv_obj_t * obj, uint32_t delay);
 static void msgbox_del(lv_timer_t * tmr);
-static void set_y_anim(void * obj, int32_t v);
-static void set_width_anim(void * obj, int32_t v);
-static void arc_set_end_angle_anim(void * obj, int32_t v);
+static void set_y_anim(void * obj, int v);
+static void set_width_anim(void * obj, int v);
+static void arc_set_end_angle_anim(void * obj, int v);
 static void obj_test_task_cb(lv_timer_t * tmr);
 
 /**********************
- *  static VARIABLES
+ *  STATIC VARIABLES
  **********************/
 static lv_obj_t * main_page;
 static lv_obj_t * ta;
@@ -41,7 +41,7 @@ static uint32_t mem_free_start = 0;
  **********************/
 
 /**********************
- *   static FUNCTIONS
+ *   STATIC FUNCTIONS
  **********************/
 
 static uint32_t cnt = 0;
@@ -438,17 +438,17 @@ static void msgbox_del(lv_timer_t * tmr)
     lv_msgbox_close(tmr->user_data);
 }
 
-static void set_y_anim(void * obj, int32_t v)
+static void set_y_anim(void * obj, int v)
 {
     lv_obj_set_y(obj, v);
 }
 
-static void set_width_anim(void * obj, int32_t v)
+static void set_width_anim(void * obj, int v)
 {
     lv_obj_set_width(obj, v);
 }
 
-static void arc_set_end_angle_anim(void * obj, int32_t v)
+static void arc_set_end_angle_anim(void * obj, int v)
 {
     lv_arc_set_end_angle(obj, v);
 }
@@ -459,6 +459,7 @@ static void arc_set_end_angle_anim(void * obj, int32_t v)
  *********************/
 void tuya_lvgl_stress_main(void)
 {
+    bk_printf("-------[%s %d] \r\n", __func__, __LINE__);
     LV_LOG_USER("Starting stress test. (< 100 bytes permanent memory leak is normal due to fragmentation)");
     tuya_gui_timer = lv_timer_create(obj_test_task_cb, LV_DEMO_STRESS_TIME_STEP, NULL);
 }

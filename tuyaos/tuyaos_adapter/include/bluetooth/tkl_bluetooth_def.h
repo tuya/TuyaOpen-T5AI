@@ -70,13 +70,13 @@
                     
 /**@brief GAP address parameters. */
 typedef struct {
-    UCHAR_T     type;                                   /**< Mac Address Type, Refer to @ TKL_BLE_GAP_ADDR_TYPE_PUBLIC or TKL_BLE_GAP_ADDR_TYPE_RANDOM*/
-    UCHAR_T     addr[6];                                /**< Mac Address, Address size, 6 bytes */
+    uint8_t     type;                                   /**< Mac Address Type, Refer to @ TKL_BLE_GAP_ADDR_TYPE_PUBLIC or TKL_BLE_GAP_ADDR_TYPE_RANDOM*/
+    uint8_t     addr[6];                                /**< Mac Address, Address size, 6 bytes */
 } TKL_BLE_GAP_ADDR_T;
 
 typedef struct {
     USHORT_T    length;                                 /**< Ble Data Len */
-    UCHAR_T     *p_data;                                /**< Ble Data Pointer */
+    uint8_t     *p_data;                                /**< Ble Data Pointer */
 } TKL_BLE_DATA_T;
 
 typedef enum {
@@ -99,12 +99,12 @@ typedef struct {
 
 /**@brief GAP advertising parameters. */
 typedef struct {
-    UCHAR_T                 adv_type;                   /**< Adv Type. Refer to TKL_BLE_GAP_ADV_TYPE_CONN_SCANNABLE_UNDIRECTED etc.*/
+    uint8_t                 adv_type;                   /**< Adv Type. Refer to TKL_BLE_GAP_ADV_TYPE_CONN_SCANNABLE_UNDIRECTED etc.*/
     TKL_BLE_GAP_ADDR_T      direct_addr;                /**< For Directed Advertising, you can fill in direct address */
     
     USHORT_T                adv_interval_min;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
     USHORT_T                adv_interval_max;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
-    UCHAR_T                 adv_channel_map;            /**< Advertising Channel Map, 0x01 = adv channel index 37,  0x02 = adv channel index 38,
+    uint8_t                 adv_channel_map;            /**< Advertising Channel Map, 0x01 = adv channel index 37,  0x02 = adv channel index 38,
                                                                 0x04 = adv channel index 39. Default Value: 0x07*/
 } TKL_BLE_GAP_ADV_PARAMS_T;
 
@@ -142,8 +142,8 @@ typedef struct {
 typedef struct {
     TKL_BLE_GAP_ADV_TYPE_E  adv_type;                   /**< Advertising report type. Refer to @TKL_BLE_GAP_ADV_TYPE_E */
     TKL_BLE_GAP_ADDR_T      peer_addr;                  /**< Bluetooth address of the peer device. */
-    char                  rssi;                       /**< Received Signal Strength Indication in dBm of the last packet received. */
-    UCHAR_T                 channel_index;              /**< Channel Index on which the last advertising packet is received (37-39).channel index = 37, it means that we do advertisement in channel 37. */
+    CHAR_T                  rssi;                       /**< Received Signal Strength Indication in dBm of the last packet received. */
+    uint8_t                 channel_index;              /**< Channel Index on which the last advertising packet is received (37-39).channel index = 37, it means that we do advertisement in channel 37. */
     TKL_BLE_DATA_T          data;                       /**< Received advertising or scan response data.  */
 } TKL_BLE_GAP_ADV_REPORT_T;
 
@@ -162,17 +162,17 @@ typedef struct {
 
 /**@brief GAP scanning parameters. */
 typedef struct {
-    UCHAR_T                 extended;                   /**< If 1, the scanner will accept extended advertising packets. Refer to @TKL_BLE_GAP_EVT_EXT_ADV_REPORT
+    uint8_t                 extended;                   /**< If 1, the scanner will accept extended advertising packets. Refer to @TKL_BLE_GAP_EVT_EXT_ADV_REPORT
                                                             If set to 0, the scanner will not receive advertising packets
                                                             on secondary advertising channels, and will not be able
                                                             to receive long advertising PDUs. */
-    UCHAR_T                 active : 1;                 /**< [Tuya Need]!!!! If 1, perform active scanning by sending scan requests.
+    uint8_t                 active : 1;                 /**< [Tuya Need]!!!! If 1, perform active scanning by sending scan requests.
                                                             This parameter is ignored when used with @ref tkl_ble_gap_connect. */
-    UCHAR_T                 scan_phys;                  /**< Refer to @TKL_BLE_GAP_PHY_1MBPS. TKL_BLE_GAP_PHY_2MBPS*/
+    uint8_t                 scan_phys;                  /**< Refer to @TKL_BLE_GAP_PHY_1MBPS. TKL_BLE_GAP_PHY_2MBPS*/
     USHORT_T                interval;                   /**< Scan interval in 625 us units. */
     USHORT_T                window;                     /**< Scan window in 625 us units. */
     USHORT_T                timeout;                    /**< Scan timeout in 10 ms units. */
-    UCHAR_T                 scan_channel_map;           /**< Scan Channel Index */
+    uint8_t                 scan_channel_map;           /**< Scan Channel Index */
 } TKL_BLE_GAP_SCAN_PARAMS_T;
 
 /** @brief  Definition of LE connection request parameter.*/
@@ -198,7 +198,7 @@ typedef struct {
     union {
         USHORT_T            uuid16;                     /**< 16-bit UUID value  */
         uint32_t              uuid32;                     /**< 32-bit UUID value */
-        UCHAR_T             uuid128[16];                /**< Little-Endian UUID bytes. 128bit uuid*/
+        uint8_t             uuid128[16];                /**< Little-Endian UUID bytes. 128bit uuid*/
     }uuid;
 } TKL_BLE_UUID_T;
 
@@ -230,9 +230,9 @@ typedef struct {
     USHORT_T        handle;                             /**< [Output] After init the characteristic, we will get the char-handle, we need to restore it */
 
     TKL_BLE_UUID_T  char_uuid;                          /**< Characteristics UUID */
-    UCHAR_T         property;                           /**< Characteristics property , Refer to TKL_BLE_CHAR_PROP_TYPE_E */
-    UCHAR_T         permission;                         /**< Characteristics value attribute permission */
-    UCHAR_T         value_len;                          /**< Characteristics value length */
+    uint8_t         property;                           /**< Characteristics property , Refer to TKL_BLE_CHAR_PROP_TYPE_E */
+    uint8_t         permission;                         /**< Characteristics value attribute permission */
+    uint8_t         value_len;                          /**< Characteristics value length */
 } TKL_BLE_CHAR_PARAMS_T;
 
 typedef enum {
@@ -249,12 +249,12 @@ typedef struct {
     TKL_BLE_UUID_T              svc_uuid;               /**< Service UUID */
     TKL_BLE_SERVICE_TYPE_E      type;                   /**< Service Type */
     
-    UCHAR_T                     char_num;               /**< Number of characteristic */
+    uint8_t                     char_num;               /**< Number of characteristic */
     TKL_BLE_CHAR_PARAMS_T       *p_char;                /**< Pointer of characteristic */
 } TKL_BLE_SERVICE_PARAMS_T;
 
 typedef struct {
-    UCHAR_T                     svc_num;                /**< If we only use service(0xFD50), the svc_num will be set into 1 */
+    uint8_t                     svc_num;                /**< If we only use service(0xFD50), the svc_num will be set into 1 */
     TKL_BLE_SERVICE_PARAMS_T    *p_service;
 } TKL_BLE_GATTS_PARAMS_T;
 
@@ -308,13 +308,13 @@ typedef enum {
 } TKL_BLE_GATT_EVT_TYPE_E;
 
 typedef struct {
-    UCHAR_T                         role;               /**< BLE role for this connection, see @ref TKL_BLE_ROLE_SERVER, or TKL_BLE_ROLE_CLIENT */
+    uint8_t                         role;               /**< BLE role for this connection, see @ref TKL_BLE_ROLE_SERVER, or TKL_BLE_ROLE_CLIENT */
     TKL_BLE_GAP_ADDR_T              peer_addr;          /**< Reserved, [Ble Central],For some platform, we will get the peer address after connect one device */
     TKL_BLE_GAP_CONN_PARAMS_T       conn_params;        /**< Report Connection Parameters */
 } TKL_BLE_GAP_CONNECT_EVT_T;
 
 typedef struct {
-    UCHAR_T                         role;               /**< BLE role for this disconnection */
+    uint8_t                         role;               /**< BLE role for this disconnection */
     int                           reason;             /**< Report Disconnection Reason */
 } TKL_BLE_GAP_DISCONNECT_EVT_T;
 
@@ -330,7 +330,7 @@ typedef struct {
 } TKL_BLE_GATT_SVC_HANDLE_T;
 
 typedef struct {
-    UCHAR_T                         svc_num;            /**< Number of Services */
+    uint8_t                         svc_num;            /**< Number of Services */
 
     TKL_BLE_GATT_SVC_HANDLE_T       services[TKL_BLE_GATT_SERVICE_MAX_NUM];
 } TKL_BLE_GATT_SVC_DISC_TYPE_T;
@@ -341,7 +341,7 @@ typedef struct {
 }TKL_BLE_GATT_CHAR_HANDLE_T;
 
 typedef struct {
-    UCHAR_T                         char_num;           /**< Number of Characteristics */
+    uint8_t                         char_num;           /**< Number of Characteristics */
 
     TKL_BLE_GATT_CHAR_HANDLE_T      characteristics[TKL_BLE_GATT_CHAR_MAX_NUM];
 } TKL_BLE_GATT_CHAR_DISC_TYPE_T;
@@ -366,16 +366,16 @@ typedef struct {
         TKL_BLE_GAP_ADV_REPORT_T        adv_report;     /**< Receive Adv and Respond report*/
         TKL_BLE_GAP_EXT_ADV_REPORT_T    ext_adv_report; /**< Receive Ext Adv report*/
         TKL_BLE_GAP_CONN_PARAMS_T       conn_param;     /**< We will update connect parameters.This value can be used with TKL_BLE_EVT_CONN_PARAM_REQ and TKL_BLE_EVT_CONN_PARAM_UPDATE*/
-        char                          link_rssi;      /**< Peer device RSSI value */
+        CHAR_T                          link_rssi;      /**< Peer device RSSI value */
     }gap_event;
 } TKL_BLE_GAP_PARAMS_EVT_T;
 typedef struct {
     USHORT_T                        char_handle;                /**< Specify one characteristic handle */
-    UCHAR_T                         reason;
-    UCHAR_T                         prev_notify     :    1;     /**< previously subscribed */
-    UCHAR_T                         cur_notify      :    1;     /** currently notifications. */
-    UCHAR_T                         prev_indicate   :    1;     /** previously indications. */
-    UCHAR_T                         cur_indicate    :    1;     /** currently subscribed to indications. */
+    uint8_t                         reason;
+    uint8_t                         prev_notify     :    1;     /**< previously subscribed */
+    uint8_t                         cur_notify      :    1;     /** currently notifications. */
+    uint8_t                         prev_indicate   :    1;     /** previously indications. */
+    uint8_t                         cur_indicate    :    1;     /** currently subscribed to indications. */
 } TKL_BLE_SUBSCRBE_EVT_T;
 typedef struct {
     USHORT_T                        char_handle;                /**< Specify one characteristic handle */

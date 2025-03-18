@@ -62,6 +62,8 @@ static bk_err_t mp3_decode_handler(unsigned int size)
 
     uint32 uiTemp = 0;
 
+    os_printf("--- trace %s %d, %p %p %d\r\n", __func__, __LINE__, readBuf, g_readptr, bytesLeft);
+
     if (mp3_file_is_empty) {
         os_printf("==========================================================\r\n");
         os_printf("playback is over, please input the stop command!\r\n");
@@ -69,6 +71,7 @@ static bk_err_t mp3_decode_handler(unsigned int size)
         return -100;
     }
 
+    os_printf("--- trace %s %d\r\n", __func__, __LINE__);
     if (bytesLeft < MP3_DATA_BUF_SIZE) {
         os_memmove(readBuf, g_readptr, bytesLeft);
 
@@ -81,10 +84,13 @@ static bk_err_t mp3_decode_handler(unsigned int size)
         }
         bytesLeft = bytesLeft + uiTemp;
         g_readptr = readBuf;
+    os_printf("--- trace %s %d\r\n", __func__, __LINE__);
     }
 
+#if 1
     offset = MP3FindSyncWord(g_readptr, bytesLeft);
 
+    os_printf("--- trace %s %d %d\r\n", __func__, __LINE__, offset);
     if (offset < 0) {
         os_printf("MP3FindSyncWord not find!\r\n");
         bytesLeft = 0;
@@ -99,38 +105,19 @@ static bk_err_t mp3_decode_handler(unsigned int size)
         }
 
         MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
-        // os_printf("Bitrate: %d kb/s, Samprate: %d\r\n", (mp3FrameInfo.bitrate) / 1000, mp3FrameInfo.samprate);
-        // os_printf("Channel: %d, Version: %d, Layer: %d\r\n", mp3FrameInfo.nChans, mp3FrameInfo.version, mp3FrameInfo.layer);
-        // os_printf("OutputSamps: %d\r\n", mp3FrameInfo.outputSamps);
 
-        #if 1
-        /* write a frame speaker data to speaker_ring_buff */
+      // os_printf("Bitrate: %d kb/s, Samprate: %d\r\n", (mp3FrameInfo.bitrate) / 1000, mp3FrameInfo.samprate);
+      // os_printf("Channel: %d, Version: %d, Layer: %d\r\n", mp3FrameInfo.nChans, mp3FrameInfo.version, mp3FrameInfo.layer);
+      // os_printf("OutputSamps: %d\r\n", mp3FrameInfo.outputSamps);
+
+      /* write a frame speaker data to speaker_ring_buff */
         TKL_AUDIO_FRAME_INFO_T frame;
         frame.pbuf = pcmBuf;
         frame.used_size = mp3FrameInfo.outputSamps * 2;
+    os_printf("--- trace %s %d\r\n", __func__, __LINE__);
         tkl_ao_put_frame(0, 0, NULL, &frame);
-        #else
-        int i = 0;
-        uint32_t write_len = mp3FrameInfo.outputSamps * 2;
-        for (i = 0; i < write_len / 320; i++) {
-write_spk_retry1:
-            ret = bk_aud_intf_write_spk_data(((uint8_t*)pcmBuf) + i * 320, 320);
-            if (ret == BK_ERR_BUSY) {
-                tkl_system_sleep(10);
-                goto write_spk_retry1;
-            }
-        }
-
-        if ((write_len % 320) != 0) {
-write_spk_retry2:
-            ret = bk_aud_intf_write_spk_data(((uint8_t*)pcmBuf) + i * 320, write_len % 320);
-            if (ret == BK_ERR_BUSY) {
-                tkl_system_sleep(10);
-                goto write_spk_retry2;
-            }
-        }
-        #endif
     }
+#endif
     return ret;
 }
 
@@ -148,6 +135,8 @@ void bk_audio_mp3_play_decode_init(void)
         return;
     }
 
+    os_printf("--- trace %s %d\r\n", __func__, __LINE__);
+
     hMP3Decoder = MP3InitDecoder();
     if (hMP3Decoder == 0) {
         os_free(readBuf);
@@ -156,10 +145,13 @@ void bk_audio_mp3_play_decode_init(void)
         return;
     }
 
+    os_printf("--- trace %s %d\r\n", __func__, __LINE__);
 }
 
 static int cli_mp3_test_init(const char *f)
 {
+    tkl_fs_mount("/", DEV_INNER_FLASH);
+
     bk_audio_mp3_play_decode_init();
     os_printf("audio mp3 play decode init completely!\r\n");
     /*open file to read mp3 data */
@@ -205,7 +197,6 @@ void cli_aud_intf_mp3_play_test_cmd(char *pcWriteBuffer, int xWriteBufferLen, in
         return;
     }
 
-    os_printf("audio trace: %s %d\r\n", __func__, __LINE__);
     TKL_AUDIO_CONFIG_T config;
 
     // 2, mic init
@@ -218,17 +209,18 @@ void cli_aud_intf_mp3_play_test_cmd(char *pcWriteBuffer, int xWriteBufferLen, in
     config.codectype = TKL_CODEC_AUDIO_PCM;
     config.card = TKL_AUDIO_TYPE_BOARD;
     config.put_cb = __test_ai_cb;
-    config.spk_gpio = 27;
+    config.spk_gpio = 28;
     config.spk_gpio_polarity = 0;
 
     tkl_ai_init(&config, 0);
-    os_printf("audio trace: %s %d\r\n", __func__, __LINE__);
 
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
     tkl_ai_start(0, 0);
-    os_printf("audio trace: %s %d\r\n", __func__, __LINE__);
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
 
     tkl_ai_set_vol(0, 0, 80);
 
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
     extern void tkl_system_sleep(uint32_t num_ms);
     tkl_system_sleep(200);
     do {
@@ -239,17 +231,22 @@ void cli_aud_intf_mp3_play_test_cmd(char *pcWriteBuffer, int xWriteBufferLen, in
         tkl_system_sleep(20);
     } while (ret <= 0);
 
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
 
     // stop && deinit
     tkl_ai_stop(TKL_AUDIO_TYPE_BOARD, 0);
 
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
     tkl_ai_uninit();
 
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
     bytesLeft = 0;
     mp3_file_is_empty = false;
 
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
     tkl_fclose(mp3file);
 
+    os_printf("---trace %s %d\r\n", __func__, __LINE__);
     MP3FreeDecoder(hMP3Decoder);
     os_free(readBuf); readBuf = NULL;
     os_free(pcmBuf); pcmBuf = NULL;

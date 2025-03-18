@@ -25,6 +25,7 @@ const lcd_device_t *lcd_devices[] =
 {
 // Modified by TUYA Start
     &lcd_device_nv3047,
+    &lcd_device_t35p128cq,
 #if CONFIG_LCD_ILI9488
     &lcd_device_ili9488,
 #endif
@@ -36,11 +37,6 @@ const lcd_device_t *lcd_devices[] =
 #if CONFIG_LCD_T50P181CQ
     &lcd_device_t50p181cq,
 #endif
-
-#if CONFIG_LCD_TUYA_COMMON_RGB
-    &lcd_device_tuya_rgb,
-#endif
-// Modified by TUYA End
 
 #if CONFIG_LCD_ST7282
 	&lcd_device_st7282,

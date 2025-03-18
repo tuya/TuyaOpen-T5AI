@@ -77,130 +77,6 @@ static void cli_rf_set_cali_cmd(char *pcWriteBuffer, int xWriteBufferLen, int ar
     bk_printf("set rf calibration flag end\r\n");
 }
 
-#if CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
-#include "tkl_wakeup.h"
-#include "tkl_semaphore.h"
-#include "tkl_audio.h"
-#include "FreeRTOS.h"
-#include "task.h"
-TaskHandle_t __thread_handle = NULL;
-TKL_SEM_HANDLE __test_sem;
-static void __test_wakeup_func(void *arg)
-{
-    tkl_semaphore_create_init(&__test_sem, 0, 1);
-    while (1) {
-        tkl_semaphore_wait(__test_sem, 0xffffffff);
-        bk_printf("ooooooooooooooooo\r\n");
-        bk_printf("ooooooooooooooooo\r\n");
-        bk_printf("ooooooooooooooooo\r\n");
-
-        // init uvc
-        tkl_vi_init(NULL, 0);
-        tkl_system_sleep(100);
-        // init lcd
-        tkl_disp_init(NULL, NULL);
-        // init h264
-        tkl_venc_init(0, NULL, 0);
-
-        TKL_AUDIO_CONFIG_T config;
-        config.put_cb = NULL;
-        tkl_ai_init(&config, 0);
-    }
-}
-
-static void __pm_gpio_callback(void *arg)
-{
-    bk_printf("test __pm_gpio_callback[%d]: %d\r\n",
-            bk_pm_exit_low_vol_wakeup_source_get(), (uint32_t)arg);
-    tkl_semaphore_post(__test_sem);
-}
-
-static void __set_test_wakeup_source(uint32_t type, uint32_t param)
-{
-    TUYA_WAKEUP_SOURCE_BASE_CFG_T cfg;
-    if (type == 2) {
-        TUYA_GPIO_IRQ_T irq_cfg;
-        irq_cfg.mode = TUYA_GPIO_IRQ_RISE;
-        irq_cfg.cb = __pm_gpio_callback;
-        irq_cfg.arg = (void *)33;
-        tkl_gpio_irq_init(33, &irq_cfg);
-
-        if (__thread_handle == NULL)
-            xTaskCreate(__test_wakeup_func, "test_func", 1024, NULL, 6, (TaskHandle_t * const )&__thread_handle);
-
-        cfg.source = TUYA_WAKEUP_SOURCE_GPIO;
-        cfg.wakeup_para.gpio_param.gpio_num = 33;
-        cfg.wakeup_para.gpio_param.level = 1;
-    } else if (type == 1) {
-        uint32_t t = (param == 0)? 5: param;
-        cfg.source = TUYA_WAKEUP_SOURCE_TIMER;
-        cfg.wakeup_para.timer_param.timer_num = TUYA_TIMER_NUM_5;
-        cfg.wakeup_para.timer_param.mode = TUYA_TIMER_MODE_ONCE;
-        cfg.wakeup_para.timer_param.ms = t * 1000;
-    }
-
-    tkl_wakeup_source_set(&cfg);
-    tkl_system_sleep(200);
-}
-
-static void cli_wifi_set_interval_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
-{
-    uint8_t interval = 0;
-    int ret = 0;
-    char *msg = NULL;
-
-    if (argc < 2) {
-        bk_printf("invalid argc num\r\n");
-        goto error;
-    }
-
-    if (!os_strcmp(argv[1], "deepsleep")) {
-        TUYA_WAKEUP_SOURCE_BASE_CFG_T  cfg;
-        if (!os_strcmp(argv[2], "rtc")) {
-            __set_test_wakeup_source(1, 12);
-        }else if (!os_strcmp(argv[2], "gpio")) {
-            __set_test_wakeup_source(2, 0);
-        } else {
-            goto error;
-        }
-        tkl_cpu_sleep_mode_set(1, TUYA_CPU_DEEP_SLEEP);
-    } else if (!os_strcmp(argv[1], "sleep")) {
-        if (!os_strcmp(argv[2], "rtc")) {
-            __set_test_wakeup_source(1, 12);
-        } else if (!os_strcmp(argv[2], "gpio")) {
-            __set_test_wakeup_source(2, 0);
-        } else {
-            goto error;
-        }
-        tkl_cpu_sleep_mode_set(1, TUYA_CPU_SLEEP);
-    } else if (!os_strcmp(argv[1], "exit")) {
-        tkl_cpu_sleep_mode_set(0, 0);
-    } else {
-        interval = (uint8_t)os_strtoul(argv[1], NULL, 10);
-        bk_printf("\r\nset wifi dtim %d\r\n", interval);
-        ret = bk_wifi_send_listen_interval_req(interval);
-        if (!ret) {
-            bk_printf("set_interval ok");
-            msg = WIFI_CMD_RSP_SUCCEED;
-            os_memcpy(pcWriteBuffer, msg, os_strlen(msg));
-            return;
-        } else {
-            bk_printf("set_interval failed");
-            goto error;
-        }
-        bk_pm_module_vote_sleep_ctrl(PM_SLEEP_MODULE_NAME_APP, 1, 0);
-    }
-
-    return;
-
-error:
-    bk_printf("Usage: lp deepsleep [rtc|gpio] [rtc time<seconds>|gpio num]");
-    msg = WIFI_CMD_RSP_ERROR;
-    os_memcpy(pcWriteBuffer, msg, os_strlen(msg));
-    return;
-}
-#endif // CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
-
 static void __get_flash_id(void)
 {
     uint32_t flash_size;
@@ -388,10 +264,11 @@ static void cli_uart_test_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc
 
 #define TUYA_TEST_CMD_CNT (sizeof(s_sinfo_commands) / sizeof(struct cli_command))
 static const struct cli_command s_sinfo_commands[] = {
+#if CONFIG_SYS_CPU0
+    {"sc", "single core", cli_sc_cmd},
+#endif
+#if 0
     {"info", "system info", cli_system_info_cmd},
-#if CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
-    {"lp", "set wifi dtim", cli_wifi_set_interval_cmd},
-#endif // CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
     {"rf_cali", "set rf calibration flag, just for test", cli_rf_set_cali_cmd},
     {"audio_test", "mic to speaker test", cli_audio_test_cmd},
     {"xadc", "adc test", cli_adc_cmd},
@@ -402,11 +279,11 @@ static const struct cli_command s_sinfo_commands[] = {
 
     {"xpwm", "pwm test", cli_pwm_cmd},
 
-#if (CONFIG_CPU_INDEX == 0)
+#if CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
+    {"xlp", "low power test", cli_lp_test_cmd},
     {"xmt", "tuya media test", cli_tuya_media_cmd},
-#endif // CONFIG_CPU_INDEX == 0
-
     {"sf", "startup frame", cli_sf_cmd},
+#endif // CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
 
     {"xq", "test", cli_xxxt_cmd},
     {"xu", "uart test", cli_uart_test_cmd},
@@ -414,12 +291,14 @@ static const struct cli_command s_sinfo_commands[] = {
     {"lfs", "little fs test", cli_littlefs_cmd},
     // {"xt", "timer test", cli_tkl_timer_test},
     {"xt", "timer test", cli_timer_cmd},
+    {"xusb", "usb device check", cli_usb_cmd},
+    {"xsd", "sd card test", cli_sdcard_test_cmd},
 };
 
 int cli_tuya_test_init(void)
 {
     cli_register_commands(s_sinfo_commands, TUYA_TEST_CMD_CNT);
-    cli_mp3_init();
+    // cli_mp3_init();
     return 0;
 }
 

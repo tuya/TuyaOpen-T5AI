@@ -48,6 +48,8 @@
 #include "reg_domain.h"
 #include "bk_rw.h"
 
+#include "common/bk_generic.h"
+
 #if (CONFIG_CKMN)
 #include <driver/rosc_32k.h>
 #endif
@@ -78,9 +80,13 @@ bk_pbuf_alloc_wrapper(int layer, uint16_t length, int type)
 		case BK_PBUF_RAM:
 			type_tmp = PBUF_RAM;
 			break;
+// Modified by TUYA Start
+#if MEM_TRX_DYNAMIC_EN
 		case BK_PBUF_RAM_RX:
 			type_tmp = PBUF_RAM_RX;
 			break;
+#endif
+// Modified by TUYA End
 		case BK_PBUF_POOL:
 			type_tmp = PBUF_POOL;
 			break;
@@ -134,8 +140,14 @@ int bk_get_pbuf_pool_size_wrapper()
 
 void *bk_get_netif_hostname_wrapper(void *netif)
 {
+// Modified by TUYA Start
+#if LWIP_NETIF_HOSTNAME
 	const char*  hostname = ((struct netif *)netif)->hostname;
 	return (void *)hostname;
+#else
+    return NULL;
+#endif
+// Modified by TUYA End
 }
 
 int bk_save_net_info_wrapper(int item, u8 *ptr0, u8 *ptr1, u8 *ptr2)
@@ -1119,6 +1131,8 @@ static void register_wifi_dump_hook_wrapper(void *wifi_func)
 
 static void bk_airkiss_start_udp_boardcast_wrapper(u8 random_data)
 {
+    // TODO
+#if 0
 	int err, i;
 	int udp_broadcast_fd = -1;
 	struct sockaddr_in remote_skt;
@@ -1147,6 +1161,7 @@ static void bk_airkiss_start_udp_boardcast_wrapper(u8 random_data)
 
 	BK_LOGD(TAG, "close socket\r\n");
 	close(udp_broadcast_fd);
+#endif
 }
 
 static void tx_verify_test_call_back_wrapper(void)

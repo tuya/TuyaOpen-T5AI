@@ -17,8 +17,49 @@
 #include <driver/trng.h>
 #include "tkl_memory.h"
 #include <driver/otp.h>
+#include "tkl_ipc.h"
+#include "sdkconfig.h"
 
 extern void bk_printf(const char *fmt, ...);
+
+void tkl_sys_ipc_func(struct ipc_msg_s *msg)
+{
+    switch(msg->subtype) {
+        case TKL_IPC_TYPE_SYS_REBOOT:
+        {
+            tkl_system_reset();
+        }
+            break;
+
+        default:
+            break;
+    }
+
+
+    return;
+}
+
+/**
+ * @brief system enter critical
+ *
+ * @param[in]   none
+ * @return  irq mask
+ */
+uint32_t tkl_system_enter_critical(void)
+{
+    return rtos_disable_int();
+}
+
+/**
+ * @brief system exit critical
+ *
+ * @param[in]   irq_mask: irq mask 
+ * @return  none
+ */
+void tkl_system_exit_critical(uint32_t irq_mask)
+{
+    rtos_enable_int(irq_mask);
+}
 
 /**
 * @brief Get system ticket count
@@ -66,6 +107,7 @@ void tkl_system_sleep(const uint32_t num_ms)
     vTaskDelay(ticks);
 }
 
+extern OPERATE_RET tkl_ipc_send_no_sync(const uint8_t *buf, uint32_t buf_len);
 
 /**
 * @brief System reset
@@ -78,8 +120,20 @@ void tkl_system_sleep(const uint32_t num_ms)
 */
 void tkl_system_reset(void)
 {
+#if CONFIG_SYS_CPU0
     bk_reboot();
-	return;
+#else
+    struct ipc_msg_s msg = {0};
+    msg.type = TKL_IPC_TYPE_SYS;
+    msg.subtype = TKL_IPC_TYPE_SYS_REBOOT;
+
+    tkl_ipc_send_no_sync((const uint8_t *)&msg, sizeof(struct ipc_msg_s));
+    // TODO ret
+    while(1) {
+        tkl_system_sleep(100);
+    }
+#endif
+    return;
 }
 
 /**
@@ -105,7 +159,7 @@ int tkl_system_get_free_heap_size(void)
 *
 * @return reset reason of system
 */
-TUYA_RESET_REASON_E tkl_system_get_reset_reason(char** describe)
+TUYA_RESET_REASON_E tkl_system_get_reset_reason(CHAR_T** describe)
 {
     unsigned char value = bk_misc_get_reset_reason() & 0xFF;
     TUYA_RESET_REASON_E ty_value;
@@ -153,7 +207,8 @@ TUYA_RESET_REASON_E tkl_system_get_reset_reason(char** describe)
             break;
 
         default:
-            ty_value = TUYA_RESET_REASON_UNKNOWN;
+            // ty_value = TUYA_RESET_REASON_UNKNOWN;
+            ty_value = TUYA_RESET_REASON_POWERON;
             break;
     }
 
@@ -193,6 +248,8 @@ int tkl_system_get_random(const uint32_t range)
 
 OPERATE_RET tkl_system_get_cpu_info(TUYA_CPU_INFO_T **cpu_ary, int *cpu_cnt)
 {
+    // TODO
+#if 0
     TUYA_CPU_INFO_T *cpu = tkl_system_malloc(sizeof(TUYA_CPU_INFO_T));
     if (NULL == cpu) {
         return OPRT_MALLOC_FAILED;
@@ -205,6 +262,6 @@ OPERATE_RET tkl_system_get_cpu_info(TUYA_CPU_INFO_T **cpu_ary, int *cpu_cnt)
     }
 
     *cpu_ary = cpu;
-
-    return OPRT_OK;
+#endif
+    return OPRT_NOT_SUPPORTED;
 }

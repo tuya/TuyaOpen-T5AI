@@ -141,6 +141,10 @@ out:
 
 bk_err_t msg_send_rsp_to_media_major_mailbox(media_mailbox_msg_t *msg, uint32_t result, uint32_t dest)
 {
+#if CONFIG_TUYA_LOGIC_MODIFY
+    return BK_OK;
+#endif // CONFIG_TUYA_LOGIC_MODIFY
+
 	bk_err_t ret = BK_OK;
 	msg->src = MAJOR_MODULE;
 	msg->dest = dest;
@@ -565,7 +569,7 @@ void media_major_mailbox_msg_handle(media_mailbox_msg_t *msg)
             {
                 media_mailbox_list_del_node(msg->sem, &media_major_mailbox_msg_queue_rsp);
                 ret = rtos_set_semaphore(&msg->sem);
-        
+
                 if (ret != BK_OK)
                 {
                     LOGE("%s semaphore set failed: %d\n", __func__, ret);
@@ -604,7 +608,8 @@ void media_major_mailbox_msg_handle(media_mailbox_msg_t *msg)
 				default:
 					break;
 			}
-		}
+		
+}
 	}
 	else
 	{

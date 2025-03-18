@@ -62,7 +62,7 @@ OPERATE_RET tkl_init(void);
  * @return the version of the tuya kernel adapter layer
  *
  */
-char * tkl_get_version(void);
+CHAR_T * tkl_get_version(void);
 
 
 /**

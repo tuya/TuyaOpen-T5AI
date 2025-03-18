@@ -8,57 +8,21 @@
  *
  */
 #include <errno.h>
+#include "sdkconfig.h"
 #include "tkl_fs.h"
 #ifdef CONFIG_VFS
+#include "bk_partition.h"
 #include "bk_posix.h"
 #include "driver/flash_partition.h"
+#include "bk_filesystem.h"
 #endif
 #include "tkl_output.h"
-#include "sdkconfig.h"
 #include "tkl_ipc.h"
 #include "tkl_semaphore.h"
 
 extern void bk_printf(const char *fmt, ...);
 
 #define FILE_HANDLE_OFFSET 0x100
-
-
-#if !CONFIG_SYS_CPU0
-TKL_SEM_HANDLE thread_fs_access_sem = NULL;
-TKL_SEM_HANDLE fs_api_access_sem = NULL;
-uint32_t fs_result[2];
-
-void tkl_fs_init(void)
-{
-    fs_result[0] = 0;
-    fs_result[1] = 0;
-    tkl_semaphore_create_init(&thread_fs_access_sem, 1, 1);
-    tkl_semaphore_create_init(&fs_api_access_sem, 0, 1);
-}
-
-// IN Parameter: int type, uint8_t *data, uint32_t len
-// OUT Parameter: result
-extern TKL_IPC_HANDLE __ipc_handle[2];
-static void __tkl_fs_client(struct ipc_msg_s *msg, int *result)
-{
-    OPERATE_RET ret = tkl_semaphore_wait(thread_fs_access_sem, 5000);
-    if (ret != OPRT_OK) {
-        if (result != NULL)
-            result[0] = -1;
-        bk_printf("error %s %d\n", __func__, __LINE__);
-        return;
-    }
-
-    msg->len = sizeof(msg->buf);
-    tkl_ipc_send_no_sync(__ipc_handle[0], msg, sizeof(struct ipc_msg_s));
-
-    // wait ack
-    tkl_semaphore_wait(fs_api_access_sem, 5000);
-    result[0] = fs_result[0];
-    result[1] = fs_result[1];
-    tkl_semaphore_post(thread_fs_access_sem);
-}
-#endif // CONFIG_SYS_CPU1
 
 /**
  * @brief Make directory
@@ -71,23 +35,12 @@ static void __tkl_fs_client(struct ipc_msg_s *msg, int *result)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fs_mkdir(const char *path)
 {
-#if CONFIG_SYS_CPU0
     int ret = mkdir(path,0777);
     if (ret && ret != -EEXIST) {
         bk_printf("tkl_fs_mkdir failed, path:%s ret =%d errno=%d\n ", path,ret,errno);
         return -1;
     }
     return 0;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_MKDIR;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, path, strlen(path));
-    msg.len = strlen(path);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -101,7 +54,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_mkdir(const char *path)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fs_remove(const char *path)
 {
-#if CONFIG_SYS_CPU0
     struct stat path_stat;
     int ret = 0;
     if (stat(path, &path_stat) != 0) {
@@ -128,16 +80,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_remove(const char *path)
     // bk_printf("tkl_fs_remove %s %s\n", path, ret == 0 ? "success" : "failed");
 
     return ret;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_REMOVE;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, path, strlen(path));
-    msg.len = strlen(path);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -152,7 +94,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_remove(const char *path)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fs_mode(const char *path, uint32_t *mode)
 {
-#if CONFIG_SYS_CPU0
     if (mode == NULL) {
         return -1;
     }
@@ -165,17 +106,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_mode(const char *path, uint32_t *mode)
 
     *mode = statbuf.st_mode;
     return 0;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_MODE;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, path, strlen(path));
-    msg.len = strlen(path);
-    __tkl_fs_client(&msg, ret);
-    *mode = ret[1];
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -190,7 +120,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_mode(const char *path, uint32_t *mode)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fs_is_exist(const char *path, BOOL_T *is_exist)
 {
-#if CONFIG_SYS_CPU0
     if (is_exist == NULL) {
         return -1;
     }
@@ -208,17 +137,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_is_exist(const char *path, BOOL_T *is_exist)
 
     *is_exist = TRUE;
     return 0;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_IS_EXIST;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, path, strlen(path));
-    msg.len = strlen(path);
-    __tkl_fs_client(&msg, ret);
-    *is_exist = ret[1];
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -233,19 +151,7 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_is_exist(const char *path, BOOL_T *is_exist)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fs_rename(const char *path_old, const char *path_new)
 {
-#if CONFIG_SYS_CPU0
     return rename(path_old, path_new);
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_RENAME;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, path_old, strlen(path_old));
-    memcpy(msg.buf+strlen(path_old)+1, path_new, strlen(path_new));
-    msg.len = strlen(strlen(path_old)+1+strlen(path_new));
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -260,7 +166,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fs_rename(const char *path_old, const char *path_new
  */
 TUYA_WEAK_ATTRIBUTE int tkl_dir_open(const char *path, TUYA_DIR *dir)
 {
-#if CONFIG_SYS_CPU0
     if (dir == NULL) {
         return -1;
     }
@@ -274,17 +179,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_dir_open(const char *path, TUYA_DIR *dir)
 
     *dir = d;
     return 0;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_DIR_OPEN;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, path, strlen(path));
-    msg.len = strlen(path);
-    __tkl_fs_client(&msg, ret);
-    *dir = ret[1];
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -298,25 +192,13 @@ TUYA_WEAK_ATTRIBUTE int tkl_dir_open(const char *path, TUYA_DIR *dir)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_dir_close(TUYA_DIR dir)
 {
-#if CONFIG_SYS_CPU0
     DIR *dirp = (DIR *)dir;
     int ret =  closedir(dirp);
     if (ret < 0) {
         bk_printf("tkl_dir_close failed\n");
     }
-    else {
-        bk_printf("tkl_dir_close success\n");
-    }
+
     return ret;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_DIR_CLOSE;
-    msg.buf32[0] = (uint32_t)dir;
-    msg.len = sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -332,7 +214,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_dir_close(TUYA_DIR dir)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_dir_read(TUYA_DIR dir, TUYA_FILEINFO *info)
 {
-#if CONFIG_SYS_CPU0
     if (info == NULL) {
         return -1;
     }
@@ -345,16 +226,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_dir_read(TUYA_DIR dir, TUYA_FILEINFO *info)
 
     *info = dp;
     return 0;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_DIR_READ;
-    msg.buf32[0] = (uint32_t)dir;
-    msg.len = sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    *info = ret[1];
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -380,7 +251,7 @@ TUYA_WEAK_ATTRIBUTE int tkl_dir_name(TUYA_FILEINFO info, const char **name)
 
     *name = dp->d_name;
 
-    bk_printf("tkl_dir_name name:%s\r\n", *name);
+    // bk_printf("tkl_dir_name name:%s\r\n", *name);
     return 0;
 }
 
@@ -438,7 +309,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_dir_is_regular(TUYA_FILEINFO info, BOOL_T *is_regula
  */
 TUYA_WEAK_ATTRIBUTE TUYA_FILE tkl_fopen(const char *path, const char *mode)
 {
-#if CONFIG_SYS_CPU0
     int fd = 0;
     int flags;
 
@@ -478,18 +348,6 @@ TUYA_WEAK_ATTRIBUTE TUYA_FILE tkl_fopen(const char *path, const char *mode)
         bk_printf("tkl_fopen file success, path:%s fd = %d\n",path,fd);
     }
     return (TUYA_FILE)(fd + FILE_HANDLE_OFFSET);
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    memset(&msg, 0, sizeof(struct ipc_msg_s));
-    msg.type = TKL_IPC_TYPE_FS_FOPEN;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, path, strlen(path));
-    memcpy(msg.buf + strlen(path) + 1, (uint8_t *)mode, strlen(mode));
-    msg.len = strlen(path)+1+strlen(mode);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -503,7 +361,6 @@ TUYA_WEAK_ATTRIBUTE TUYA_FILE tkl_fopen(const char *path, const char *mode)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fclose(TUYA_FILE file)
 {
-#if CONFIG_SYS_CPU0
     int fd;
     int ret;
 
@@ -518,15 +375,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fclose(TUYA_FILE file)
     }
     // bk_printf("tkl_fclose file %d\n", fd);
     return OPRT_OK;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FCLOSE;
-    msg.buf32[0] = (uint32_t)file;
-    msg.len = sizeof(TUYA_FILE);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -540,9 +388,8 @@ TUYA_WEAK_ATTRIBUTE int tkl_fclose(TUYA_FILE file)
  *
  * @return the bytes read from file
  */
-TUYA_WEAK_ATTRIBUTE int tkl_fread(void *buf, int bytes, TUYA_FILE file)
+TUYA_WEAK_ATTRIBUTE int tkl_fread(VOID_T *buf, int bytes, TUYA_FILE file)
 {
-#if CONFIG_SYS_CPU0
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
     if (fd < 0) {
@@ -552,16 +399,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fread(void *buf, int bytes, TUYA_FILE file)
     int ret =  read(fd, buf, bytes);
     // bk_printf("tkl_fread fd: %d size: %d bytes = %d\n", fd,ret,bytes);
     return ret;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FREAD;
-    msg.buf32[0] = (uint32_t)buf;
-    msg.buf32[1] = (uint32_t)bytes;
-    msg.buf32[2] = (uint32_t)file;
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -575,9 +412,8 @@ TUYA_WEAK_ATTRIBUTE int tkl_fread(void *buf, int bytes, TUYA_FILE file)
  *
  * @return the bytes write to file
  */
-TUYA_WEAK_ATTRIBUTE int tkl_fwrite(void *buf, int bytes, TUYA_FILE file)
+TUYA_WEAK_ATTRIBUTE int tkl_fwrite(VOID_T *buf, int bytes, TUYA_FILE file)
 {
-#if CONFIG_SYS_CPU0
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
     if (fd < 0) {
@@ -586,16 +422,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fwrite(void *buf, int bytes, TUYA_FILE file)
     // bk_printf("begin tkl_fwrite: fd=%d, bytes=%d\n", fd, bytes);
 
     return write(fd, buf, bytes);
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FWRITE;
-    msg.buf32[0] = (uint32_t)buf;
-    msg.buf32[1] = (uint32_t)bytes;
-    msg.buf32[2] = (uint32_t)file;
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -609,7 +435,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fwrite(void *buf, int bytes, TUYA_FILE file)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fsync(int fd)
 {
-#if CONFIG_SYS_CPU0
     int ret;
 
     fd -= FILE_HANDLE_OFFSET;
@@ -618,15 +443,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fsync(int fd)
         return OPRT_OS_ADAPTER_COM_ERROR;
     }
     return OPRT_OK;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FSYNC;
-    msg.buf32[0] = (uint32_t)fd;
-    msg.len = sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -642,7 +458,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fsync(int fd)
  */
 TUYA_WEAK_ATTRIBUTE char *tkl_fgets(char *buf, int len, TUYA_FILE file)
 {
-#if CONFIG_SYS_CPU0
     if (len <= 0 || buf == NULL) {
         return NULL;
     }
@@ -680,17 +495,6 @@ TUYA_WEAK_ATTRIBUTE char *tkl_fgets(char *buf, int len, TUYA_FILE file)
     }
 
     return buf;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FGETS;
-    msg.buf32[0] = (uint32_t)buf;
-    msg.buf32[1] = (uint32_t)len;
-    msg.buf32[2] = (uint32_t)file;
-    msg.len = 3*sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -704,7 +508,6 @@ TUYA_WEAK_ATTRIBUTE char *tkl_fgets(char *buf, int len, TUYA_FILE file)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_feof(TUYA_FILE file)
 {
-#if CONFIG_SYS_CPU0
     int fd;
 
     fd = (int)file;
@@ -732,15 +535,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_feof(TUYA_FILE file)
 
     // 判断是否到达文件末尾
     return current_pos >= file_size;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FEOF;
-    msg.buf32[0] = (uint32_t)file;
-    msg.len = sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -756,7 +550,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_feof(TUYA_FILE file)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fseek(TUYA_FILE file, INT64_T offs, int whence)
 {
-#if CONFIG_SYS_CPU0
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
     // bk_printf("begin to tkl_fseek: fd=%d, offs=%ld, whence=%d\n", fd, offs, whence);
@@ -765,18 +558,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fseek(TUYA_FILE file, INT64_T offs, int whence)
         return -1;
     }
     return 0;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FSEEK;
-    msg.buf32[0] = (uint32_t)file;
-    msg.buf32[1] = (uint32_t)((offs >> 32) & 0xffffffff);
-    msg.buf32[2] = (uint32_t)(offs & 0xffffffff);
-    msg.buf32[3] = (uint32_t)whence;
-    msg.len = 4*sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -790,7 +571,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fseek(TUYA_FILE file, INT64_T offs, int whence)
  */
 TUYA_WEAK_ATTRIBUTE INT64_T tkl_ftell(TUYA_FILE file)
 {
-#if CONFIG_SYS_CPU0
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
     off_t pos = lseek(fd, 0, SEEK_CUR);
@@ -798,15 +578,6 @@ TUYA_WEAK_ATTRIBUTE INT64_T tkl_ftell(TUYA_FILE file)
         return -1;
     }
     return pos;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FTELL;
-    msg.buf32[0] = (uint32_t)file;
-    msg.len = sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -820,22 +591,11 @@ TUYA_WEAK_ATTRIBUTE INT64_T tkl_ftell(TUYA_FILE file)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fgetsize(const char *filepath)
 {
-#if CONFIG_SYS_CPU0
     struct stat statbuf;
     stat(filepath, &statbuf);
     int size = statbuf.st_size;
 
     return size;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FGETSIZE;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, filepath, strlen(filepath));
-    msg.len = strlen(filepath);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -851,7 +611,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fgetsize(const char *filepath)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_faccess(const char *filepath, int mode)
 {
-#if CONFIG_SYS_CPU0
     struct stat st;
     if (stat(filepath, &st) != 0) {
         // 如果 stat 失败，返回错误
@@ -874,17 +633,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_faccess(const char *filepath, int mode)
     }
 
     return 0;
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FACCESS;
-    memset(msg.buf, 0, sizeof(msg.buf));
-    memcpy(msg.buf, filepath, strlen(filepath));
-    memcpy(msg.buf+strlen(filepath)+1, (uint8_t *)&mode, sizeof(int));
-    msg.len = strlen(filepath)+1+sizeof(int);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -898,7 +646,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_faccess(const char *filepath, int mode)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_fgetc(TUYA_FILE file)
 {
-#if CONFIG_SYS_CPU0
     unsigned char ch;
     ssize_t ret = tkl_fread(&ch, 1, file);
     if (ret == 1) {
@@ -906,15 +653,6 @@ TUYA_WEAK_ATTRIBUTE int tkl_fgetc(TUYA_FILE file)
     } else {
         return -1;
     }
-#else // client
-    int ret[2] = {0, 0};
-    struct ipc_msg_s msg;
-    msg.type = TKL_IPC_TYPE_FS_FGETC;
-    msg.buf32[0] = (uint32_t)file;
-    msg.len = sizeof(uint32_t);
-    __tkl_fs_client(&msg, ret);
-    return ret[0];
-#endif // CONFIG_SYS_CPU0
 }
 
 /**
@@ -959,14 +697,9 @@ TUYA_WEAK_ATTRIBUTE int tkl_fileno(TUYA_FILE file)
  */
 TUYA_WEAK_ATTRIBUTE int tkl_ftruncate(int fd, UINT64_T length)
 {
-#if CONFIG_SYS_CPU0
     int plat_fd = (int)fd;
     plat_fd -= FILE_HANDLE_OFFSET;
     return ftruncate(plat_fd, length);
-#else // client
-    // Not support
-    return -1;
-#endif // CONFIG_SYS_CPU0
 }
 
 /**

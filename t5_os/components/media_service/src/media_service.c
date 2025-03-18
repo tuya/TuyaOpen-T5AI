@@ -11,9 +11,11 @@
 #include "audio_osi_wrapper.h"
 #include "video_osi_wrapper.h"
 
-#if (CONFIG_SOC_BK7258 && CONFIG_SYS_CPU0)
+// Modified by TUYA Start
+#if (CONFIG_SOC_BK7258 && CONFIG_SYS_CPU0 && CONFIG_MEDIA_UNIT_TEST)
 #include "media_unit_test.h"
 #endif
+// Modified by TUYA End
 
 #define TAG "ME INIT"
 
@@ -106,9 +108,11 @@ int media_service_init(void)
 	cli_aud_intf_init();
 #endif
 
-#if (CONFIG_SOC_BK7258 && CONFIG_SYS_CPU0)
+// Modified by TUYA Start
+#if (CONFIG_SOC_BK7258 && CONFIG_SYS_CPU0 && CONFIG_MEDIA_UNIT_TEST)
 	media_unit_test_cli_init();
 #endif
+// Modified by TUYA End
 
 #endif
 	return 0;

@@ -42,7 +42,7 @@ OPERATE_RET tkl_io_pinmux_config(TUYA_PIN_NAME_E pin, TUYA_PIN_FUNC_E pin_func);
  * 
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_multi_io_pinmux_config(TUYA_MUL_PIN_CFG_T *cfg, uint16_t num);
+OPERATE_RET tkl_multi_io_pinmux_config(TUYA_MUL_PIN_CFG_T *cfg, UINT16_T num);
 
 /**
  * @brief tuya io pin to port,
@@ -53,7 +53,7 @@ OPERATE_RET tkl_multi_io_pinmux_config(TUYA_MUL_PIN_CFG_T *cfg, uint16_t num);
  * @return        16        8       8
  * @return[out] | rsv   |  port | channel |
  */
-int32_t tkl_io_pin_to_func(uint32_t pin, TUYA_PIN_TYPE_E pin_type);
+int tkl_io_pin_to_func(uint32_t pin, TUYA_PIN_TYPE_E pin_type);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -333,14 +333,18 @@ static bk_err_t transfer_major_task_open_handle(media_mailbox_msg_t *msg)
 	ret = transfer_major_task_init();
 	if (ret == BK_OK)
 	{
+#ifndef CONFIG_TUYA_LOGIC_MODIFY
 		transfer_major_task_send_msg(TRS_TRANSFER_START, msg->param);
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 
 		set_transfer_state(TRS_STATE_ENABLED);
 	}
 
 end:
 
+#ifndef CONFIG_TUYA_LOGIC_MODIFY
 	msg_send_rsp_to_media_major_mailbox(msg, ret, APP_MODULE);
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 
 	LOGI("%s complete\n", __func__);
 
@@ -354,7 +358,9 @@ static bk_err_t transfer_major_task_close_handle(media_mailbox_msg_t *msg)
 	if (transfer_major_task_running == false || get_transfer_state() == TRS_STATE_DISABLED)
 	{
 		LOGI("transfer_major_task have closed!\r\n");
+#ifndef CONFIG_TUYA_LOGIC_MODIFY
 		msg_send_rsp_to_media_major_mailbox(msg, BK_OK, APP_MODULE);
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 		return BK_OK;
 	}
 
@@ -368,7 +374,9 @@ static bk_err_t transfer_major_task_close_handle(media_mailbox_msg_t *msg)
 	rtos_deinit_semaphore(&transfer_major_sem);
 	transfer_major_sem = NULL;
 
+#ifndef CONFIG_TUYA_LOGIC_MODIFY
 	msg_send_rsp_to_media_major_mailbox(msg, BK_OK, APP_MODULE);
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 
 	return BK_OK;
 }
@@ -384,7 +392,9 @@ static bk_err_t transfer_major_task_pause_handle(media_mailbox_msg_t *msg)
 
 	GLOBAL_INT_RESTORE();
 
+#ifndef CONFIG_TUYA_LOGIC_MODIFY
 	msg_send_rsp_to_media_major_mailbox(msg, kNoErr, APP_MODULE);
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 
 	return BK_OK;
 }

@@ -567,47 +567,17 @@ bool check_lcd_task_is_open(void)
 	}
 }
 
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#include "tkl_display.h"
-#endif
-// Modified by TUYA End
 
 bk_err_t lcd_display_open(lcd_open_t *lcd_config)
 {
 	int ret = BK_OK;
 	const lcd_device_t *lcd_device = NULL;
-    // Modified by TUYA Start
-    lcd_open_t *config = lcd_config;
-#ifdef CONFIG_TUYA_GPIO_MAP
-    lcd_open_t conf;
-#endif // CONFIG_TUYA_GPIO_MAP
-    // Modified by TUYA End
 
 	if (lcd_disp_config && lcd_disp_config->disp_task_running)
 	{
 		LOGE("%s lcd display task is running!\r\n", __func__);
 		return ret;
 	}
-
-    // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint32_t *tmp = (uint32_t *)lcd_config;
-    if (tmp[0] == 0x54555941) {
-        // update config
-        tkl_disp_update_ll_config((void *)lcd_config);
-
-        conf.device_ppi = tkl_disp_get_ppi();
-        conf.device_name = tkl_disp_get_lcd_name();
-        config = &conf;
-
-        tuya_lcd_update_config((void *)lcd_config);
-    } else
-#endif // CONFIG_TUYA_GPIO_MAP
-    {
-        config = lcd_config;
-    }
-    // Modified by TUYA End
 
 	lcd_disp_config = (lcd_disp_config_t *)os_malloc(sizeof(lcd_disp_config_t));
 	if (lcd_disp_config == NULL)
@@ -633,12 +603,12 @@ bk_err_t lcd_display_open(lcd_open_t *lcd_config)
 		goto out;
 	}
 
-	if (config->device_name != NULL)
-		lcd_device = get_lcd_device_by_name(config->device_name);
+	if (lcd_config->device_name != NULL)
+		lcd_device = get_lcd_device_by_name(lcd_config->device_name);
 
 	if (lcd_device == NULL)
 	{
-		lcd_device = get_lcd_device_by_ppi(config->device_ppi);
+		lcd_device = get_lcd_device_by_ppi(lcd_config->device_ppi);
 	}
 
 	if (lcd_device == NULL)

@@ -52,7 +52,9 @@ typedef struct _sys_arch_state_t
 } sys_arch_state_t;
 
 /* Message queue constants. */
-#define archMESG_QUEUE_LENGTH	( 32 )
+// Modified by TUYA Start
+// #define archMESG_QUEUE_LENGTH	( 32 )
+// Modified by TUYA End
 
 #if CONFIG_FREERTOS
 sys_sem_t* sys_thread_sem_get(void);

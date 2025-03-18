@@ -169,7 +169,7 @@ int tkl_net_socket_create_v6(const TUYA_PROTOCOL_TYPE_E type);
 *
 * @return 0 on success. Others on error, please refer to the error no of the target system
 */
-TUYA_ERRNO tkl_net_connect(const int fd, const TUYA_IP_ADDR_T addr, const uint16_t port);
+TUYA_ERRNO tkl_net_connect(const int fd, const TUYA_IP_ADDR_T addr, const UINT16_T port);
 
 /**
 * @brief Connect to network with raw data
@@ -195,7 +195,7 @@ TUYA_ERRNO tkl_net_connect_raw(const int fd, void *p_socket_addr, const int len)
 *
 * @return 0 on success. Others on error, please refer to the error no of the target system
 */
-TUYA_ERRNO tkl_net_bind(const int fd, const TUYA_IP_ADDR_T addr, const uint16_t port);
+TUYA_ERRNO tkl_net_bind(const int fd, const TUYA_IP_ADDR_T addr, const UINT16_T port);
 
 /**
 * @brief Listen to network
@@ -220,7 +220,7 @@ TUYA_ERRNO tkl_net_listen(const int fd, const int backlog);
 *
 * @return 0 on success. Others on error, please refer to the error no of the target system
 */
-TUYA_ERRNO tkl_net_accept(const int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
+TUYA_ERRNO tkl_net_accept(const int fd, TUYA_IP_ADDR_T *addr, UINT16_T *port);
 
 /**
 * @brief Send data to network
@@ -248,7 +248,7 @@ TUYA_ERRNO tkl_net_send(const int fd, const void *buf, const uint32_t nbytes);
 *
 * @return >0 on num of send, <0 please refer to the error no of the target system
 */
-TUYA_ERRNO tkl_net_send_to(const int fd, const void *buf, const uint32_t nbytes, const TUYA_IP_ADDR_T addr,const uint16_t port);
+TUYA_ERRNO tkl_net_send_to(const int fd, const void *buf, const uint32_t nbytes, const TUYA_IP_ADDR_T addr,const UINT16_T port);
 
 /**
 * @brief Receive data from network
@@ -290,7 +290,7 @@ int tkl_net_recv_nd_size(const int fd, void *buf, const uint32_t buf_size, const
 *
 * @return >0 on num of recv, <0 please refer to the error no of the target system
 */
-TUYA_ERRNO tkl_net_recvfrom(const int fd, void *buf, const uint32_t nbytes, TUYA_IP_ADDR_T *addr, uint16_t *port); 
+TUYA_ERRNO tkl_net_recvfrom(const int fd, void *buf, const uint32_t nbytes, TUYA_IP_ADDR_T *addr, UINT16_T *port); 
  
 /**
 * @brief Get address information by domain
@@ -302,7 +302,7 @@ TUYA_ERRNO tkl_net_recvfrom(const int fd, void *buf, const uint32_t nbytes, TUYA
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_gethostbyname(const char *domain, TUYA_IP_ADDR_T *addr);
+OPERATE_RET tkl_net_gethostbyname(const CHAR_T *domain, TUYA_IP_ADDR_T *addr);
 
 /**
 * @brief Bind to network with specified ip
@@ -314,7 +314,7 @@ OPERATE_RET tkl_net_gethostbyname(const char *domain, TUYA_IP_ADDR_T *addr);
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_socket_bind(const int fd, const char *ip);
+OPERATE_RET tkl_net_socket_bind(const int fd, const CHAR_T *ip);
 
 /**
 * @brief Set socket fd close mode
@@ -348,7 +348,7 @@ OPERATE_RET tkl_net_get_socket_ip(const int fd, TUYA_IP_ADDR_T *addr);
 *
 * @return ip address
 */
-TUYA_IP_ADDR_T tkl_net_str2addr(const char *ip_str);
+TUYA_IP_ADDR_T tkl_net_str2addr(const CHAR_T *ip_str);
 
 /**
 * @brief Change ip address to string
@@ -359,7 +359,7 @@ TUYA_IP_ADDR_T tkl_net_str2addr(const char *ip_str);
 *
 * @return ip string
 */
-char* tkl_net_addr2str(const TUYA_IP_ADDR_T ipaddr);
+CHAR_T* tkl_net_addr2str(const TUYA_IP_ADDR_T ipaddr);
 
 /**
 * @brief Set socket options
@@ -476,7 +476,7 @@ OPERATE_RET tkl_net_set_keepalive(int fd, const BOOL_T alive, const uint32_t idl
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_getsockname(int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
+OPERATE_RET tkl_net_getsockname(int fd, TUYA_IP_ADDR_T *addr, UINT16_T *port);
 
 /**
 * @brief Get name of connected peer socket
@@ -489,7 +489,7 @@ OPERATE_RET tkl_net_getsockname(int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_getpeername(int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
+OPERATE_RET tkl_net_getpeername(int fd, TUYA_IP_ADDR_T *addr, UINT16_T *port);
 
 /**
 * @brief Set the system hostname
@@ -500,7 +500,7 @@ OPERATE_RET tkl_net_getpeername(int fd, TUYA_IP_ADDR_T *addr, uint16_t *port);
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_sethostname(const char *hostname);
+OPERATE_RET tkl_net_sethostname(const CHAR_T *hostname);
 
 /**
  * @brief get netif by index

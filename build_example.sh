@@ -69,7 +69,7 @@ enable_python_env() {
     fi
 
     VIRTUAL_NAME=$1
-    SCRIPT_DIR=$PWD
+    SCRIPT_DIR=$PWD/${TARGET_PROJECT}
     VIRTUAL_ENV=$SCRIPT_DIR/$VIRTUAL_NAME
 
     if [ ! -d "${VIRTUAL_ENV}" ]; then
@@ -85,13 +85,13 @@ enable_python_env() {
     if [ -f "$ACTIVATE_SCRIPT" ] && [ -f ${PIP_CMD} ]; then
         echo "Activate python virtual environment."
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
-        ${PIP_CMD} install -r "requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
     else
         echo "Activate script not found."
         rm -rf "${VIRTUAL_ENV}"
         $PYTHON_CMD -m venv "${VIRTUAL_ENV}" || { echo "Failed to create virtual environment."; exit 1; }
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
-        ${PIP_CMD} install -r "requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
 
     fi
 }
@@ -120,7 +120,6 @@ check_python_install ||  { echo "Failed to check python environment."; exit 1; }
 
 bash t5_os/toolchain_get.sh $(pwd)/../tools || { echo "Failed to setup toolchain."; exit 1; } 
 
-enable_python_env "tuya_build_env" || { echo "Failed to enable python virtual environment."; exit 1; }
 
 export TUYA_APP_PATH=$APP_PATH
 export TUYA_APP_NAME=$APP_BIN_NAME
@@ -133,6 +132,10 @@ export TUYA_LIBS=$LIBS
 APP_PATH=../../$APP_DIR
 
 cd t5_os
+
+TARGET_PROJECT=projects/tuya_app
+
+enable_python_env "tuya_build_env" || { echo "Failed to enable python virtual environment."; exit 1; }
 
 tmp_gen_files_list=bk_idk/tools/build_tools/part_table_tools/config/gen_files_list.txt
 if [ -f $tmp_gen_files_list ]; then
@@ -163,12 +166,10 @@ if [ x$USER_CMD = "xclean" ];then
 	exit 0
 fi
 
-TARGET_PROJECT=projects/tuya_app
-
 echo "check bootloader.bin"
 boot_file=bk_idk/components/bk_libs/bk7258/bootloader/normal_bootloader/bootloader.bin
 check_value=$(md5sum ${boot_file} | awk '{print $1}')
-ori_value=de1a8f2f2d2a4fa7ea85ce8cd4f59619
+ori_value=f8f45b0779a8269fa089ac84ebd9c149
 if [ "x${check_value}" != "x${ori_value}" ]; then
     echo -e "\033[1;31m bootloader.bin check failed, the file had been changed, please update md5 value in build.sh \033[0m"
     exit
@@ -221,8 +222,9 @@ fi
 
 if [ -e "./build/${TARGET_PLATFORM}/all-app.bin" ]; then
     ofs=$(stat -c %s ./build/${TARGET_PLATFORM}/app.bin)
+    app0_max_size=1740800
     # TODO 1920k = 1966080 bytes
-    app0_max_size=1966080
+    # app0_max_size=1966080
     if [ $ofs -gt $app0_max_size ]; then
         echo "app0 file is too big, limit $app0_max_size, act $ofs"
         exit -1
@@ -264,3 +266,7 @@ echo "*********************${APP_BIN_NAME}_$APP_VERSION.bin********************"
 echo "*************************************************************************"
 echo "**********************COMPILE SUCCESS************************************"
 echo "*************************************************************************"
+
+disable_python_env "tuya_build_env"
+# Modified by TUYA End
+

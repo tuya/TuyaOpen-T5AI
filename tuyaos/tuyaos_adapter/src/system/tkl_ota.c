@@ -53,7 +53,7 @@ typedef struct {
     uint32_t bin_len;
     uint32_t bin_type;
     uint32_t offset;
-    UCHAR_T firmware_is_crc;  //0- 固件区不需要加crc校验， 1- 固件区需要加crc校验（bk平台）
+    uint8_t firmware_is_crc;  //0- 固件区不需要加crc校验， 1- 固件区需要加crc校验（bk平台）
     UG_STAT_E stat;
     OTA_TYPE_E ota_type;//0-diff; 1-seg_A; 2-seg_B
 }UG_PROC_S;
@@ -67,7 +67,7 @@ typedef struct {
 
 static uint32_t flash_area = INVALID_ARG;
 static UG_PROC_S *ug_proc = NULL;
-static UCHAR_T tkl_fist_flag = 0;
+static uint8_t tkl_fist_flag = 0;
 static uint32_t flash_crc32 = 0;
 
 extern OPERATE_RET tkl_flash_set_protect(const BOOL_T enable);
@@ -90,7 +90,7 @@ uint32_t  _flash_crc32_cal(uint32_t addr, uint32_t size)
 {
     uint32_t read_block = 4096;
 
-    UCHAR_T *read_buffer = tkl_system_malloc(read_block);
+    uint8_t *read_buffer = tkl_system_malloc(read_block);
     if(read_buffer == NULL) {
         bk_printf("malloc error\r\n");
         return 0;
@@ -104,7 +104,7 @@ uint32_t  _flash_crc32_cal(uint32_t addr, uint32_t size)
     while (1) {
         read_len = size - pos > read_block ? read_block : size - pos;
         tkl_flash_set_protect(FALSE);
-        mem_cpy(read_buffer, (UCHAR_T *)(addr + pos)+FLASH_BASE_ADDR, read_len);
+        mem_cpy(read_buffer, (uint8_t *)(addr + pos)+FLASH_BASE_ADDR, read_len);
         tkl_flash_set_protect(TRUE);
 
         crc32 = hash_crc32i_update(crc32, read_buffer, read_len);
@@ -366,12 +366,12 @@ OPERATE_RET tkl_ota_data_process(TUYA_OTA_DATA_T *pack, uint32_t* remain_len)
             tkl_fist_flag = 1;
             flash_crc32 = hash_crc32i_init();
 
-            UCHAR_T *temp_buf = NULL;
+            uint8_t *temp_buf = NULL;
             uint32_t off_size = BK_ADDR_CHANGE(pack->start_addr, TO_PHYSICS) % FLASH_SECTOR_SIZE;
             uint32_t address = BK_ADDR_CHANGE(pack->start_addr, TO_PHYSICS) - off_size;
             //bk_printf("off_size:%x,%x,%x\r\n",off_size, address, pack->start_addr);
             if(off_size != 0) {
-                temp_buf = (UCHAR_T *) tkl_system_malloc(off_size);
+                temp_buf = (uint8_t *) tkl_system_malloc(off_size);
                 if(NULL == temp_buf) {
                     return OPRT_MALLOC_FAILED;
                 }

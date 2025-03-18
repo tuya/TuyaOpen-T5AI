@@ -249,7 +249,6 @@ static void bk_qspi_flash_gd25_quad_disable(qspi_id_t id)
 static bk_err_t bk_qspi_flash_gd25_erase_block(uint32_t addr)
 {
     qspi_cmd_t erase_block_cmd = {0};
-    uint32_t aligned_address = addr & (~GD25_BLOCK_MASK);
 
 
 //    bk_printf("===> entry %s\r\n", __func__);
@@ -517,13 +516,14 @@ uint32_t bk_qspi_flash_gd25_read_id_test(qspi_id_t id, uint32_t cmd, uint32_t ad
     return read_id_data;
 }
 
+#include "tkl_memory.h"
 uint32_t bk_qspi_flash_gd25_test(uint32_t test_len)
 {
-    uint32_t read_id_data;
-    uint8_t status_reg_data = 0;
+    // uint32_t read_id_data;
+    // uint8_t status_reg_data = 0;
     // uint32_t test_len = 5;
 
-    read_id_data = bk_qspi_flash_gd25_read_id();
+    // read_id_data = bk_qspi_flash_gd25_read_id();
 
     // bk_qspi_flash_gd25_write_s16_s23(QSPI_ID_1, 0x40);
 

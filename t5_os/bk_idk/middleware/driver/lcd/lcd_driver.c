@@ -55,14 +55,8 @@
 #endif
 
 #if CONFIG_SOC_BK7236XX
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#include "gpio_map.h"
-#else // !CONFIG_TUYA_GPIO_MAP
 #define LCD_BACKLIGHT_PWM           PWM_ID_1
 #define LCD_BACKLIGHT_GPIO          GPIO_7
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 #endif
 
 #define IO_FUNCTION_ENABLE(pin, func)   \
@@ -192,34 +186,7 @@ void bk_lcd_set_devices_list(const lcd_device_t **list, uint16_t size)
 }
 
 #include "common/bk_assert.h"
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-extern int tkl_display_ll_spi_config(LCD_SPI_GPIO_TYPE_E gpio_type);
-int32_t lcd_driver_get_spi_gpio(LCD_SPI_GPIO_TYPE_E gpio_type)
-{
-    int32_t gpio_value = 0;
-    switch(gpio_type)
-    {
-        case SPI_GPIO_CLK:
-            gpio_value = tkl_display_ll_spi_config(SPI_GPIO_CLK);
-            break;
-        case SPI_GPIO_CSX:
-            gpio_value = tkl_display_ll_spi_config(SPI_GPIO_CSX);
-            break;
-        case SPI_GPIO_SDA:
-            gpio_value = tkl_display_ll_spi_config(SPI_GPIO_SDA);
-            break;
-        case SPI_GPIO_RST:
-            gpio_value = tkl_display_ll_spi_config(SPI_GPIO_RST);
-            break;
-        default:
-            LOGE("%s can't support this gpio type:%d\r\n", __FUNCTION__, __LINE__);
-            BK_ASSERT(0);
-            break;
-    }
-    return gpio_value;
-}
-#else // !CONFIG_TUYA_GPIO_MAP
+
 int32_t lcd_driver_get_spi_gpio(LCD_SPI_GPIO_TYPE_E gpio_type)
 {
     int32_t gpio_value = 0;
@@ -296,8 +263,6 @@ int32_t lcd_driver_get_spi_gpio(LCD_SPI_GPIO_TYPE_E gpio_type)
 
     return gpio_value;
 }
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 
 bk_err_t lcd_mcu_gpio_init(void)
 {
@@ -333,73 +298,17 @@ bk_err_t lcd_mcu_gpio_init(void)
 }
 
 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-#include "tkl_display.h"
-static bk_err_t lcd_rgb_gpio_init(void)
-{
-    LOGI("%s\n", __func__);
-#if CONFIG_SOC_BK7236XX
-    if (tkl_display_rgb_mode() == TKL_DISP_PIXEL_FMT_RGB666) {
-        IO_FUNCTION_ENABLE(LCD_RGB_R2_PIN, LCD_RGB_R2_FUNC);
-    } else if (tkl_display_rgb_mode() == TKL_DISP_PIXEL_FMT_RGB888) {
-        IO_FUNCTION_ENABLE(LCD_RGB_R0_PIN, LCD_RGB_R0_FUNC);
-        IO_FUNCTION_ENABLE(LCD_RGB_R1_PIN, LCD_RGB_R1_FUNC);
-        IO_FUNCTION_ENABLE(LCD_RGB_R2_PIN, LCD_RGB_R2_FUNC);
-    }
-#endif // CONFIG_SOC_BK7236XX
-
-    IO_FUNCTION_ENABLE(LCD_RGB_R3_PIN, LCD_RGB_R3_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_R4_PIN, LCD_RGB_R4_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_R5_PIN, LCD_RGB_R5_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_R6_PIN, LCD_RGB_R6_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_R7_PIN, LCD_RGB_R7_FUNC);
-
-#if CONFIG_SOC_BK7236XX
-    if (tkl_display_rgb_mode() == TKL_DISP_PIXEL_FMT_RGB888) {
-        IO_FUNCTION_ENABLE(LCD_RGB_G0_PIN, LCD_RGB_G0_FUNC);
-        IO_FUNCTION_ENABLE(LCD_RGB_G1_PIN, LCD_RGB_G1_FUNC);
-    }
-#endif // CONFIG_SOC_BK7236XX
-
-    IO_FUNCTION_ENABLE(LCD_RGB_G2_PIN, LCD_RGB_G2_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_G3_PIN, LCD_RGB_G3_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_G4_PIN, LCD_RGB_G4_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_G5_PIN, LCD_RGB_G5_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_G6_PIN, LCD_RGB_G6_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_G7_PIN, LCD_RGB_G7_FUNC);
-
-#if CONFIG_SOC_BK7236XX
-    if (tkl_display_rgb_mode() == TKL_DISP_PIXEL_FMT_RGB666) {
-        IO_FUNCTION_ENABLE(LCD_RGB_B2_PIN, LCD_RGB_B2_FUNC);
-    } else if (tkl_display_rgb_mode() == TKL_DISP_PIXEL_FMT_RGB888) {
-        IO_FUNCTION_ENABLE(LCD_RGB_B0_PIN, LCD_RGB_B0_FUNC);
-        IO_FUNCTION_ENABLE(LCD_RGB_B1_PIN, LCD_RGB_B1_FUNC);
-        IO_FUNCTION_ENABLE(LCD_RGB_B2_PIN, LCD_RGB_B2_FUNC);
-    }
-#endif // CONFIG_SOC_BK7236XX
-
-    IO_FUNCTION_ENABLE(LCD_RGB_B3_PIN, LCD_RGB_B3_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_B4_PIN, LCD_RGB_B4_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_B5_PIN, LCD_RGB_B5_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_B6_PIN, LCD_RGB_B6_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_B7_PIN, LCD_RGB_B7_FUNC);
-
-    IO_FUNCTION_ENABLE(LCD_RGB_CLK_PIN, LCD_RGB_CLK_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_DISP_PIN, LCD_RGB_DISP_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_HSYNC_PIN, LCD_RGB_HSYNC_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_VSYNC_PIN, LCD_RGB_VSYNC_FUNC);
-    IO_FUNCTION_ENABLE(LCD_RGB_DE_PIN, LCD_RGB_DE_FUNC);
-
-    return BK_OK;
-}
-#else // !CONFIG_TUYA_GPIO_MAP
-static bk_err_t lcd_rgb_gpio_init(void)
+static bk_err_t lcd_rgb_gpio_init(pixel_format_t out_fmt)
 {
 	LOGI("%s\n", __func__);
 #if CONFIG_SOC_BK7236XX
-	IO_FUNCTION_ENABLE(LCD_RGB_R0_PIN, LCD_RGB_R0_FUNC);
-	IO_FUNCTION_ENABLE(LCD_RGB_R1_PIN, LCD_RGB_R1_FUNC);
-	IO_FUNCTION_ENABLE(LCD_RGB_R2_PIN, LCD_RGB_R2_FUNC);
+	if(PIXEL_FMT_RGB666 == out_fmt) {
+		IO_FUNCTION_ENABLE(LCD_RGB_R2_PIN, LCD_RGB_R2_FUNC);
+	}else if(PIXEL_FMT_RGB888 == out_fmt) {
+        IO_FUNCTION_ENABLE(LCD_RGB_R0_PIN, LCD_RGB_R0_FUNC);
+        IO_FUNCTION_ENABLE(LCD_RGB_R1_PIN, LCD_RGB_R1_FUNC);
+        IO_FUNCTION_ENABLE(LCD_RGB_R2_PIN, LCD_RGB_R2_FUNC);
+	}
 #endif
 	IO_FUNCTION_ENABLE(LCD_RGB_R3_PIN, LCD_RGB_R3_FUNC);
 	IO_FUNCTION_ENABLE(LCD_RGB_R4_PIN, LCD_RGB_R4_FUNC);
@@ -408,8 +317,10 @@ static bk_err_t lcd_rgb_gpio_init(void)
 	IO_FUNCTION_ENABLE(LCD_RGB_R7_PIN, LCD_RGB_R7_FUNC);
 	
 #if CONFIG_SOC_BK7236XX
-	IO_FUNCTION_ENABLE(LCD_RGB_G0_PIN, LCD_RGB_G0_FUNC);
-	IO_FUNCTION_ENABLE(LCD_RGB_G1_PIN, LCD_RGB_G1_FUNC);
+	if(PIXEL_FMT_RGB888 == out_fmt) {
+		IO_FUNCTION_ENABLE(LCD_RGB_G0_PIN, LCD_RGB_G0_FUNC);
+		IO_FUNCTION_ENABLE(LCD_RGB_G1_PIN, LCD_RGB_G1_FUNC);	
+	}
 	IO_FUNCTION_ENABLE(LCD_RGB_G2_PIN, LCD_RGB_G2_FUNC);
 #endif
 	IO_FUNCTION_ENABLE(LCD_RGB_G3_PIN, LCD_RGB_G3_FUNC);
@@ -419,10 +330,13 @@ static bk_err_t lcd_rgb_gpio_init(void)
 	IO_FUNCTION_ENABLE(LCD_RGB_G7_PIN, LCD_RGB_G7_FUNC);
 
 #if CONFIG_SOC_BK7236XX
-	IO_FUNCTION_ENABLE(LCD_RGB_B0_PIN, LCD_RGB_B0_FUNC);
-	IO_FUNCTION_ENABLE(LCD_RGB_B1_PIN, LCD_RGB_B1_FUNC);
-	IO_FUNCTION_ENABLE(LCD_RGB_B2_PIN, LCD_RGB_B2_FUNC);
-	
+	if(PIXEL_FMT_RGB666 == out_fmt) {
+		IO_FUNCTION_ENABLE(LCD_RGB_B2_PIN, LCD_RGB_B2_FUNC);
+	}else if(PIXEL_FMT_RGB888 == out_fmt) {
+		IO_FUNCTION_ENABLE(LCD_RGB_B0_PIN, LCD_RGB_B0_FUNC);
+		IO_FUNCTION_ENABLE(LCD_RGB_B1_PIN, LCD_RGB_B1_FUNC);
+		IO_FUNCTION_ENABLE(LCD_RGB_B2_PIN, LCD_RGB_B2_FUNC);
+	}
 #endif
 	IO_FUNCTION_ENABLE(LCD_RGB_B3_PIN, LCD_RGB_B3_FUNC);
 	IO_FUNCTION_ENABLE(LCD_RGB_B4_PIN, LCD_RGB_B4_FUNC);
@@ -438,7 +352,6 @@ static bk_err_t lcd_rgb_gpio_init(void)
 
 	return BK_OK;
 }
-#endif // CONFIG_TUYA_GPIO_MAP
 // Modified by TUYA End
 
 bk_err_t bk_lcd_rgb_io_deinit(void)
@@ -486,28 +399,6 @@ bk_err_t lcd_driver_backlight_open(void)
     }
 #endif
 #elif (CONFIG_SOC_BK7236XX)
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint8_t lcd_bl, active_level;
-    tkl_display_bl_ctrl_io(&lcd_bl, &active_level);
-#if CONFIG_PWM
-    if (tkl_display_bl_mode() == TKL_DISP_BL_PWM) {
-        BK_LOG_ON_ERR(bk_pwm_driver_init());
-        pwm_init_config_t config = {0};
-        config.period_cycle = 100;
-        config.duty_cycle = 100;
-        BK_LOG_ON_ERR(bk_pwm_init(lcd_bl, &config));
-        BK_LOG_ON_ERR(bk_pwm_start(lcd_bl));
-    } else
-#else
-    {
-        gpio_dev_unmap(lcd_bl);
-        BK_LOG_ON_ERR(bk_gpio_enable_output(lcd_bl));
-        BK_LOG_ON_ERR(bk_gpio_pull_up(lcd_bl));
-        bk_gpio_set_output_high(lcd_bl);
-    }
-#endif // CONFIG_PWM
-#else // !CONFIG_TUYA_GPIO_MAP
 #if CONFIG_PWM
     BK_LOG_ON_ERR(bk_pwm_driver_init());
     pwm_init_config_t config = {0};
@@ -522,8 +413,6 @@ bk_err_t lcd_driver_backlight_open(void)
     BK_LOG_ON_ERR(bk_gpio_pull_up(LCD_BACKLIGHT_GPIO));
     bk_gpio_set_output_high(LCD_BACKLIGHT_GPIO);
 #endif
-#endif // CONFIG_TUYA_GPIO_MAP
-// Modified by TUYA End
 #endif
 
     return BK_OK;
@@ -549,13 +438,7 @@ bk_err_t lcd_driver_backlight_set(uint8_t percent)
         bk_pwm_set_period_duty(LCD_BACKLIGHT_PWM_RGB, &config);
     }
 #elif CONFIG_SOC_BK7236XX
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint8_t lcd_bl, active_level;
-    tkl_display_bl_ctrl_io(&lcd_bl, &active_level);
-    bk_pwm_set_period_duty(lcd_bl, &config);
-#else // !CONFIG_TUYA_GPIO_MAP
     bk_pwm_set_period_duty(LCD_BACKLIGHT_PWM, &config);
-#endif // CONFIG_TUYA_GPIO_MAP
 #endif
 #endif
 
@@ -583,22 +466,6 @@ bk_err_t lcd_driver_backlight_close(void)
     }
 #endif
 #elif (CONFIG_SOC_BK7236XX)
-// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint8_t lcd_bl, active_level;
-    tkl_display_bl_ctrl_io(&lcd_bl, &active_level);
-#if CONFIG_PWM
-    if (tkl_display_bl_mode() == TKL_DISP_BL_PWM) {
-        BK_LOG_ON_ERR(bk_pwm_stop(lcd_bl));
-        BK_LOG_ON_ERR(bk_pwm_deinit(lcd_bl));
-    } else
-#else
-    {
-        BK_LOG_ON_ERR(bk_gpio_pull_down(lcd_bl));
-        bk_gpio_set_output_low(lcd_bl);
-    }
-#endif // CONFIG_PWM
-#else // !CONFIG_TUYA_GPIO_MAP
 #if CONFIG_PWM
     BK_LOG_ON_ERR(bk_pwm_stop(LCD_BACKLIGHT_PWM));
     BK_LOG_ON_ERR(bk_pwm_deinit(LCD_BACKLIGHT_PWM));
@@ -606,7 +473,6 @@ bk_err_t lcd_driver_backlight_close(void)
     BK_LOG_ON_ERR(bk_gpio_pull_down(LCD_BACKLIGHT_GPIO));
     bk_gpio_set_output_low(LCD_BACKLIGHT_GPIO);
 #endif
-#endif // CONFIG_TUYA_GPIO_MAP
 #endif
 // Modified by TUYA End
     return BK_OK;
@@ -1208,51 +1074,23 @@ void lcd_driver_ppi_set(uint16_t width, uint16_t height)
 	}
 }
 
-bk_err_t lcd_ldo_power_enable(uint8_t enable)
+bk_err_t lcd_ldo_power_enable(gpio_id_t gpio, bool active_lv, uint8_t enable)
 {
 #if (CONFIG_LCD_POWER_GPIO_CTRL)
-
-
 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint8_t lcd_ldo, active_level;
-    tkl_display_power_ctrl_pin(&lcd_ldo, &active_level);
     if (enable) {
         if (active_level == 1)
-            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, lcd_ldo, GPIO_OUTPUT_STATE_HIGH);
+            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, gpio, GPIO_OUTPUT_STATE_HIGH);
         else
-            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, lcd_ldo, GPIO_OUTPUT_STATE_LOW);
+            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, gpio, GPIO_OUTPUT_STATE_LOW);
     } else {
         if (active_level == 1)
-            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, lcd_ldo, GPIO_OUTPUT_STATE_LOW);
+            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, gpio, GPIO_OUTPUT_STATE_LOW);
         else
-            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, lcd_ldo, GPIO_OUTPUT_STATE_HIGH);
+            bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, gpio, GPIO_OUTPUT_STATE_HIGH);
     }
-
-#else // !CONFIG_TUYA_GPIO_MAP
-
-	if (enable)
-	{
-#if (LCD_LDO_CTRL_ACTIVE_LEVEL)
-		bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, LCD_LDO_CTRL_GPIO, GPIO_OUTPUT_STATE_HIGH);
-#else
-		bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, LCD_LDO_CTRL_GPIO, GPIO_OUTPUT_STATE_LOW);
-#endif
-	}
-	else
-	{
-
-#if (LCD_LDO_CTRL_ACTIVE_LEVEL)
-		bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, LCD_LDO_CTRL_GPIO, GPIO_OUTPUT_STATE_LOW);
-#else
-		bk_gpio_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, LCD_LDO_CTRL_GPIO, GPIO_OUTPUT_STATE_HIGH);
-#endif
-	}
-
-#endif // CONFIG_TUYA_GPIO_MAP
-
-#endif // CONFIG_LCD_POWER_GPIO_CTRL
 // Modified by TUYA End
+#endif // CONFIG_LCD_POWER_GPIO_CTRL
 
 	return BK_OK;
 }
@@ -1268,22 +1106,14 @@ bk_err_t lcd_driver_init(const lcd_device_t *device)
 	bk_pm_module_vote_power_ctrl(PM_POWER_SUB_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_ON);
 	bk_pm_clock_ctrl(PM_CLK_ID_DISP, CLK_PWR_CTRL_PWR_UP);
 #if CONFIG_SOC_BK7256XX
-	lcd_ldo_power_enable(1);
+	lcd_ldo_power_enable(device->ldo_pin, device->ldo_lv, 1);
 	bk_pm_module_vote_cpu_freq(PM_DEV_ID_DISP, PM_CPU_FRQ_320M);
 #else
-
 	// Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint8_t lcd_ldo, active_level;
-    tkl_display_power_ctrl_pin(&lcd_ldo, &active_level);
-    bk_pm_module_vote_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, lcd_ldo, GPIO_OUTPUT_STATE_HIGH);
-#else // !CONFIG_TUYA_GPIO_MAP
-    bk_pm_module_vote_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, LCD_LDO_CTRL_GPIO, GPIO_OUTPUT_STATE_HIGH);
-#endif // CONFIG_TUYA_GPIO_MAP
-
+    bk_pm_module_vote_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, device->ldo_pin, device->ldo_lv);
 	bk_pm_module_vote_cpu_freq(PM_DEV_ID_DISP, PM_CPU_FRQ_480M);
+	// Modified by TUYA End
 #endif
-    // Modified by TUYA End
 
 	os_memset(&s_lcd, 0, sizeof(s_lcd));
 	os_memcpy((void*)&s_lcd.device, device, sizeof(lcd_device_t));
@@ -1297,7 +1127,7 @@ bk_err_t lcd_driver_init(const lcd_device_t *device)
 	if ((device->type == LCD_TYPE_RGB565) || (device->type == LCD_TYPE_RGB))
 	{
 		bk_lcd_driver_init(device->rgb->clk);
-		lcd_rgb_gpio_init();
+		lcd_rgb_gpio_init(device->out_fmt);
 		bk_lcd_rgb_init(device);
 		lcd_hal_rgb_set_in_out_format(device->src_fmt, device->out_fmt);
 //		lcd_hal_int_enable(DE_INT);
@@ -1326,12 +1156,6 @@ bk_err_t lcd_driver_init(const lcd_device_t *device)
 	before = 0;
 #endif
 
-	// Modified by TUYA Start
-	//if (device->init)
-	//{
-	//	device->init();
-	//}
-	// Modified by TUYA End
 #if CONFIG_ARCH_RISCV
 	after = riscv_get_mtimer();
 #else
@@ -1385,17 +1209,13 @@ bk_err_t lcd_driver_deinit(void)
 	bk_pm_module_vote_power_ctrl(PM_POWER_SUB_MODULE_NAME_VIDP_LCD, PM_POWER_MODULE_STATE_OFF);
 	bk_pm_module_vote_cpu_freq(PM_DEV_ID_DISP, PM_CPU_FRQ_DEFAULT);
 #if CONFIG_SOC_BK7256XX
-	lcd_ldo_power_enable(0);
+	// Modified by TUYA Start
+	lcd_ldo_power_enable(s_lcd.device.ldo_pin, s_lcd.device.ldo_lv, 0);
+	// Modified by TUYA End
 #else
 
 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint8_t lcd_ldo, active_level;
-    tkl_display_power_ctrl_pin(&lcd_ldo, &active_level);
-    bk_pm_module_vote_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, lcd_ldo, GPIO_OUTPUT_STATE_LOW);
-#else // !CONFIG_TUYA_GPIO_MAP
-    bk_pm_module_vote_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, LCD_LDO_CTRL_GPIO, GPIO_OUTPUT_STATE_LOW);
-#endif // CONFIG_TUYA_GPIO_MAP
+    bk_pm_module_vote_ctrl_external_ldo(GPIO_CTRL_LDO_MODULE_LCD, s_lcd.device.ldo_pin, GPIO_OUTPUT_STATE_LOW);
 // Modified by TUYA End
 
 #endif

@@ -1486,7 +1486,7 @@ static bk_err_t aud_tras_dec(void)
 			}
 			i += 8;
 		}
-	} else 
+	} else
 #endif
 	{
 	/* save the data after G711A processed to encoder_ring_buffer */
@@ -4141,7 +4141,7 @@ bk_err_t aud_tras_drv_deinit(void)
 
 bk_err_t audio_event_handle(media_mailbox_msg_t * msg)
 {
-	bk_err_t ret = BK_FAIL;
+	bk_err_t ret = BK_OK; // Modified by TUYA
 
 	/* save mailbox msg received from media app */
 	LOGD("%s, %d, event: %d \n", __func__, __LINE__, msg->event);

@@ -25,43 +25,14 @@ menu "TUYA_SDK"
         int "cpu index"
         default 255
 
-    config TUYA_LCD
-        bool "tuya lcd"
-        default y
-
-    menu "TUYA LCD Driver"
-        depends on TUYA_LCD
-
-        config TUYA_ST7701S
-            bool "lcd st7701s"
-            default y
-
-        config TUYA_ST7701SN
-            bool "lcd st7701sn"
-            default y
-    endmenu
-
-    menu "TUYA LCD Type"
-        choice LCD_TYPE
-            depends on TUYA_LCD
-            prompt "lcd type select"
-            default TUYA_LCD_RGB565
-
-            config TUYA_LCD_RGB565
-                bool "rgb565"
-            config TUYA_LCD_RGB888
-                bool "rgb888"
-        endchoice
-    endmenu
-
     config TUYA_LOG_OPTIMIZATION
         bool "enable log OPTIMIZATION"
         default y
         help
         this config should be enable, or log maybe lost
 
-    config TUYA_GPIO_MAP
-        bool "usd tuya gpio defines"
+    config TUYA_LOGIC_MODIFY
+        bool "tuya modify"
         default y
 
     config TUYA_PAGE_TILEVIEW

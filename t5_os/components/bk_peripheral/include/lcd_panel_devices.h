@@ -23,6 +23,7 @@ extern "C" {
 
 // Modified by TUYA Start
 extern const lcd_device_t lcd_device_nv3047;
+extern const lcd_device_t lcd_device_t35p128cq;
 #if CONFIG_LCD_ILI9488
 extern const lcd_device_t lcd_device_ili9488;
 #endif

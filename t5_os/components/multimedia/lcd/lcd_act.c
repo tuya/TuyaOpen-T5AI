@@ -168,12 +168,12 @@
 #ifdef LCD_DIAG_DEBUG
 void lcd_debug_en(void)
 {
-	gpio_dev_unmap(GPIO_2); 
+	gpio_dev_unmap(GPIO_2);
 	BK_LOG_ON_ERR(bk_gpio_disable_input((GPIO_2)));
 	bk_gpio_enable_output(GPIO_2);
 	bk_gpio_set_output_low(GPIO_2);
 
-	gpio_dev_unmap(GPIO_3); 
+	gpio_dev_unmap(GPIO_3);
 	BK_LOG_ON_ERR(bk_gpio_disable_input((GPIO_3)));
 	bk_gpio_enable_output(GPIO_3);
 	bk_gpio_set_output_low(GPIO_3);
@@ -909,7 +909,7 @@ frame_buffer_t *lcd_driver_scale_frame(frame_buffer_t *frame, media_ppi_t ppi)
 
 	scale_frame = lcd_info.scale_frame;
 	lcd_info.scale_frame = NULL;
-	
+
 out:
 
 	LCD_DRIVER_FRAME_FREE(frame);
@@ -972,7 +972,7 @@ frame_buffer_t *lcd_driver_rotate_frame(frame_buffer_t *frame, media_rotate_t ro
 		lcd_info.rotate_frame->height = frame->width;
 		lcd_info.rotate_frame->width = frame->height;
 	}
-	
+
 	lcd_info.rotate_frame->fmt = frame->fmt;
 	lcd_info.rotate_frame->sequence = frame->sequence;
 	lcd_info.rotate_frame->length = frame->width * frame->height * 2;
@@ -1157,7 +1157,7 @@ void dma2d_memcpy_psram_wait_last_transform_for_lvgl
 {
     dma2d_memcpy_psram_wait_last_transform_is_finish();
     dma2d_memcpy_psram_for_lvgl(Psrc, src_xsize, src_ysize,
-                            Pdst, lcd_info.lcd_width, lcd_info.lcd_height, 
+                            Pdst, lcd_info.lcd_width, lcd_info.lcd_height,
                             0, 0,
                             dst_xpos, dst_ypos
                             );
@@ -1247,14 +1247,14 @@ bk_err_t lcd_blend_open_handler(media_mailbox_msg_t *msg)
 		{
 			lcd_info.dma2d_blend = true;
 			lcd_info.font_draw = true;
-		
+
 			ret = lcd_blend_malloc_buffer();
 			if (ret != BK_OK) {
 				LOGE("lcd blend malloc error, lcd blend open fail\r\n");
 				lcd_info.dma2d_blend = false;
 				lcd_info.font_draw = false;
 			}
-		
+
 			if(lcd_info.dma2d_blend)
 			{
 				ret= lcd_dma2d_blend_init();
@@ -1311,7 +1311,7 @@ bk_err_t lcd_display_echo_event_handle(media_mailbox_msg_t *msg)
 
 	frame_buffer_fb_direct_free(jpeg_frame);
 	frame_buffer_fb_push(dec_frame);
-	
+
 	LOGI("%s complete\n", __func__);
 	msg->result = ret;
 	ret = rtos_set_semaphore(&msg->sem);
@@ -1323,7 +1323,7 @@ bk_err_t lcd_display_echo_event_handle(media_mailbox_msg_t *msg)
 
 error:
 	lcd_info.picture_echo = false;
-	lcd_decoder_task_start(lcd_info.rotate); 
+	lcd_decoder_task_start(lcd_info.rotate);
 	set_lcd_state(LCD_STATE_ENABLED);
 
 	msg->result = ret;
@@ -1354,21 +1354,22 @@ bk_err_t lcd_display_file_handle(media_mailbox_msg_t *msg)
 	frame_buffer_fb_init(FB_INDEX_JPEG);
 	frame_buffer_fb_register(MODULE_DECODER, FB_INDEX_JPEG);
 	frame_buffer_t *frame = frame_buffer_fb_malloc(FB_INDEX_JPEG, 200 * 1024);
-	
+
 	if (frame == NULL)
 	{
 		LOGE("%s, read jpeg frame NULL\n", __func__);
-		
+
 		msg->result = BK_FAIL;
 		return BK_FAIL;
 	}
-	
+
 	lcd_info.picture_echo = true;
+    bk_printf("%s %d\r\n", __func__, __LINE__);
 	ret = msg_send_req_to_media_major_mailbox_sync(EVENT_LCD_PICTURE_ECHO_NOTIFY, APP_MODULE, (uint32_t)frame, NULL);
 
 	msg->result = ret;
 	return ret;
-	
+
 }
 
 
@@ -1390,26 +1391,10 @@ bk_err_t lcd_open_handle(media_mailbox_msg_t *msg)
 	}
 
     bk_printf("%s %x\n", __func__, (uint32_t *)msg->param);
-    // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
-    uint32_t *tmp = (uint32_t *)msg->param;
-    if (tmp[0] == 0x54555941) {
-        // update config
-        tkl_disp_update_ll_config((void *)msg->param);
 
-        lcd_config.lcd_open.device_ppi = tkl_disp_get_ppi();
-        char *device_name = tkl_disp_get_lcd_name();
-        lcd_config.lcd_open.device_name = device_name;
-
-        tuya_lcd_update_config((void *)msg->param);
-    } else
-#endif // CONFIG_TUYA_GPIO_MAP
-    {
-        //os_memcpy(&lcd_info.lcd_device, lcd_config.lcd_device, sizeof(lcd_device_t));
-        lcd_open_t *lcd_open = (lcd_open_t *)msg->param;
-        os_memcpy(&lcd_config.lcd_open, lcd_open, sizeof(lcd_open_t));
-    }
-    // Modified by TUYA End
+	//os_memcpy(&lcd_info.lcd_device, lcd_config.lcd_device, sizeof(lcd_device_t));
+	lcd_open_t *lcd_open = (lcd_open_t *)msg->param;
+	os_memcpy(&lcd_config.lcd_open, lcd_open, sizeof(lcd_open_t));
 
 	if (lcd_config.lcd_open.device_name != NULL)
 		lcd_info.lcd_device = get_lcd_device_by_name(lcd_config.lcd_open.device_name);
@@ -1483,7 +1468,7 @@ bk_err_t lcd_open_handle(media_mailbox_msg_t *msg)
 #endif
 	if (lcd_info.decode_mode == NONE_DECODE)
 		lcd_info.decode_mode = lcd_config.decode_mode;
-	if(lcd_info.decode_mode == HARDWARE_DECODING) 
+	if(lcd_info.decode_mode == HARDWARE_DECODING)
 	{
 		lcd_info.decoder_en = true;
 #if CONFIG_LCD_HW_DECODE
@@ -1507,7 +1492,7 @@ bk_err_t lcd_open_handle(media_mailbox_msg_t *msg)
 		if (ret != BK_OK)
 			LOGE("%s, bk_hw_scale_driver_init fail\r\n", __func__);
         lcd_info.scale_ppi = lcd_info.lcd_device->ppi;
-        
+
         LOGI("%s, ===>>>scale ppi: %dX%d %s\n", __func__, lcd_info.scale_ppi >> 16, lcd_info.scale_ppi & 0xFFFF, lcd_info.lcd_device->name);
 	}
 
@@ -1572,7 +1557,7 @@ bk_err_t lcd_display_fram_handle(media_mailbox_msg_t *msg)
 		LOGI("set new ppi 160 * 240\n\r");
 		lcd_driver_ppi_set(160, 240);
 		display_type_init = lcd_mcu_display->display_type;
-	}	
+	}
 	else if (lcd_mcu_display->display_type == 0 && display_type_init != lcd_mcu_display->display_type)
 	{
 		LOGI("set new ppi 320 * 480\n\r");
@@ -1823,6 +1808,7 @@ bk_err_t lcd_rotate_handle(media_mailbox_msg_t *msg)
 }
 
 //Modified by TUYA Start
+#include "usbh_core.h"
 static uint32_t usb_device_status = 0;
 static void usbh_device_info(uint32_t vid, uint32_t pid, uint32_t bcd)
 {

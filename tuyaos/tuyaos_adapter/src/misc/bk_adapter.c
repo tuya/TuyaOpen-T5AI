@@ -40,11 +40,15 @@
 /**
  * Security Check Interface : To check the contents of hostids
  **/
+#if CONFIG_SYS_CPU1
 uint32_t mem_sanity_check(void *mem)
 {
     return 1;
 }
+#endif
 
+extern bk_err_t media_app_get_usb_connect_status(void);
+#include "tkl_system.h"
 void tuya_get_usb_dev(uint32_t *vid, uint32_t *pid)
 {
     int cnt = 10, status = 0;
@@ -121,7 +125,7 @@ static inline int __attribute__((always_inline)) gpio_level_check_and_set(uint32
 static uint32_t is_init = 0;
 static void __mutil_power_init(void)
 {
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     TUYA_GPIO_BASE_CFG_T cfg;
     cfg.direct = TUYA_GPIO_OUTPUT;
     cfg.level = TUYA_GPIO_LEVEL_LOW;
@@ -144,12 +148,12 @@ static void __mutil_power_init(void)
 #ifdef MUTEX_CTRL
     tkl_gpio_init(MUTEX_CTRL, &cfg);
 #endif // MUTEX_CTRL
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 }
 
 void tuya_multimedia_power_on(void)
 {
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
 //    if (!is_init) {
         __mutil_power_init();
         is_init = 1;
@@ -163,12 +167,12 @@ void tuya_multimedia_power_on(void)
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
     gpio_level_check_and_set(usb_ldo, active_level, MUTIL_ON);
 
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 }
 
 void tuya_multimedia_power_off(void)
 {
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
 //    if (!is_init) {
         __mutil_power_init();
         is_init = 1;
@@ -189,9 +193,15 @@ void tuya_multimedia_power_off(void)
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
     gpio_level_check_and_set(usb_ldo, active_level, MUTIL_OFF);
 
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 }
 
 #endif // CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
 
+#if CONFIG_SYS_CPU0
+uint8_t* dhcp_lookup_mac(uint8_t *chaddr)
+{
+    return NULL;
+}
+#endif
 

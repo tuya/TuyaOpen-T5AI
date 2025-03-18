@@ -15,6 +15,7 @@
 #include "uart_statis.h"
 #include "bk_uart.h"
 #include "tuya_gpio_map.h"
+#include "bk_pm_internal_api.h"
 
 extern void tkl_set_ll_wakeup_source(void);
 extern void bk_printf(const char *fmt, ...);
@@ -78,6 +79,7 @@ OPERATE_RET tkl_cpu_sleep_mode_set(BOOL_T enable, TUYA_CPU_SLEEP_MODE_E mode)
 {
     bk_printf("-- cpu sleep set enable:%d, mode:%d\r\n", enable, mode);
 
+#if 0
     if(mode == TUYA_CPU_SLEEP) {
         if(tkl_get_lp_flag()) {
             if(enable) {
@@ -107,7 +109,7 @@ OPERATE_RET tkl_cpu_sleep_mode_set(BOOL_T enable, TUYA_CPU_SLEEP_MODE_E mode)
     } else {
         return OPRT_OS_ADAPTER_CPU_LPMODE_SET_FAILED;
     }
-
+#endif
     return OPRT_OK;
 }
 

@@ -7,7 +7,6 @@
 
 #include "cli_tuya_test.h"
 
-#if (CONFIG_CPU_INDEX == 0)
 #include <os/os.h>
 #include "media_app.h"
 #include "media_evt.h"
@@ -16,6 +15,11 @@
 #include "tkl_audio.h"
 #include "tkl_video_in.h"
 #include "tkl_lvgl.h"
+
+#include "sys_driver.h"
+#include "aud_intf.h"
+#include "aud_intf_types.h"
+#include <modules/g711.h>
 
 #define DEV_CLOSED      0
 #define DEV_OPEN        1
@@ -40,6 +44,9 @@ static void __test_media_get_lcd_info(uint16_t *w, uint16_t *h)
     } else if (!os_strcmp(__test_ic_name, "T50P181CQ")) {
         *w = 480;
         *h = 864;
+    } else if (!os_strcmp(__test_ic_name, "T35P128CQ")) {
+        *w = 320;
+        *h = 480;
     } else if (!os_strcmp(__test_ic_name, "nv3047")) {
         *w = 480;
         *h = 272;
@@ -85,7 +92,6 @@ static void __test_media_open_dvp(void)
     vi_config.pdata = &ext_conf;
 
     tkl_vi_init(&vi_config, 0);
-    bk_printf("--- trace %s %d\r\n", __func__, __LINE__);
 }
 
 static void __test_media_open_lcd(uint8_t pipeline)
@@ -150,6 +156,37 @@ static void __test_media_open_lcd(uint8_t pipeline)
         info.ll_ctrl.tp.tp_i2c_sda      = TUYA_GPIO_NUM_15;
         info.ll_ctrl.tp.tp_rst          = TUYA_GPIO_NUM_27;
         info.ll_ctrl.tp.tp_intr         = TUYA_GPIO_NUM_38;
+    } else if (!os_strcmp(__test_ic_name, "T35P128CQ")) {
+        info.ll_ctrl.bl.io              = TUYA_GPIO_NUM_9;
+        info.ll_ctrl.bl.mode            = TKL_DISP_BL_GPIO;
+        info.ll_ctrl.bl.active_level    = TUYA_GPIO_LEVEL_HIGH;
+
+        info.ll_ctrl.spi.clk            = TUYA_GPIO_NUM_49;
+        info.ll_ctrl.spi.csx            = TUYA_GPIO_NUM_48;
+        info.ll_ctrl.spi.sda            = TUYA_GPIO_NUM_50;
+        info.ll_ctrl.spi.rst_mode       = TKL_DISP_GPIO_RESET;
+        info.ll_ctrl.spi.rst            = TUYA_GPIO_NUM_53;
+
+        info.ll_ctrl.power_ctrl_pin     = TUYA_GPIO_NUM_56;     // no lcd ldo
+        info.ll_ctrl.power_active_level = TUYA_GPIO_LEVEL_HIGH;
+        info.ll_ctrl.rgb_mode           = TKL_DISP_PIXEL_FMT_RGB565;
+
+        info.ll_ctrl.tp.tp_i2c_clk      = TUYA_GPIO_NUM_13;
+        info.ll_ctrl.tp.tp_i2c_sda      = TUYA_GPIO_NUM_15;
+        info.ll_ctrl.tp.tp_rst          = TUYA_GPIO_NUM_54;
+        info.ll_ctrl.tp.tp_intr         = TUYA_GPIO_NUM_55;
+
+        info.ll_ctrl.init_param         = NULL;
+
+        // 拉高 lcd rst 引脚
+        TUYA_GPIO_BASE_CFG_T gpio_cfg = {
+            .direct = TUYA_GPIO_OUTPUT,
+            .mode = TUYA_GPIO_PULLUP,
+            .level = TUYA_GPIO_LEVEL_HIGH,
+        };
+        tkl_gpio_init(TUYA_GPIO_NUM_53, &gpio_cfg);
+        tkl_gpio_write(TUYA_GPIO_NUM_53, 1);
+
     } else if (!os_strcmp(__test_ic_name, "nv3047")) {
         info.fps = 30;
         info.format = TKL_DISP_PIXEL_FMT_RGB888;
@@ -190,12 +227,62 @@ static void __test_media_open_lcd(uint8_t pipeline)
     tkl_disp_set_brightness(NULL, 100);
 }
 
+static int send_mic_data_to_spk(uint8_t *data, unsigned int len)
+{
+    bk_err_t ret = BK_OK;
+
+    int16_t *pcm_data = (int16_t *)data;
+    uint8_t *g711a_data = NULL;
+    g711a_data = os_malloc(len/2);
+
+    /* pcm -> g711a */
+    for (int i = 0; i < len/2; i++) {
+        g711a_data[i] = linear2alaw(pcm_data[i]);
+    }
+
+    /* g711a -> pcm */
+    for (int i = 0; i< len/2; i++) {
+        pcm_data[i] = alaw2linear(g711a_data[i]);
+    }
+
+    /* write a fram speaker data to speaker_ring_buff */
+    extern bk_err_t bk_aud_intf_write_spk_data(uint8_t *dac_buff, uint32_t size);
+    ret = bk_aud_intf_write_spk_data((uint8 *)pcm_data, len);
+    if (ret != BK_OK) {
+        os_printf("write mic spk data fail \r\n");
+        return ret;
+    }
+
+    os_free(g711a_data);
+    {
+        static SYS_TICK_T last_tick = 0;
+        static uint32_t spk_recv_size = 0;
+
+        spk_recv_size += len;
+        SYS_TICK_T current = tkl_system_get_tick_count();
+
+        if (current - last_tick > 1000) {
+            last_tick = current;
+            bk_printf("%s %d, %d, %d\r\n", __func__, __LINE__, last_tick, spk_recv_size);
+        }
+    }
+    return len;
+}
+
 static int __test_media_ai_cb(TKL_AUDIO_FRAME_INFO_T *pframe)
 {
-//    bk_printf("%s %d: \r\n", __func__, __LINE__);
-//    for (int i = 0; i < 16; i++)
-//        bk_printf("%02x ", (uint8_t)pframe->pbuf[i]);
-//    bk_printf("\r\n");
+    static SYS_TICK_T last_tick = 0;
+    static uint32_t audio_recv_size = 0;
+
+    audio_recv_size += pframe->buf_size;
+    SYS_TICK_T current = tkl_system_get_tick_count();
+
+    if (current - last_tick > 1000) {
+        last_tick = current;
+        bk_printf("%s %d, %d, %d\r\n", __func__, __LINE__, last_tick, audio_recv_size);
+    }
+
+    send_mic_data_to_spk(pframe->pbuf, pframe->buf_size);
 
     return pframe->buf_size;
 }
@@ -204,7 +291,7 @@ static void __test_media_open_audio(void)
 {
     TKL_AUDIO_CONFIG_T config ={0};
     config.enable = true;
-    config.card = TKL_AUDIO_TYPE_UAC;
+    config.card = TKL_AUDIO_TYPE_BOARD;
     config.ai_chn = 0;
     config.sample = 8000;                      // sample
     config.datebits = 16;                    // datebit
@@ -212,13 +299,13 @@ static void __test_media_open_audio(void)
     config.codectype = TKL_CODEC_AUDIO_PCM;                   // codec type
     config.fps = 25;                         // frame per second，suggest 25
     config.put_cb = __test_media_ai_cb;
-    config.spk_gpio = 56;
+    config.spk_gpio = 28;
     tkl_ai_init(&config, 1);
     tkl_ai_start(0,0);
 }
 
 
-void __attribute__((weak)) app_recv_lv_event(UCHAR_T *buf, uint32_t len, void *args)
+void __attribute__((weak)) app_recv_lv_event(uint8_t *buf, uint32_t len, void *args)
 {
     os_printf("%s , this function should be defined in app\r\n", __func__);
 }
@@ -272,7 +359,7 @@ void cli_tuya_media_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
         return;
     }
 
-    if ((__test_ic_name == NULL) && (0 != os_strcmp(argv[1], "set"))) {
+    if ((__test_ic_name == NULL) && (!os_strcmp(argv[1], "lcd"))) {
         bk_printf("set lcd name first\r\n");
         return;
     }
@@ -284,8 +371,10 @@ void cli_tuya_media_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
             __test_ic_name = "st7701sn";
         } else if (!os_strcmp(argv[2], "nv3047")) {
             __test_ic_name = "nv3047";
+        } else if (!os_strcmp(argv[2], "T35P128CQ")) {
+            __test_ic_name = "T35P128CQ";
         } else {
-            bk_printf("not support %s, use T50P181CQ or st7701sn", argv[2]);
+            bk_printf("not support %s", argv[2]);
             return;
         }
         bk_printf("set ic: %s\r\n", argv[2]);
@@ -318,7 +407,7 @@ void cli_tuya_media_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
             bk_printf("no spec close parameter\r\n");
         } else if (!os_strcmp(argv[2], "uvc")) {
             tkl_vi_uninit(TKL_VI_CAMERA_TYPE_UVC);
-        } else if (!os_strcmp(argv[2], "uvc")) {
+        } else if (!os_strcmp(argv[2], "dvp")) {
             tkl_vi_uninit(TKL_VI_CAMERA_TYPE_DVP);
         } else if (!os_strcmp(argv[2], "lvgl")) {
             if (__lvgl_status == DEV_OPEN) {
@@ -368,7 +457,6 @@ void cli_tuya_media_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
     return;
 }
 
-#endif // CONFIG_CPU_INDEX == 0
 
 
 

@@ -9,278 +9,66 @@
 #include "tkl_ipc.h"
 #include "tkl_fs.h"
 #include "tkl_semaphore.h"
+#include "tkl_mutex.h"
 
-TKL_IPC_HANDLE __ipc_handle[2] = {0, 0};
-extern OPERATE_RET tkl_ipc_send_no_sync(TKL_IPC_HANDLE handle, const uint8_t *buf, uint32_t buf_len);
+// for debug
 
-#ifdef CONFIG_SYS_CPU1
-extern TKL_SEM_HANDLE fs_api_access_sem;
+#if TKL_IPC_DEBUG
+const char *ipc_event_str[4] = {"wifi", "hci", "lwip", "system"};
+const char *ipc_subevent_str[4][32] = {
+    "wf_scan",  "wf_scan_res", "wf_scan_free_mem", "wf_ap_start", "wf_ap_stop", "wf_channel_set", "wf_channel_get", "wf_sniffer_set", "wf_sniffer_data", "wf_ip_get", "wf_ipv6_get", "wf_ip_set", "wf_mac_set", "wf_mac_get", "wf_workmode_set", "wf_workmode_get", "wf_fastconn_info_get", "wf_bssid_get", "wf_ccode_set", "wf_ccode_get", "wf_rf_calibrated_set", "wf_lp_mode_set", "wf_fast_connect", "wf_connect", "wf_connect_res", "wf_disconnect", "wf_rssi_get", "wf_station_status_get", "wf_mgnt_send", "wf_recv_mgnt_set", "wf_mgnt_recv", "wf_ioctl",
+    "hci_init", "hci_deinit",   "hci_reset", "hci_cmd_send", "hci_acl_send", "hci_event_to_host", "hci_acl_to_host", "hci_reg_callback", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event", "no_hci_event",
+    "lwip_init","lwip_get_netif_by_idx", "lwip_send", "lwip_recv", "lwip_pbuf_alloc", "lwip_pbuf_cat", "lwip_pbuf_coalesce", "lwip_pbuf_free", "lwip_pbuf_header", "lwip_pbuf_ref", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event", "no_lwip_event",
+    "reboot", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event", "no_sys_event"
+};
 #endif
 
-// TODO ugly
-static TUYA_FILEINFO info = NULL;
-static struct ipc_msg_s result;
 
-static OPERATE_RET tuya_ipc_cb(TKL_IPC_HANDLE handle, uint8_t *buf, uint32_t buf_len)
+TKL_SEM_HANDLE ipc_ack_sem = NULL;
+TKL_MUTEX_HANDLE ipc_mutex0= NULL;
+TKL_MUTEX_HANDLE ipc_mutex1= NULL;
+struct ipc_msg_s *ipc_req_msg = NULL;
+extern void tkl_wifi_ipc_func(struct ipc_msg_s *msg);
+extern void tkl_hci_ipc_func(struct ipc_msg_s *msg);
+extern void tkl_lwip_ipc_func(struct ipc_msg_s *msg);
+
+static OPERATE_RET __tuya_ipc_cb(struct ipc_msg_s *msg )
 {
-    struct ipc_msg_s *msg = (struct ipc_msg_s *)buf;
-    int ret = -1;
+#if TKL_IPC_DEBUG
+    tkl_ipc_debug(IPC_RECV, msg->type, msg->subtype);
+#endif
+    if(ipc_req_msg && ipc_req_msg->type == msg->type && ipc_req_msg->subtype == msg->subtype) {//res...��req��ͬһ��msg��ַ
+        tkl_semaphore_post(ipc_ack_sem);
+    }else {
+        switch (msg->type) {
+            //wifi
+            case TKL_IPC_TYPE_WIFI:
+                tkl_wifi_ipc_func(msg);
+                break;
 
-#if CONFIG_SYS_CPU0
-    memset(&result, 0, sizeof(struct ipc_msg_s));
+            case TKL_IPC_TYPE_HCI:
+                tkl_hci_ipc_func(msg);
+                break;
 
-    result.type = msg->type;
+            case TKL_IPC_TYPE_LWIP:
+                tkl_lwip_ipc_func(msg);
+                break;
 
-    switch (msg->type) {
-        case TKL_IPC_TYPE_FS_MKDIR:
-            if (msg->buf!= NULL) {
-                char *path = (char *)msg->buf;
-                ret = tkl_fs_mkdir(path);
-            }
-            result.buf32[0] = ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_REMOVE:                 // 0x101
-            if (msg->buf != NULL) {
-                char *path = (char *)msg->buf;
-                ret = tkl_fs_remove(path);
-            }
-            result.buf32[0] = ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_MODE:                   // 0x102
-            if (msg->buf != NULL) {
-                char *path = (char *)msg->buf;
-                uint32_t mode = 0;
-                ret = tkl_fs_mode(path, &mode);
-                result.buf32[0] = ret;
-                result.buf32[1] = (int)mode;
-                result.len = sizeof(ret) + sizeof(mode);
-            } else {
-                result.buf32[0] = ret;
-                result.len = sizeof(ret);
-            }
-            break;
-        case TKL_IPC_TYPE_FS_IS_EXIST:               // 0x103
-            if (msg->buf != NULL) {
-                char *path = (char *)msg->buf;
-                BOOL_T is_exist = 0;
-                ret = tkl_fs_is_exist(path, &is_exist);
-                result.buf32[0] = ret;
-                result.buf32[1] = (int)is_exist;
-                result.len = 2*sizeof(int);
-            } else {
-                result.buf32[0] = ret;
-                result.len = sizeof(int);
-            }
-            break;
-        case TKL_IPC_TYPE_FS_RENAME:                 // 0x104
-            if (msg->buf != NULL) {
-                char *path_old = (char *)msg->buf;
-                int ofs = strlen(path_old) + 1;
-                char *path_new = (char *)((char *)msg->buf + ofs);
-                if (path_new != NULL) {
-                    ret = tkl_fs_rename(path_old, path_new);
-                }
-            }
-            result.buf32[0] = ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_DIR_OPEN:               // 0x105
-            if (msg->buf != NULL) {
-                char *path = (char *)msg->buf;
-                TUYA_DIR dir = NULL;
-                ret = tkl_dir_open(path, &dir);
-                result.buf32[0] = ret;
-                result.buf32[1] = (int)dir;
-                result.len = 2*sizeof(ret);
-            } else {
-                result.buf32[0] = ret;
-                result.len = sizeof(int);
-            }
-            break;
-        case TKL_IPC_TYPE_FS_DIR_CLOSE:              // 0x106
-            if (msg->buf != NULL) {
-                TUYA_DIR dir = (TUYA_DIR)msg->buf32[0];
-                ret = tkl_dir_close(dir);
-            }
-            result.buf32[0] = ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_DIR_READ:               // 0x107
-            if (msg->buf != NULL) {
-                TUYA_DIR dir = (TUYA_DIR)msg->buf32[0];
-                ret = tkl_dir_read(dir, &info);
-                result.buf32[0] = ret;
-                result.buf32[1] = (int)info;
-                result.len = 2*sizeof(int);
-            } else {
-                result.buf32[0] = ret;
-                result.len = sizeof(ret);
-            }
-            break;
-        case TKL_IPC_TYPE_FS_DIR_NAME:               // 0x108
-            // do nothing
-            break;
-        case TKL_IPC_TYPE_FS_DIR_IS_DIRECTORY:       // 0x109
-            // do nothing
-            break;
-        case TKL_IPC_TYPE_FS_DIR_IS_REGULAR:         // 0x10a
-            // do nothing
-            break;
-        case TKL_IPC_TYPE_FS_FOPEN:                  // 0x10b
-            if (msg->buf != NULL) {
-                char *path = (char *)msg->buf;
-                uint32_t path_ofs = strlen(path) + 1;
-                char *mode = (char *)msg->buf + path_ofs;
+            case TKL_IPC_TYPE_SYS:
+                tkl_sys_ipc_func(msg);
+                break;
 
-                bk_printf("open %s, mode: %s\r\n", path, mode);
-                TUYA_FILE file = tkl_fopen(path, mode);
-                result.buf32[0] = (int)file;
-                result.len = sizeof(int);
-            } else {
-                result.buf32[0] = ret;
-                result.len = sizeof(ret);
-            }
-            break;
-        case TKL_IPC_TYPE_FS_FCLOSE:                 // 0x10c
-            if (msg->buf != NULL) {
-                TUYA_FILE file = (TUYA_FILE)msg->buf32[0];
-                ret = tkl_fclose(file);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FREAD:                  // 0x10d
-            if (msg->buf != NULL) {
-                uint32_t *info = msg->buf32;
-                uint8_t *buf = info[0];
-                int bytes =  info[1];
-                TUYA_FILE file = (TUYA_FILE)info[2];
-                ret = tkl_fread(buf, bytes, file);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FWRITE:                 // 0x10e
-            if (msg->buf != NULL) {
-                uint32_t *info = msg->buf32;
-                uint8_t *buf = info[0];
-                int bytes =  info[1];
-                TUYA_FILE file = (TUYA_FILE)info[2];
-                ret = tkl_fwrite(buf, bytes, file);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FSYNC:                  // 0x10f
-            if (msg->buf != NULL) {
-                int *info = (int *)msg->buf32;
-                int fd = info[0];
-                ret = tkl_fsync(fd);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FGETS:                  // 0x110
-            if (msg->buf != NULL) {
-                uint32_t *info = msg->buf32;
-                uint8_t *buf = info[0];
-                int bytes =  info[1];
-                TUYA_FILE file = (TUYA_FILE)info[2];
-                ret = tkl_fgets(buf, bytes, file);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FEOF:                   // 0x111
-            if (msg->buf != NULL) {
-                uint32_t *info = msg->buf32;
-                TUYA_FILE file = (TUYA_FILE)info[0];
-                ret = tkl_feof(file);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FSEEK:                  // 0x112
-            if (msg->buf != NULL) {
-                uint32_t *info = msg->buf32;
-                TUYA_FILE file = (TUYA_FILE)info[0];
-                INT64_T offs = (info[1] << 32) | info[2];
-                int whence = (TUYA_FILE)info[3];
-                ret = tkl_fseek(file, offs, whence);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FTELL:                  // 0x113
-            if (msg->buf != NULL) {
-                uint32_t *info = msg->buf32;
-                TUYA_FILE file = (TUYA_FILE)info[0];
-                ret = tkl_ftell(file);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FGETSIZE:               // 0x114
-            {
-                int size = 0;
-                if (msg->buf != NULL) {
-                    char *path = (char *)msg->buf;
-                    size = tkl_fgetsize(path);
-                }
-                result.buf32[0] = (int)size;
-                result.len = sizeof(ret);
-            }
-            break;
-        case TKL_IPC_TYPE_FS_FACCESS:                // 0x115
-            if (msg->buf != NULL) {
-                char *path = (char *)msg->buf;
-                uint32_t path_ofs = strlen(path) + 1;
-                char *mode = (char *)msg->buf + path_ofs;
-                bk_printf("tkl_faccess: %s, mode: %s", path, mode);
-                ret = tkl_faccess(path, mode);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FGETC:                  // 0x116
-            if (msg->buf != NULL) {
-                int *info = (int *)msg->buf;
-                TUYA_FILE file = (TUYA_FILE)info[0];
-                ret = tkl_fgetc(file);
-            }
-            result.buf32[0] = (int)ret;
-            result.len = sizeof(ret);
-            break;
-        case TKL_IPC_TYPE_FS_FFLUSH:                 // 0x117
-            break;
-        case TKL_IPC_TYPE_FS_FILENO:                 // 0x118
-            break;
-        case TKL_IPC_TYPE_FS_FTRUNCATE:              // 0x119
-            break;
-        default:
-            break;
+            case TKL_IPC_TYPE_TEST:
+#if CONFIG_SYS_CPU1
+                // tkl_test_ipc_func(msg);
+#endif
+                break;
+
+            default:
+                break;
+
+        }
     }
-
-    if (msg->type == TKL_IPC_TYPE_LVGL) {
-        tkl_lvgl_ipc_func_cb(handle, buf, buf_len);
-    } else {
-        // send result
-        tkl_ipc_send_no_sync(__ipc_handle[0], &result, sizeof(struct ipc_msg_s));
-        bk_printf("cpu0, ipc message type: %x, %p, result: %x %x %x %p\r\n", msg->type, buf, result.type, result.buf32[0], result.buf32[1], &result);
-    }
-#else // client
-    if (msg->type == TKL_IPC_TYPE_LVGL) {
-        tkl_lvgl_ipc_func_cb(handle, buf, buf_len);
-    } else {
-        extern uint32_t fs_result[2];
-        fs_result[0] = msg->buf32[0];
-        fs_result[1] = msg->buf32[1];
-        bk_printf("cpu1, ipc result type: %x %x %x %p\r\n", msg->type, fs_result[0], fs_result[1], buf);
-        tkl_semaphore_post(fs_api_access_sem);
-    }
-#endif // CONFIG_SYS_CPU0
 
     return 0;
 }
@@ -288,9 +76,83 @@ static OPERATE_RET tuya_ipc_cb(TKL_IPC_HANDLE handle, uint8_t *buf, uint32_t buf
 OPERATE_RET tuya_ipc_init(void)
 {
     TKL_IPC_CONF_T ipc_conf;
-    ipc_conf.cb = tuya_ipc_cb;
-    uint8_t cnt = 0;
-    tkl_ipc_init(&ipc_conf, __ipc_handle, &cnt);
+    ipc_conf.cb = __tuya_ipc_cb;
+    OPERATE_RET ret = tkl_ipc_init(&ipc_conf);
+    if(ret)
+        return ret;
+
+    ret = tkl_semaphore_create_init(&ipc_ack_sem, 0, 1);
+    if(ret)
+        return ret;
+
+    ret = tkl_mutex_create_init(&ipc_mutex0);
+    if(ret) {
+        tkl_semaphore_release(ipc_ack_sem);
+        ipc_ack_sem = NULL;
+        return ret;
+    }
+
+    ret = tkl_mutex_create_init(&ipc_mutex1);
+    if(ret) {
+        tkl_semaphore_release(ipc_ack_sem);
+        tkl_mutex_release(ipc_mutex0);
+        ipc_ack_sem = NULL;
+        return ret;
+    }
+
+    return 0;
+}
+
+OPERATE_RET tuya_ipc_send_sync(struct ipc_msg_s *msg)
+{
+    if(msg == NULL)
+        return OPRT_INVALID_PARM;
+
+    tkl_mutex_lock(ipc_mutex1);
+
+    ipc_req_msg = msg;
+
+#if TKL_IPC_DEBUG
+    tkl_ipc_debug(IPC_SEND_SYNC_START, msg->type, msg->subtype);
+#endif
+    tkl_ipc_send_no_sync((uint8_t *)msg, sizeof(struct ipc_msg_s));
+
+    // wait ack
+    OPERATE_RET ret = tkl_semaphore_wait(ipc_ack_sem, 5000);
+#if TKL_IPC_DEBUG
+    if (ret == OPRT_OS_ADAPTER_SEM_WAIT_FAILED) {
+        tkl_ipc_debug(IPC_SEND_SYNC_TIMEOUT, msg->type, msg->subtype);
+    } else {
+        tkl_ipc_debug(IPC_SEND_SYNC_COMPLETE, msg->type, msg->subtype);
+    }
+#endif
+
+    ipc_req_msg = NULL;
+
+    tkl_mutex_unlock(ipc_mutex1);
+
+    return ret;
+}
+
+
+OPERATE_RET tuya_ipc_send_no_sync(struct ipc_msg_s *msg)
+{
+    if(msg == NULL)
+        return OPRT_INVALID_PARM;
+
+    tkl_mutex_lock(ipc_mutex0);
+#if TKL_IPC_DEBUG
+    tkl_ipc_debug(IPC_SEND_NO_SYNC_START, msg->type, msg->subtype);
+#endif
+
+    tkl_ipc_send_no_sync((uint8_t *)msg, sizeof(struct ipc_msg_s));
+
+#if TKL_IPC_DEBUG
+    tkl_ipc_debug(IPC_SEND_NO_SYNC_COMPLETE, msg->type, msg->subtype);
+#endif
+
+    tkl_mutex_unlock(ipc_mutex0);
+
     return 0;
 }
 

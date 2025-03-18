@@ -56,7 +56,7 @@ OPERATE_RET  tkl_rsa_free( TKL_ASYMMETRICAY_HANDLE ctx );
  */
 OPERATE_RET  tkl_rsa_gen_key(TKL_ASYMMETRICAY_HANDLE ctx,
                                 uint32_t nbits,
-                                int32_t exponent);
+                                int exponent);
 
 
 /**

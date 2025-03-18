@@ -92,7 +92,6 @@ int tkl_system_get_free_heap_size(void);
 int tkl_system_memcmp(const void *str1, const void *str2, SIZE_T n);
 
 
-#if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM==1)
 /**
 * @brief Alloc psram memory of system
 *
@@ -115,7 +114,13 @@ void *tkl_system_psram_malloc(SIZE_T size);
 */
 void tkl_system_psram_free(void* ptr);
 
-#endif
+/**
+ * @brief Re-allocate the memory
+ *
+ * @param[in]       nitems      source memory address
+ * @param[in]       size        the size after re-allocate
+ */
+void *tkl_system_psram_realloc(void* ptr, size_t size);
 
 #ifdef __cplusplus
 }
