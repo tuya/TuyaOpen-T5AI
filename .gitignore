@@ -36,6 +36,8 @@ xx*.sh
 /t5_os/bk_idk/tools/build_tools/part_table_tools/config/gen_files_list.txt
 /t5_os/bk_idk/tools/env_tools/beken_packager/partition_bootloader.json
 /t5_os/projects/tuya_app/config/bk7258/partitions.csv
+/t5_os/projects/tuya_app/config/bk7258/config
 /t5_os/projects/tuya_app/tuya_build_env
 /t5_os/projects/tuya_app/config/bk7258/usr_gpio_cfg.h
 /t5_os/.app
+*.build/
