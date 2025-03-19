@@ -36,6 +36,8 @@ set(incs
     "include/timer"
     "include/uart"
     "include/utilities/include"
+    "include/vad"
+    "include/vad/lib"
     "include/wakeup"
     "include/watchdog"
     "include/wifi"
@@ -107,6 +109,7 @@ list(APPEND srcs
     src/misc/qflash.c
     src/misc/sflash.c
     src/misc/tuya_tkl_ipc.c
+    src/misc/ty_vad_app.c
     src/driver/tkl_adc.c
     src/driver/tkl_pwm.c
     src/driver/tkl_uart.c
@@ -121,6 +124,9 @@ list(APPEND srcs ${utilities_srcs})
 endif()
 
 armino_component_register(SRCS "${srcs}" INCLUDE_DIRS "${incs}" REQUIRES bk_common bk_log multimedia bk_usb bk_draw_blend media_service lvgl bk_vfs bk_cli lwip_intf_v2_1)
+
+# platform/t5ai/tuyaos/tuyaos_adapter/include/vad/lib/libvad.a
+target_link_libraries(${COMPONENT_LIB} INTERFACE "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/vad/lib/libvad.a")
 
 #add tuya lib
 if (CONFIG_SYS_CPU1)
