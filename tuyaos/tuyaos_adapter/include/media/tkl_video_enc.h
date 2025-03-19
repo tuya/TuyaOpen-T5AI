@@ -50,7 +50,7 @@ typedef struct
 {
     TKL_MEDIA_FRAME_TYPE_E frametype;                    // bitrate,kbps
     TKL_MEDIA_CODEC_TYPE_E codectype;                    // codec type
-    char    *pbuf;                                     // frame buffer
+    CHAR_T    *pbuf;                                     // frame buffer
     uint32_t     buf_size;                                 // buffer size
     uint32_t     used_size;                                // used buffer size
     uint32_t     width;                                    // frame width
@@ -102,8 +102,8 @@ typedef struct
 
 typedef struct
 {
-    int32_t enable;
-    int32_t is_dls;
+    int enable;
+    int is_dls;
 }TKL_VENC_OSD_T;
 
 typedef enum {
@@ -138,16 +138,16 @@ typedef enum {
 } TKL_VENC_PROFILE_E;
 
 typedef struct {
-    int32_t bitrate;                                     // 单位kbps
-    int32_t fps;
-    int32_t gop;
+    int bitrate;                                     // 单位kbps
+    int fps;
+    int gop;
     TKL_VENC_PROFILE_E profile;
 } TKL_VENC_H264_ATTR_T;
 
 typedef struct {
-    int32_t bitrate;                                     // 单位kbps
-    int32_t fps;
-    int32_t gop;
+    int bitrate;                                     // 单位kbps
+    int fps;
+    int gop;
     TKL_VENC_PROFILE_E profile;
 } TKL_VENC_H265_ATTR_T;
 
@@ -156,8 +156,8 @@ typedef struct {
 } TKL_VENC_JPEG_ATTR_T;
 
 typedef struct {
-    int32_t width;
-    int32_t height;
+    int width;
+    int height;
     TKL_MEDIA_CODEC_TYPE_E codectype;
     union {
         TKL_VENC_H264_ATTR_T h264_attr;
@@ -175,7 +175,7 @@ typedef struct {
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_venc_init(int32_t vi_chn, TKL_VENC_CONFIG_T *pconfig, int32_t count);
+OPERATE_RET tkl_venc_init(int vi_chn, TKL_VENC_CONFIG_T *pconfig, int count);
 
 /**
 * @brief video encode get frame

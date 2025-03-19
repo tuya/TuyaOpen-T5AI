@@ -119,7 +119,7 @@ OPERATE_RET tkl_spi_deinit(TUYA_SPI_NUM_E port);
 ### tkl_spi_send
 
 ```
-OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint16_t size);
+OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, UINT16_T size);
 ```
 
 - 功能描述:
@@ -134,7 +134,7 @@ OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint16_t size);
 ### tkl_spi_recv
 
 ```
-OPERATE_RET tkl_spi_recv(TUYA_SPI_NUM_E port, void *data, uint16_t size);
+OPERATE_RET tkl_spi_recv(TUYA_SPI_NUM_E port, void *data, UINT16_T size);
 ```
 
 - 功能描述:
@@ -239,7 +239,7 @@ OPERATE_RET tkl_spi_irq_disable(TUYA_SPI_NUM_E port);
 ### tkl_spi_get_data_count
 
 ```
-int32_t tkl_spi_get_data_count(TUYA_SPI_NUM_E port);
+int tkl_spi_get_data_count(TUYA_SPI_NUM_E port);
 ```
 
 - 功能描述:

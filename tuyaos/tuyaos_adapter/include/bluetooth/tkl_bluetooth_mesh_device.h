@@ -27,7 +27,7 @@ extern "C" {
  * @param   [in] appkey_idx  use which appkey index
  * @return  tx result
  * */
-OPERATE_RET tkl_mesh_access_normal_data_send(USHORT_T src_addr, USHORT_T dst_addr, uint32_t opcode, UCHAR_T *data, USHORT_T data_len, USHORT_T appkey_idx);
+OPERATE_RET tkl_mesh_access_normal_data_send(USHORT_T src_addr, USHORT_T dst_addr, uint32_t opcode, uint8_t *data, USHORT_T data_len, USHORT_T appkey_idx);
 
 /**
  * @brief   Send mesh data to unicast/group addr.
@@ -38,7 +38,7 @@ OPERATE_RET tkl_mesh_access_normal_data_send(USHORT_T src_addr, USHORT_T dst_add
  * @param   [in] data_len  data point
  * @return  tx result
  * */
-OPERATE_RET tkl_mesh_access_rsp_data_send(USHORT_T src_addr, USHORT_T dst_addr, uint32_t opcode, UCHAR_T *data, USHORT_T data_len);
+OPERATE_RET tkl_mesh_access_rsp_data_send(USHORT_T src_addr, USHORT_T dst_addr, uint32_t opcode, uint8_t *data, USHORT_T data_len);
 
 /**
  * @brief   Init the mesh node composition data(head).
@@ -54,7 +54,7 @@ void tkl_mesh_composition_data_set(USHORT_T company_id, USHORT_T product_id, USH
  * @param   [in] uuid  mesh universally unique identifier
  * @return  NULL
  * */
-void tkl_mesh_uuid_set(UCHAR_T* uuid);
+void tkl_mesh_uuid_set(uint8_t* uuid);
 
 /**
  * @brief   Function to subscribe a group address for a model of the element.
@@ -81,7 +81,7 @@ USHORT_T* tkl_mesh_group_addr_sub_list_get(USHORT_T ele_idx, uint32_t model_id);
  * @param   [in] step  retransmission interval = (net_trans_steps + 1) * 10ms
  * @return  NULL
  * */
-void tkl_mesh_network_transmit_set(UCHAR_T cnt, UCHAR_T step);
+void tkl_mesh_network_transmit_set(uint8_t cnt, uint8_t step);
 
 /**
  * @brief   Get the network layer retransmit parameters.
@@ -89,7 +89,7 @@ void tkl_mesh_network_transmit_set(UCHAR_T cnt, UCHAR_T step);
  * @param   [out] step  retransmission interval = (net_trans_steps + 1) * 10ms
  * @return  NULL
  * */
-void tkl_mesh_network_transmit_get(UCHAR_T* cnt, UCHAR_T* step);
+void tkl_mesh_network_transmit_get(uint8_t* cnt, uint8_t* step);
 
 /**
  * @brief   Set the node PB-GATT ADV use identity type.
@@ -103,7 +103,7 @@ void tkl_mesh_mode_identity_set(void);
  * @param   [in] step  retransmission interval = (net_trans_steps + 1) * 10ms
  * @return  NULL
  * */
-void tkl_mesh_network_relay_retransmit_set(UCHAR_T cnt, UCHAR_T step);
+void tkl_mesh_network_relay_retransmit_set(uint8_t cnt, uint8_t step);
 
 /**
  * @brief   Get the network layer retransmit parameters.
@@ -111,7 +111,7 @@ void tkl_mesh_network_relay_retransmit_set(UCHAR_T cnt, UCHAR_T step);
  * @param   [out] step  retransmission interval = (net_trans_steps + 1) * 10ms
  * @return  NULL
  * */
-void tkl_mesh_network_relay_retransmit_get(UCHAR_T* cnt, UCHAR_T* step);
+void tkl_mesh_network_relay_retransmit_get(uint8_t* cnt, uint8_t* step);
 
 /**
  * @brief   Set the node feature.
@@ -120,7 +120,7 @@ void tkl_mesh_network_relay_retransmit_get(UCHAR_T* cnt, UCHAR_T* step);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_mesh_node_features_set(MESH_FEATURE_T featrue, UCHAR_T enable);
+OPERATE_RET tkl_mesh_node_features_set(MESH_FEATURE_T featrue, uint8_t enable);
 
 /**
  * @brief   Get the node feature.
@@ -128,7 +128,7 @@ OPERATE_RET tkl_mesh_node_features_set(MESH_FEATURE_T featrue, UCHAR_T enable);
  * @return  Enable : 1
  *          Disable : 0
  * */
-UCHAR_T tkl_mesh_node_features_get(MESH_FEATURE_T featrue);
+uint8_t tkl_mesh_node_features_get(MESH_FEATURE_T featrue);
 
 /**
  * @brief   Set the node defalut ttl.
@@ -136,13 +136,13 @@ UCHAR_T tkl_mesh_node_features_get(MESH_FEATURE_T featrue);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_mesh_node_default_ttl_set(UCHAR_T ttl);
+OPERATE_RET tkl_mesh_node_default_ttl_set(uint8_t ttl);
 
 /**
  * @brief   Get the node defalut ttl.
  * @return  ttl
  * */
-UCHAR_T tkl_mesh_node_default_ttl_get(void);
+uint8_t tkl_mesh_node_default_ttl_get(void);
 
 /**
  * @brief   Save all mesh param into flash.
@@ -154,7 +154,7 @@ void tkl_mesh_node_param_save_all(void);
  * @brief   Get the mesh node provision state.
  * @return  the provision state
  * */
-UCHAR_T tkl_mesh_get_if_prov_success(void);
+uint8_t tkl_mesh_get_if_prov_success(void);
 
 /**
  * @brief   Get the mesh node primary element address.
@@ -175,14 +175,14 @@ void tkl_mesh_primary_ele_addr_set(USHORT_T addr, int flash_save_en);
  * @param   [in] key  point of device key
  * @return  NULL
  * */
-void tkl_mesh_device_key_update(UCHAR_T *key);
+void tkl_mesh_device_key_update(uint8_t *key);
 
 /**
  * @brief   get the mesh node device key.
  * @param   [in] key  point of device key
  * @return  NULL
  * */
-void tkl_mesh_device_key_get(UCHAR_T *key);
+void tkl_mesh_device_key_get(uint8_t *key);
 
 /**
  * @brief   Reset the seq cache.
@@ -219,7 +219,7 @@ void tkl_mesh_network_recover(void);
  * @param   [in] enable  enable or disable the adv
  * @return  NULL
  * */
-void tkl_mesh_node_unprovision_beacon_enable(UCHAR_T enable);
+void tkl_mesh_node_unprovision_beacon_enable(uint8_t enable);
 
 /**
  * @brief   Close the mesh node gatt adv.
@@ -227,7 +227,7 @@ void tkl_mesh_node_unprovision_beacon_enable(UCHAR_T enable);
  * @param   [in] enable  enable or disable the adv
  * @return  NULL
  * */
-void tkl_mesh_node_pbgatt_adv_enable(UCHAR_T enable);
+void tkl_mesh_node_pbgatt_adv_enable(uint8_t enable);
 
 /**
  * @brief   Update the mesh network provision data and the app key data.
@@ -239,7 +239,7 @@ void tkl_mesh_node_pbgatt_adv_enable(UCHAR_T enable);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_mesh_provision_data_set(UCHAR_T prov_en, TKL_NET_PROV_DATA_T *prov_data, TKL_APP_KEY_DATA_T *app_key);
+OPERATE_RET tkl_mesh_provision_data_set(uint8_t prov_en, TKL_NET_PROV_DATA_T *prov_data, TKL_APP_KEY_DATA_T *app_key);
 
 /**
  * @brief   Bind all the model use the appkey index input.
@@ -247,7 +247,7 @@ OPERATE_RET tkl_mesh_provision_data_set(UCHAR_T prov_en, TKL_NET_PROV_DATA_T *pr
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_mesh_model_appkey_bind_all(uint16_t appkey_idx);
+OPERATE_RET tkl_mesh_model_appkey_bind_all(UINT16_T appkey_idx);
 
 /**
  * @brief   Function to register a elemennt.
@@ -264,7 +264,7 @@ OPERATE_RET tkl_mesh_element_register(USHORT_T element_index);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_mesh_model_register(UCHAR_T element_index, TKL_MESH_MODEL_HADLE_T *pmodel_info);
+OPERATE_RET tkl_mesh_model_register(uint8_t element_index, TKL_MESH_MODEL_HADLE_T *pmodel_info);
 
 /**
  * @brief   Function to register a mesh net state callback into tkl.

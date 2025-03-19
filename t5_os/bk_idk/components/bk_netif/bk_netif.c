@@ -62,6 +62,8 @@ bk_err_t netif_wifi_event_cb(void *arg, event_module_t event_module,
 
 bk_err_t bk_netif_init(void)
 {
+	//modified by tuya
+#if 0
 #if (!CONFIG_RTT) && CONFIG_NO_HOSTED
 	extern void net_wlan_initial(void);
 	net_wlan_initial();
@@ -69,6 +71,7 @@ bk_err_t bk_netif_init(void)
 
 	BK_LOG_ON_ERR(bk_event_register_cb(EVENT_MOD_WIFI, EVENT_ID_ALL,
 			netif_wifi_event_cb, NULL));
+#endif
 	return BK_OK;
 }
 

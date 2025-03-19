@@ -230,6 +230,10 @@ typedef struct
 		const lcd_qspi_t *qspi;/**< QSPI interface lcd device config */
 		const lcd_spi_t *spi;  /**< SPI interface lcd device config */
 	};
+	// Modified by TUYA Start
+	uint32_t ldo_pin;
+	bool     ldo_lv;
+	// Modified by TUYA End
 	void (*init)(void);                   /**< lcd device initial function */
 	bk_err_t (*lcd_off)(void);            /**< lcd off */
 } lcd_device_t;

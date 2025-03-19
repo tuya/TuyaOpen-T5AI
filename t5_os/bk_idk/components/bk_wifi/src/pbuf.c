@@ -4,6 +4,7 @@
 #if (CONFIG_FULLY_HOSTED || CONFIG_SEMI_HOSTED)
 struct pbuf *pbuf_alloc(int dummy0, uint32_t len, int dummy1)
 {
+#error 11111111111111111111111111111
 	struct pbuf *p = wifi_malloc(len + sizeof(*p));
 	if (!p)
 		return 0;

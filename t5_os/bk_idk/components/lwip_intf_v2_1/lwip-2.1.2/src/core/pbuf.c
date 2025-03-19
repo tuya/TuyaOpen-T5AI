@@ -99,17 +99,18 @@ pbuf_skip_const(const struct pbuf *in, u16_t in_offset, u16_t *out_offset);
 #define PBUF_POOL_IS_EMPTY()
 #else /* !LWIP_TCP || !TCP_QUEUE_OOSEQ || !PBUF_POOL_FREE_OOSEQ */
 
-#if !NO_SYS
-#ifndef PBUF_POOL_FREE_OOSEQ_QUEUE_CALL
-#include "lwip/tcpip.h"
-#define PBUF_POOL_FREE_OOSEQ_QUEUE_CALL()  do { \
-  if (tcpip_try_callback(pbuf_free_ooseq_callback, NULL) != ERR_OK) { \
-      SYS_ARCH_PROTECT(old_level); \
-      pbuf_free_ooseq_pending = 0; \
-      SYS_ARCH_UNPROTECT(old_level); \
-  } } while(0)
-#endif /* PBUF_POOL_FREE_OOSEQ_QUEUE_CALL */
-#endif /* !NO_SYS */
+#define PBUF_POOL_FREE_OOSEQ_QUEUE_CALL()
+// #if !NO_SYS
+// #ifndef PBUF_POOL_FREE_OOSEQ_QUEUE_CALL
+// #include "lwip/tcpip.h"
+// #define PBUF_POOL_FREE_OOSEQ_QUEUE_CALL()  do { \
+//   if (tcpip_try_callback(pbuf_free_ooseq_callback, NULL) != ERR_OK) { \
+//       SYS_ARCH_PROTECT(old_level); \
+//       pbuf_free_ooseq_pending = 0; \
+//       SYS_ARCH_UNPROTECT(old_level); \
+//   } } while(0)
+// #endif /* PBUF_POOL_FREE_OOSEQ_QUEUE_CALL */
+// #endif /* !NO_SYS */
 
 volatile u8_t pbuf_free_ooseq_pending;
 #define PBUF_POOL_IS_EMPTY() pbuf_pool_is_empty()
@@ -129,6 +130,7 @@ static
 void
 pbuf_free_ooseq(void)
 {
+#if 0
   struct tcp_pcb *pcb;
   SYS_ARCH_SET(pbuf_free_ooseq_pending, 0);
 
@@ -140,6 +142,7 @@ pbuf_free_ooseq(void)
       return;
     }
   }
+#endif
 }
 
 #if !NO_SYS
@@ -302,7 +305,9 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       else
         p = (struct pbuf *)mem_malloc(alloc_len);
 #else
-      p = (struct pbuf *)mem_malloc(alloc_len);
+      // p = (struct pbuf *)mem_malloc(alloc_len);
+      extern VOID_T* tkl_system_malloc(CONST SIZE_T size);
+      p = tkl_system_malloc(alloc_len);
 #endif
       if (p == NULL) {
         return NULL;
@@ -318,8 +323,8 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       return NULL;
   }
 #if CONFIG_BRIDGE
-  p->sn = 0; 
-  p->elfags = 0; 
+  p->sn = 0;
+  p->elfags = 0;
 #endif
   LWIP_DEBUGF(PBUF_DEBUG | LWIP_DBG_TRACE, ("pbuf_alloc(length=%"U16_F") == %p\n", length, (void *)p));
 #if PBUF_LIFETIME_DBG
@@ -811,7 +816,9 @@ pbuf_free(struct pbuf *p)
           memp_free(MEMP_PBUF, p);
           /* type == PBUF_RAM */
         } else if (alloc_src == PBUF_TYPE_ALLOC_SRC_MASK_STD_HEAP) {
-          mem_free(p);
+          // mem_free(p);
+          extern VOID_T tkl_system_free(VOID_T* ptr);
+          tkl_system_free(p);
         } else {
           /* @todo: support freeing other types */
           LWIP_ASSERT("invalid pbuf type", 0);
@@ -891,7 +898,7 @@ pbuf_length_get(void *p,u32_t *size)
 {
   u32_t len;
   u8_t alloc_src;
-  
+
   if ( (p == NULL) || (size == NULL) )
   {
     LWIP_DEBUGF(PBUF_DEBUG,("pbuf = NULL or size = NULL \n"));
@@ -899,10 +906,10 @@ pbuf_length_get(void *p,u32_t *size)
   }
 
   alloc_src = pbuf_get_allocsrc((struct pbuf *)p);
-  if (alloc_src == PBUF_TYPE_ALLOC_SRC_MASK_STD_MEMP_PBUF_POOL) 
+  if (alloc_src == PBUF_TYPE_ALLOC_SRC_MASK_STD_MEMP_PBUF_POOL)
   {
     *size = PBUF_POOL_BUFSIZE_ALIGNED;
-  } 
+  }
   else if (alloc_src == PBUF_TYPE_ALLOC_SRC_MASK_STD_MEMP_PBUF)
   {
     len = get_mem_size(p);

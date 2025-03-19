@@ -27,7 +27,7 @@ extern "C" {
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_flash_read(uint32_t addr, UCHAR_T *dst, uint32_t size);
+OPERATE_RET tkl_flash_read(uint32_t addr, uint8_t *dst, uint32_t size);
 
 /**
 * @brief write flash
@@ -40,7 +40,7 @@ OPERATE_RET tkl_flash_read(uint32_t addr, UCHAR_T *dst, uint32_t size);
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_flash_write(uint32_t addr, const UCHAR_T *src, uint32_t size);
+OPERATE_RET tkl_flash_write(uint32_t addr, const uint8_t *src, uint32_t size);
 
 /**
 * @brief erase flash

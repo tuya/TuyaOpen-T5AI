@@ -4,7 +4,9 @@
 #include "bk_wifi.h"
 #if CONFIG_WIFI_ENABLE
 #include "net.h"
-#include "lwip/ping.h"
+// Modified by TUYA Start
+// #include "lwip/ping.h"
+// Modified by TUYA End
 #include <components/event.h>
 #include <components/netif.h>
 
@@ -20,7 +22,9 @@ int at_wifi_stadisconn_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
 int at_wifi_ap_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
 int at_wifi_stop_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
 int at_wifi_state_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
-int at_wifi_ping_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
+// Modified by TUYA Start
+// int at_wifi_ping_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
+// Modified by TUYA End
 
 const at_command_t wifi_at_cmd_table[] = {
     {0, "SCAN", 1, "scan ssid...", at_wifi_scan_cmd},
@@ -29,7 +33,9 @@ const at_command_t wifi_at_cmd_table[] = {
     {3, "APSTART", 0, "start ap", at_wifi_ap_cmd},
     {4, "STOP", 0, "disable sta/ap", at_wifi_stop_cmd},
     {5, "STATE", 0, "get wifi state", at_wifi_state_cmd},
-    {6, "PING", 0, "wifi ping", at_wifi_ping_cmd}
+// Modified by TUYA Start
+//    {6, "PING", 0, "wifi ping", at_wifi_ping_cmd}
+// Modified by TUYA End
 };
 
 int wifi_at_cmd_cnt(void)
@@ -437,6 +443,8 @@ error:
 	return err;
 }
 
+// Modified by TUYA Start
+#if 0
 int at_wifi_ping_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
 	char *msg = NULL;
@@ -476,4 +484,7 @@ error:
 	os_memcpy(pcWriteBuffer, msg, os_strlen(msg));
 	return err;
 }
+#endif
+// Modified by TUYA End
+
 #endif

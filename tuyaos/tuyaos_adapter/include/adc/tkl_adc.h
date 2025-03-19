@@ -64,7 +64,7 @@ uint32_t tkl_adc_ref_voltage_get(TUYA_ADC_NUM_E port_num);
  *
  * @return temperature(bat: 'C)
  */
-int32_t tkl_adc_temperature_get(void);
+int tkl_adc_temperature_get(void);
 
 /**
  * @brief adc read
@@ -75,7 +75,7 @@ int32_t tkl_adc_temperature_get(void);
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_adc_read_data(TUYA_ADC_NUM_E port_num, int32_t *buff, uint16_t len);
+OPERATE_RET tkl_adc_read_data(TUYA_ADC_NUM_E port_num, int *buff, UINT16_T len);
 
 /**
  * @brief read single channel
@@ -87,7 +87,7 @@ OPERATE_RET tkl_adc_read_data(TUYA_ADC_NUM_E port_num, int32_t *buff, uint16_t l
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  *
  */
-OPERATE_RET tkl_adc_read_single_channel(TUYA_ADC_NUM_E port_num, uint8_t ch_id, int32_t *data);
+OPERATE_RET tkl_adc_read_single_channel(TUYA_ADC_NUM_E port_num, uint8_t ch_id, int *data);
 
 /**
  * @brief read voltage
@@ -99,7 +99,7 @@ OPERATE_RET tkl_adc_read_single_channel(TUYA_ADC_NUM_E port_num, uint8_t ch_id, 
  *
  */
 
-OPERATE_RET tkl_adc_read_voltage(TUYA_ADC_NUM_E port_num, int32_t *buff, uint16_t len);
+OPERATE_RET tkl_adc_read_voltage(TUYA_ADC_NUM_E port_num, int *buff, UINT16_T len);
 
 #ifdef __cplusplus
 }

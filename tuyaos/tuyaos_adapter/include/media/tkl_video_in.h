@@ -52,20 +52,20 @@ typedef enum
 
 typedef struct
 {
-    char conf[128];                                             // isp conf path
-    char conf1[128];                                            // isp conf1 path
-    char conf2[128];                                            // isp conf2 path
-    char conf3[128];                                            // isp conf3 path
-    char version[32];                                           // version num
-    char name[16];                                              // isp sensor num
+    CHAR_T conf[128];                                             // isp conf path
+    CHAR_T conf1[128];                                            // isp conf1 path
+    CHAR_T conf2[128];                                            // isp conf2 path
+    CHAR_T conf3[128];                                            // isp conf3 path
+    CHAR_T version[32];                                           // version num
+    CHAR_T name[16];                                              // isp sensor num
     TKL_ISP_DN_SWITCH_CONFIG_T isp_dn_switch_config;              // ADN switch config
     TKL_VI_SENSOR_CBUS_TYPE_E  sensor_type;                       // sensor control bus type
-    int32_t              addr;                                    // sensor address
-    int32_t              width;                                   // sensor width
-    int32_t              height;                                  // sensor height
+    int              addr;                                    // sensor address
+    int              width;                                   // sensor width
+    int              height;                                  // sensor height
     TKL_ISP_FIG_STYLE_CONFIG_T isp_fig_style_day;                 // isp fig style in day
     TKL_ISP_FIG_STYLE_CONFIG_T isp_fig_style_night;               // isp fig style in night
-    int32_t              fps;                                     // sensor fps
+    int              fps;                                     // sensor fps
 }TKL_VI_ISP_CONFIG_T;
 
 typedef enum
@@ -106,10 +106,10 @@ typedef struct
 
 typedef struct
 {
-    int32_t              enable;                                  // 1,enable,0,disable
+    int              enable;                                  // 1,enable,0,disable
     TKL_VI_CHN_E         chn;                                     // video input channel
-    int32_t              mirror;                                  // mirror defaults
-    int32_t              filp;                                    // filp defaults
+    int              mirror;                                  // mirror defaults
+    int              filp;                                    // filp defaults
     TKL_VI_ISP_CONFIG_T  isp;                                     // isp config
     void * pdata;                                                 // reserver data
 }TKL_VI_CONFIG_T;
@@ -124,8 +124,8 @@ typedef struct
 
 typedef struct
 {
-    int32_t x;
-    int32_t y;
+    int x;
+    int y;
 } TKL_VI_POINT_T;
 
 typedef struct
@@ -144,7 +144,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t count;
+    int count;
     TKL_VI_DETECT_TARGET_T target[TKL_VI_TARGET_MAX];
     union{
         TKL_VI_MD_RESULT_T md;
@@ -156,7 +156,7 @@ typedef struct
 {
     uint32_t roi_count;                                           // 检测有效区域个数
     TKL_VI_RECT_T roi_rect[TKL_VI_MD_ROI_RECT_MAX];               // 区域框
-    int32_t track_enable;                                         // 移动追踪使能
+    int track_enable;                                         // 移动追踪使能
 } TKL_VI_MD_PARAM_T;
 
 typedef struct
@@ -167,7 +167,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t sensitivity;
+    int sensitivity;
     union{
         TKL_VI_MD_PARAM_T md;
         TKL_VI_PERI_PARAM_T peri;
@@ -176,8 +176,8 @@ typedef struct
 
 typedef struct
 {
-    char         *pmodel;                                       // 检测模型数据指针
-    int32_t         model_len;                                    // 检测模型的数据长度
+    CHAR_T         *pmodel;                                       // 检测模型数据指针
+    int         model_len;                                    // 检测模型的数据长度
 }TKL_VI_DETECT_CONFIG_T;
 
 /**
@@ -188,7 +188,7 @@ typedef struct
 *
 * @return OPRT_OK on success. Others on error, please refer to tkl_error_code.h
 */
-OPERATE_RET tkl_vi_init(TKL_VI_CONFIG_T *pconfig, int32_t count);
+OPERATE_RET tkl_vi_init(TKL_VI_CONFIG_T *pconfig, int count);
 
 /**
 * @brief vi set mirror and flip

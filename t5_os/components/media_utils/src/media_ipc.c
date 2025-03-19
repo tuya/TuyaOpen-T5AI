@@ -680,10 +680,10 @@ int media_ipc_init(void)
 #endif
 
 	ret = rtos_create_thread(&media_ipc_info->thread,
-								4,
+								9,
 								"ipc thread",
 								(beken_thread_function_t)media_ipc_thread_entry,
-								2048,
+								8192,
 								NULL);
 
 

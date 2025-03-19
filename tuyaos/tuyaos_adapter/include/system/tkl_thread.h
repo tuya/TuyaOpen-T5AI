@@ -34,7 +34,7 @@ typedef void (*THREAD_FUNC_T)(void*);
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
 OPERATE_RET tkl_thread_create(TKL_THREAD_HANDLE* thread,
-                              const char* name,
+                              const CHAR_T* name,
                               uint32_t stack_size,
                               uint32_t priority,
                               const THREAD_FUNC_T func,
@@ -83,7 +83,7 @@ OPERATE_RET tkl_thread_get_id(TKL_THREAD_HANDLE *thread);
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_thread_set_self_name(const char* name);
+OPERATE_RET tkl_thread_set_self_name(const CHAR_T* name);
 
 
 /**
@@ -150,7 +150,7 @@ OPERATE_RET tkl_thread_diagnose(TKL_THREAD_HANDLE thread);
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
 OPERATE_RET tkl_thread_create_in_psram(TKL_THREAD_HANDLE* thread,
-                              const char* name,
+                              const CHAR_T* name,
                               uint32_t stack_size,
                               uint32_t priority,
                               const THREAD_FUNC_T func,

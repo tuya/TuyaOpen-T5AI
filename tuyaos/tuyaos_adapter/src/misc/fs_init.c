@@ -1,6 +1,7 @@
 #include "os/os.h"
 #include "bk_posix.h"
 #include "driver/flash_partition.h"
+#include "driver/sd_card.h"
 #include "sdkconfig.h"
 #include <driver/qspi_flash_common.h>
 #include "tkl_system.h"
@@ -84,6 +85,7 @@ int littlefs_mount(const char *mount_path, int type)
         // block size一般为4096, 如果flash参数不同，该处需要修改
         partition.part_flash.page_size = 256;
         partition.part_flash.block_size = 4096;
+        bk_printf("inner-flash file system mount\r\n");
     } else {
         bk_printf("device type not support: %d\r\n", type);
         return -1;

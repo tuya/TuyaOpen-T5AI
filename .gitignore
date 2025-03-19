@@ -11,13 +11,6 @@ t5_os/build
 !t5_os/build/bk7258_cp1/armino_as_lib/include/common/sys_config.h
 !t5_os/build/bk7258_cp2/armino_as_lib/include/common/sys_config.h
 t5_os/.ver
-t5_os/tools/generate/config.json
-t5_os/tools/generate/*.cpr
-t5_os/tools/generate/*.out
-t5_os/tools/generate/*.bin
-!t5_os/tools/generate/bk7231n_bootloader.bin
-!t5_os/tools/generate/bk7231n_bootloader_enc.bin
-!t5_os/tools/generate/package.bin
 qt_proj/
 /toolchain/gcc-arm-none-eabi-5_4-2016q3
 /toolchain/gcc-arm-none-eabi-9-2020-q2-update/
@@ -27,9 +20,9 @@ qt_proj/
 *.pyc
 
 /t5_os/build
-/t5_os/bk_idk/tuya_build/
+/t5_os/bk_idk/build/
 /t5_os/bk_idk/build/*
-/t5_os/bk_idk/tuya_build/*
+/t5_os/bk_idk/build/*
 xx*.sh
 /t5_os/bk_idk/tools/build_tools/part_table_tools/config/gen_files_list.txt
 /t5_os/bk_idk/tools/build_tools/part_table_tools/config/inseqs.json
@@ -44,7 +37,7 @@ xx*.sh
 /t5_os/bk_idk/tools/env_tools/beken_packager/partition_bootloader.json
 /t5_os/projects/tuya_app/config/bk7258/partitions.csv
 /t5_os/projects/tuya_app/config/bk7258/config
-
-tuya_build_env/
-t5_os/.app
+/t5_os/projects/tuya_app/tuya_build_env
+/t5_os/projects/tuya_app/config/bk7258/usr_gpio_cfg.h
+/t5_os/.app
 *.build/

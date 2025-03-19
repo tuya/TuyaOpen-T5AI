@@ -2,6 +2,7 @@
 #include "tuya_cloud_types.h"
 #include "tkl_flash.h"
 
+#include "tkl_mutex.h"
 #include "tkl_output.h"
 #include <common/bk_typedef.h>
 #include "driver/flash.h"
@@ -23,20 +24,16 @@ typedef struct {
 #define FLASH_MAX_HANDLE_KEEP_TIME 10000    //10s
 
 /* TODO: need to consider whether to use locks at the TKL layer*/
-//extern int hal_flash_lock(void);
-//extern int hal_flash_unlock(void);
-extern void flash_lock(void);
-extern void flash_unlock(void);
 
 // total: 800000
 // Name     Begin       End         Length
 // boot     0x0         0x11000     68k
 // cpu0     0x11000     0x20f000    2040k
-// cpu1     0x20f000    0x3B8000    1700k
-// cpu2     0x3B8000    0x400000    288k   // resverd
-// ota_     0x400000    0x5FE000    2040k
-// ota      0x5FE000    0x600000    8k
-// fs       0x600000    0x7cb000    1836k
+// cpu1     0x20f000    0x473000    2448k
+// cpu2     0x473000    0x4cb000    352k   // resverd
+// ota      0x4cb000    0x6c9000    2040k
+// otam     0x6c9000    0x6cb000    8k
+// fs       0x6cb000    0x7cb000    1024k
 // ef       0x7cb000    0x7cd000    8k
 // kvp      0x7cd000    0x7ce000    4k
 // res      0x7ce000    0x7dd000    60k
@@ -51,9 +48,9 @@ extern void flash_unlock(void);
 
 
 #define APPLICATION_START               0x10000
-#define APPLICATION_SIZE                ((2040 + 1700 + 288 + 2040 + 8)* 1024)
+#define APPLICATION_SIZE                ((2040 + 2448 + 352 + 2040 + 8)* 1024)
 
-#define OTA_START                       0x5fe000
+#define OTA_START                       0x6c9000
 #define OTA_SIZE                        (8 * 1024)
 
 #if defined(KV_PROTECTED_ENABLE) && (KV_PROTECTED_ENABLE==1)
@@ -79,6 +76,30 @@ extern void flash_unlock(void);
 #define FACTORY_FAST_CONNECT_DATA_START 0x7ff000
 #define FACTORY_FAST_CONNECT_DATA_SIZE  4096
 
+static TKL_MUTEX_HANDLE __tkl_flash_mutex = NULL;
+static OPERATE_RET __tkl_flash_opt_lock(void)
+{
+    OPERATE_RET ret = 0;
+    if (__tkl_flash_mutex == NULL) {
+        ret = tkl_mutex_create_init(&__tkl_flash_mutex);
+        if (ret != 0) {
+            bk_printf("flash mutex create failed\r\n");
+            return OPRT_COM_ERROR;
+        }
+    }
+
+    if (__tkl_flash_mutex)
+        tkl_mutex_lock(__tkl_flash_mutex);
+
+    return OPRT_OK;
+}
+
+static OPERATE_RET __tkl_flash_opt_unlock(void)
+{
+    if (__tkl_flash_mutex)
+        tkl_mutex_unlock(__tkl_flash_mutex);
+    return OPRT_OK;
+}
 /**
  * @brief flash 设置保护,enable 设置ture为全保护，false为半保护
  *
@@ -111,19 +132,19 @@ OPERATE_RET tkl_flash_set_protect(const BOOL_T enable)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_flash_read(uint32_t addr, UCHAR_T *dst, uint32_t size)
+OPERATE_RET tkl_flash_read(uint32_t addr, uint8_t *dst, uint32_t size)
 {
     if (NULL == dst) {
         return OPRT_INVALID_PARM;
     }
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
-    flash_lock();
+    __tkl_flash_opt_lock();
 
     bk_flash_read_bytes(addr, (uint8_t *)dst, size);
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
-    flash_unlock();
+    __tkl_flash_opt_unlock();
 
     return OPRT_OK;
 }
@@ -146,21 +167,21 @@ static unsigned int __uni_flash_is_protect_all(void)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_flash_write(uint32_t addr, const UCHAR_T *src, uint32_t size)
+OPERATE_RET tkl_flash_write(uint32_t addr, const uint8_t *src, uint32_t size)
 {
     if (NULL == src) {
         return OPRT_INVALID_PARM;
     }
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
-    flash_lock();
+    __tkl_flash_opt_lock();
 
     bk_flash_set_protect_type(FLASH_PROTECT_NONE);
     bk_flash_write_bytes(addr, (const uint8_t *)src, size);
     bk_flash_set_protect_type(FLASH_UNPROTECT_LAST_BLOCK);
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
-    flash_unlock();
+    __tkl_flash_opt_unlock();
 
     return OPRT_OK;
 }
@@ -183,7 +204,7 @@ OPERATE_RET tkl_flash_erase(uint32_t addr, uint32_t size)
     unsigned int sector_addr;
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
-    flash_lock();
+    __tkl_flash_opt_lock();
 
     bk_flash_set_protect_type(FLASH_PROTECT_NONE);
     for (i = start_sec; i <= end_sec; i++) {
@@ -193,7 +214,7 @@ OPERATE_RET tkl_flash_erase(uint32_t addr, uint32_t size)
     bk_flash_set_protect_type(FLASH_UNPROTECT_LAST_BLOCK);
 
     /* TODO: need to consider whether to use locks at the TKL layer*/
-    flash_unlock();
+    __tkl_flash_opt_unlock();
 
     return OPRT_OK;
 }

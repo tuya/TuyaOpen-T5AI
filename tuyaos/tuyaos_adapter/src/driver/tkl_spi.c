@@ -109,7 +109,8 @@ OPERATE_RET tkl_spi_deinit(TUYA_SPI_NUM_E port)
     return OPRT_OK;
 }
 
-OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint16_t size)
+extern bk_err_t bk_spi_dma_write_bytes_async(spi_id_t id, const void *data, uint32_t size);
+OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data,  uint32_t size)
 {
     bk_err_t ret = BK_OK;
 
@@ -120,17 +121,23 @@ OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint16_t size)
 #if (CONFIG_SPI_DMA)
     if (SPI_DMA_MODE_ENABLE == spi_config.dma_mode) {
         if (size >= SPI_DMA_MAX_LEN) {
-            return OPRT_INVALID_PARM;
-        }
-        
-        if (spi_irq[port].irq_enable) {
-            ret = bk_spi_dma_write_bytes_async((spi_id_t)port, data, size);
-        } else {
             ret = bk_spi_dma_write_bytes((spi_id_t)port, data, size);
-        }
-        
-        if (ret != BK_OK)
-            return OPRT_COM_ERROR;
+            if (ret != BK_OK)
+                return OPRT_COM_ERROR;
+
+            if (spi_irq[port].irq_enable) {
+                spi_irq[port].cb(port, TUYA_SPI_EVENT_TX_COMPLETE);
+            }
+        }else {
+            if (spi_irq[port].irq_enable) {
+                ret = bk_spi_dma_write_bytes_async((spi_id_t)port, data, size);
+            } else {
+                ret = bk_spi_dma_write_bytes((spi_id_t)port, data, size);
+            }
+            
+            if (ret != BK_OK)
+                return OPRT_COM_ERROR;
+        } 
     } else
 #endif
     {
@@ -147,6 +154,7 @@ OPERATE_RET tkl_spi_send(TUYA_SPI_NUM_E port, void *data, uint16_t size)
     return OPRT_OK;
 }
 
+extern bk_err_t bk_spi_dma_read_bytes_async(spi_id_t id, void *data, uint32_t size);
 OPERATE_RET tkl_spi_recv(TUYA_SPI_NUM_E port, void *data, uint16_t size)
 {
     bk_err_t ret = BK_OK;
@@ -236,6 +244,7 @@ OPERATE_RET tkl_spi_abort_transfer(TUYA_SPI_NUM_E port)
  */
 OPERATE_RET tkl_spi_irq_init(TUYA_SPI_NUM_E port, TUYA_SPI_IRQ_CB cb)
 {
+    
     if (port > TUYA_SPI_NUM_0) {
         return OPRT_INVALID_PARM;
     }

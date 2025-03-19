@@ -292,14 +292,14 @@ static void bk_usb_phy_register_refresh()
 #if CONFIG_USB_HOST
 	sys_drv_int_disable(USB_INTERRUPT_CTRL_BIT);
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t usb_ldo, active_level;
     extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	bk_gpio_set_output_low(usb_ldo);
 #else
 	bk_gpio_set_output_low(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 
 	bk_analog_layer_usb_sys_related_ops(USB_HOST_MODE, false);
@@ -309,11 +309,11 @@ static void bk_usb_phy_register_refresh()
 	sys_drv_int_enable(USB_INTERRUPT_CTRL_BIT);
 	if(s_usb_power_on_flag) {
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
 		bk_gpio_set_output_high(usb_ldo);
 #else
 		bk_gpio_set_output_high(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 	}
 #endif
@@ -325,14 +325,14 @@ void bk_usb_enum_fail_all_reg_reset()
 #if CONFIG_USB_HOST
 	sys_drv_int_disable(USB_INTERRUPT_CTRL_BIT);
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t usb_ldo, active_level;
     extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	bk_gpio_set_output_low(usb_ldo);
 #else
 	bk_gpio_set_output_low(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 	rtos_delay_milliseconds(10);
 	bk_analog_layer_usb_sys_related_ops(USB_HOST_MODE, false);
@@ -342,11 +342,11 @@ void bk_usb_enum_fail_all_reg_reset()
 	extern int usb_hc_mhdrc_register_init(void);
 	usb_hc_mhdrc_register_init();
 	sys_drv_int_enable(USB_INTERRUPT_CTRL_BIT);
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
 	bk_gpio_set_output_high(usb_ldo);
 #else
 	bk_gpio_set_output_high(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 #endif
 
@@ -912,14 +912,14 @@ static bk_err_t usb_driver_sw_init()
 	uint32_t ret = BK_OK;
 	USB_DRIVER_LOGD("[+]%s thread_hdl:%x  msg_que:%x\r\n",__func__, s_usb_drv_thread_hdl, s_usb_drv_msg_que);
     // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t usb_ldo, active_level;
     extern OPERATE_RET tkl_vi_get_power_info(uint8_t device_type, uint8_t *io, uint8_t *active);
     tkl_vi_get_power_info(UVC_CAMERA, &usb_ldo, &active_level);
 	bk_gpio_set_output_high(usb_ldo);
 #else
 	bk_gpio_set_output_high(CONFIG_USB_VBAT_CONTROL_GPIO_ID);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
     // Modified by TUYA End
 
 

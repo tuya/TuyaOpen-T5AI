@@ -70,19 +70,19 @@ if (CONFIG_SPIDMA)
 		)
 endif()
 
-if (CONFIG_SYS_CPU0)
-	list(APPEND srcs
-		"video_transfer/video_transfer.c"
-		"video_transfer/video_buffer.c"
-		"dvp_display/dvp_display.c"
-		)
-
-	if (CONFIG_DVP_CAMERA_TEST)
-			list(APPEND srcs
-			"capture/capture.c"
-			)
-	endif()
-endif()
+# if (CONFIG_SYS_CPU0)
+# 	list(APPEND srcs
+# 		"video_transfer/video_transfer.c"
+# 		"video_transfer/video_buffer.c"
+# 		"dvp_display/dvp_display.c"
+# 		)
+# 
+# 	if (CONFIG_DVP_CAMERA_TEST)
+# 			list(APPEND srcs
+# 			"capture/capture.c"
+# 			)
+# 	endif()
+# endif()
 
 endif() #CONFIG_SOC_BK7258
 

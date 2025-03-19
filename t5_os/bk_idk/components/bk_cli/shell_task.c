@@ -1348,7 +1348,7 @@ static void rx_ind_process(void)
 			if( cmd_line_buf.cmd_data_len > 0 )
 			#if defined(CONFIG_AT) && defined(CONFIG_SYS_CPU0)
 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
             #if (CONFIG_TUYA_UART_PRINT_PORT == AT_UART_PORT_CFG)
 				atsvr_msg_get_input((char *)cmd_line_buf.cmd_buff, cmd_line_buf.cmd_data_len, (char *)cmd_line_buf.rsp_buff, SHELL_RSP_BUF_LEN - 4);
 			#else

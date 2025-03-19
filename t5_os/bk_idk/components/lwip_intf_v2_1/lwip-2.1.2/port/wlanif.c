@@ -117,8 +117,8 @@ static void low_level_init(struct netif *netif)
 #endif /* LWIP_NETIF_HOSTNAME */
 
     /* set MAC hardware address length */
-    LWIP_LOGD("enter low level!\r\n");
-    LWIP_LOGI("mac %2x:%2x:%2x:%2x:%2x:%2x\r\n", macptr[0], macptr[1], macptr[2],
+    bk_printf("enter low level!\r\n");
+    bk_printf("mac %2x:%2x:%2x:%2x:%2x:%2x\r\n", macptr[0], macptr[1], macptr[2],
                  macptr[3], macptr[4], macptr[5]);
 
     netif->hwaddr_len = ETHARP_HWADDR_LEN;
@@ -138,7 +138,7 @@ static void low_level_init(struct netif *netif)
  #if defined (LWIP_IPV6_MLD) && (LWIP_IPV6_MLD == 1)
     netif->flags |= NETIF_FLAG_MLD6;
  #endif
-    LWIP_LOGD("leave low level!\r\n");
+    bk_printf("leave low level!\r\n");
 }
 
 /**
@@ -166,8 +166,9 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
     if (vif_idx == 0xff)
         return ERR_ARG;
 
+#if 0
 #if CONFIG_WIFI6_CODE_STACK
-    //LWIP_LOGI("output:%x\r\n", p);
+    //bk_printf("output:%x\r\n", p);
     extern bool special_arp_flag;
     if(special_arp_flag)
     {
@@ -175,6 +176,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
         special_arp_flag = false;
     }
     else
+#endif
 #endif
     {
         ret = bmsg_tx_sender(p, (uint32_t)vif_idx);
@@ -201,6 +203,7 @@ static inline int is_broadcast_mac_addr(const u8 *a)
  *
  * @param netif the lwip network interface structure for this ethernetif
  */
+#if 0
 void
 ethernetif_input(int iface, struct pbuf *p, int dst_idx)
 {
@@ -216,7 +219,7 @@ ethernetif_input(int iface, struct pbuf *p, int dst_idx)
     vif = wifi_netif_vifid_to_vif(iface);
     netif = (struct netif *)wifi_netif_get_vif_private_data(vif);
     if(!netif) {
-        //LWIP_LOGI("ethernetif_input no netif found %d\r\n", iface);
+        //bk_printf("ethernetif_input no netif found %d\r\n", iface);
         pbuf_free(p);
         p = NULL;
         return;
@@ -280,7 +283,7 @@ forward:
                 low_level_output(netif, q);
                 pbuf_free(q);
             } else {
-                LWIP_LOGE("alloc pbuf failed, don't forward\r\n");
+                bk_printf("alloc pbuf failed, don't forward\r\n");
             }
         }
     }
@@ -323,6 +326,7 @@ process:
     }
 
 }
+    #endif
 
 /**
  * Should be called at the beginning of the program to set up the
@@ -340,7 +344,7 @@ err_t
 wlanif_init(struct netif *netif)
 {
     LWIP_ASSERT("netif != NULL", (netif != NULL));
-
+bk_printf("1111>>>>>>>>>>>>>wlanif_init\r\n");
     /*
      * Initialize the snmp variables and counters inside the struct netif.
      * The last argument should be replaced with your link speed, in units

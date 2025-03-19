@@ -209,7 +209,7 @@ UINT32 rwm_get_rx_free_node(uint32_t *host_id, int len)
 #if MEM_TRX_DYNAMIC_EN
 	pbuf_type type = PBUF_RAM_RX;
 #else
-	pbuf_type type = PBUF_POOL;
+	pbuf_type type = PBUF_RAM; // PBUF_POOL;
 
 	/*
 	 * When requested pbuf type is PBUF_POOL, pbuf_alloc will return a valid memory address even the

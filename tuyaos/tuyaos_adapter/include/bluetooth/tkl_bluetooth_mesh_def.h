@@ -24,53 +24,53 @@
 #endif
 
  typedef struct {
-    UCHAR_T     *data;      /**< Mesh data. */
+    uint8_t     *data;      /**< Mesh data. */
     USHORT_T    data_len;   /**< Mesh data lenth. */
 }TKL_MESH_PROXY_DATA_T;
 
 /**@brief mesh access msg parameters. */
 typedef struct {
     uint32_t    opcode;        /**< Mesh opcode. */
-    UCHAR_T   *data;         /**< Mesh data. */
+    uint8_t   *data;         /**< Mesh data. */
     USHORT_T  data_len;      /**< Mesh data lenth. */
 } TKL_MESH_ACCESS_MSG_T;
 
  typedef struct {
-    UCHAR_T     adv_data[31];   /**< Mesh Connect Adv Data. */
+    uint8_t     adv_data[31];   /**< Mesh Connect Adv Data. */
     USHORT_T    adv_len;        /**< Mesh Connect Adv Data Len. */
 
-    UCHAR_T     rsp_data[31];   /**< Rsp Data. */
+    uint8_t     rsp_data[31];   /**< Rsp Data. */
     USHORT_T    rsp_len;        /**< Rsp Data Len. */
 
-    UCHAR_T     count;          /**< The number of transmissions is the Transmit Count + 1 */
-    UCHAR_T     interval_steps; /**< Transmission interval = (Network Retransmit Interval Steps + 1) * 10 */
+    uint8_t     count;          /**< The number of transmissions is the Transmit Count + 1 */
+    uint8_t     interval_steps; /**< Transmission interval = (Network Retransmit Interval Steps + 1) * 10 */
 }TKL_MESH_CONNECT_ADV_PARAM_T;
 
 /**@brief network parameters. */
 typedef struct {
     USHORT_T  src_addr;           /**< Source unicast address. */
     USHORT_T  dst_addr;           /**< Destination  unicast address. */
-    UCHAR_T   model_index;        /**< Msg model index. */
+    uint8_t   model_index;        /**< Msg model index. */
     uint32_t    seq;                /**< Sequence num of this msg. */
-    UCHAR_T   ttl;                /**< Time To Live. */
+    uint8_t   ttl;                /**< Time To Live. */
     USHORT_T  app_key_index;      /**< The appkey index of this msg ues. */
     USHORT_T  net_key_index;      /**< The networkkey index of this msg ues. */
-    char    rssi;               /**< used when rx in adv bearer. */
+    CHAR_T    rssi;               /**< used when rx in adv bearer. */
 } TKL_MESH_NET_PARAM_T;
 
 /**@brief network provision data. */
 typedef struct{
-    UCHAR_T   net_key[16];        /**< Network key. */
+    uint8_t   net_key[16];        /**< Network key. */
     USHORT_T  key_index;          /**< Network key index. */
-    UCHAR_T   flags;              /**< Network key flag. */
-    UCHAR_T   iv_index[4];        /**< Network IV index. */
+    uint8_t   flags;              /**< Network key flag. */
+    uint8_t   iv_index[4];        /**< Network IV index. */
     USHORT_T  unicast_address;    /**< Node unicast address. */
 } _PACKED_ TKL_NET_PROV_DATA_T;
 
 /**@brief app key data. */
 typedef struct{
-    UCHAR_T   net_app_idx[3];     /**< Network key index. */
-    UCHAR_T   app_key[16];        /**< App key. */
+    uint8_t   net_app_idx[3];     /**< Network key index. */
+    uint8_t   app_key[16];        /**< App key. */
 } _PACKED_ TKL_APP_KEY_DATA_T;
 
 typedef OPERATE_RET (*TKL_MESH_MSG_RECV_CB)(TKL_MESH_ACCESS_MSG_T *msg_raw, TKL_MESH_NET_PARAM_T *net_param);
@@ -109,70 +109,70 @@ typedef enum {
 } TKL_MESH_EVT_TYPE_E;
 
 typedef struct {
-    UCHAR_T     peer_addr[6];                       /**< Mesh Device Mac Address */
-    UCHAR_T     peer_uuid[16];                      /**< Mesh Device UUID */
+    uint8_t     peer_addr[6];                       /**< Mesh Device Mac Address */
+    uint8_t     peer_uuid[16];                      /**< Mesh Device UUID */
 
     USHORT_T    node_addr;                          /**< Mesh Node Address */
-    UCHAR_T     node_devkey[16];                    /**< Mesh Device key */
+    uint8_t     node_devkey[16];                    /**< Mesh Device key */
 }TKL_MESH_DEVICE_INFO_T;
 
 typedef struct {
     USHORT_T    local_addr;                         /**< Mesh Provisioner Local Address */
 
-    UCHAR_T     netkey[16];                         /**< Mesh Provisioner Local Netkey */
-    UCHAR_T     appkey[16];                         /**< Mesh Provisioner Local Appkey */
+    uint8_t     netkey[16];                         /**< Mesh Provisioner Local Netkey */
+    uint8_t     appkey[16];                         /**< Mesh Provisioner Local Appkey */
 }TKL_MESH_LOCAL_INFO_T;
 
 typedef struct {
-    UCHAR_T     mac[6];                             /**< Mesh Provisioner Scan Adv Mac Address */
-    UCHAR_T     uuid[16];                           /**< Mesh Provisioner Scan Mesh Device UUID */
+    uint8_t     mac[6];                             /**< Mesh Provisioner Scan Adv Mac Address */
+    uint8_t     uuid[16];                           /**< Mesh Provisioner Scan Mesh Device UUID */
     USHORT_T    oob;                                /**< Mesh Provisioner Scan Mesh Device OOB */
     uint32_t      uri_hash;                           /**< Mesh Provisioner Scan Mesh Device URI Hash */
-    char      rssi;                               /**< Mesh Provisioner Scan Mesh Device Rssi */
+    CHAR_T      rssi;                               /**< Mesh Provisioner Scan Mesh Device Rssi */
 }TKL_MESH_UNPROV_BEACON_T;
 
 typedef struct {
-    UCHAR_T     mac[6];                             /**< Beacon Central Scan Adv Mac Address while in mesh mode*/
-    UCHAR_T     length;                             /**< Beacon Central Scan advertising data length*/
-    UCHAR_T     *p_data;                            /**< Beacon Central Scan advertising data */
-    char      rssi;                               /**< Beacon Central Scan advertising Rssi */
+    uint8_t     mac[6];                             /**< Beacon Central Scan Adv Mac Address while in mesh mode*/
+    uint8_t     length;                             /**< Beacon Central Scan advertising data length*/
+    uint8_t     *p_data;                            /**< Beacon Central Scan advertising data */
+    CHAR_T      rssi;                               /**< Beacon Central Scan advertising Rssi */
 }TKL_PRIVATE_BEACON_T;
 
 typedef struct {
     uint32_t      opcode;                             /**< Mesh opcode. Indicate the mesh data with opcode */
-    UCHAR_T     count;                              /**< [Mesh& Gateway Special] The number of transmissions is the Transmit Count + 1 */
-    UCHAR_T     interval_steps;                     /**< [Mesh& Gateway Special] Transmission interval = (Network Retransmit Interval Steps + 1) * 10 */
+    uint8_t     count;                              /**< [Mesh& Gateway Special] The number of transmissions is the Transmit Count + 1 */
+    uint8_t     interval_steps;                     /**< [Mesh& Gateway Special] Transmission interval = (Network Retransmit Interval Steps + 1) * 10 */
 
     USHORT_T    data_len;                           /**< Mesh Data Length */
-    UCHAR_T     *p_data;                            /**< Pointer For Mesh Data */
+    uint8_t     *p_data;                            /**< Pointer For Mesh Data */
 }TKL_MESH_DATA_T;
 
 typedef struct {
     uint32_t      opcode;                             /**< Mesh opcode. Point the mesh opcode while receiving data. */
     USHORT_T    node_addr;                          /**< Sending Node Address */
     USHORT_T    dest_addr;                          /**< Receive Destination Address */
-    UCHAR_T     recv_ttl;                           /**< Receive TTL */
+    uint8_t     recv_ttl;                           /**< Receive TTL */
 
     USHORT_T    data_len;                           /**< Recevie Mesh Data Length */
-    UCHAR_T     *p_data;                            /**< Recevie Pointer of Mesh Data */
+    uint8_t     *p_data;                            /**< Recevie Pointer of Mesh Data */
 }TKL_MESH_DATA_RECEIVE_T;
 
 typedef struct {
     USHORT_T    node_addr;                          /**< Assign mesh Node Address */
-    UCHAR_T     devkey[16];                         /**< Get Mesh Node Dev-key After Provision*/
+    uint8_t     devkey[16];                         /**< Get Mesh Node Dev-key After Provision*/
 }TKL_MESH_PROV_T;
 
 struct TKL_MESH_DFU_TARGET_PARAM_T{
     USHORT_T    target_addr;                        /**< Mesh DFU Target-Node Addr */
-    UCHAR_T     img_idx;                            /**< Mesh DFU Target image index, default: 0*/
-    UCHAR_T     result;                             /**< Mesh DFU Target Finish Result*/
+    uint8_t     img_idx;                            /**< Mesh DFU Target image index, default: 0*/
+    uint8_t     result;                             /**< Mesh DFU Target Finish Result*/
 } __attribute__ ((packed));
 
 struct TKL_MESH_DFU_BLOB_CONFIG_T{
     USHORT_T    group_addr;                         /**< Mesh DFU Target Group Addr or Single Target Address*/
 
     USHORT_T    area_id;                            /**< Mesh DFU Image ID */
-    UCHAR_T     blob_id[8];                         /**< Mesh BLOB ID */
+    uint8_t     blob_id[8];                         /**< Mesh BLOB ID */
     uint32_t      blob_size;                          /**< Mesh BLOB Size, Image Size*/
 }  __attribute__ ((packed));
 
@@ -198,7 +198,7 @@ typedef struct {
     OPERATE_RET (*dfu_open)(USHORT_T area_id, void *user_data);
 
     /* Used by the BLOB Transfer Client to fetch outgoing data.*/
-    uint32_t (*dfu_read)(USHORT_T area_id, uint32_t offset, UCHAR_T *pbuff, uint32_t size);
+    uint32_t (*dfu_read)(USHORT_T area_id, uint32_t offset, uint8_t *pbuff, uint32_t size);
 
     /* Called when the reader is closed. */
     OPERATE_RET (*dfu_close)(USHORT_T area_id);

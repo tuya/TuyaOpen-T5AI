@@ -43,12 +43,12 @@ typedef struct {
     SYS_TICK_T          (*get_tick_count)           (void);
     SYS_TIME_T          (*get_millisecond)          (void);
     int               (*get_random)               (uint32_t range);
-    TUYA_RESET_REASON_E (*get_reset_reason)        (char** describe);
+    TUYA_RESET_REASON_E (*get_reset_reason)        (CHAR_T** describe);
     void                (*sleep)                    (const uint32_t num_ms);
     OPERATE_RET         (*cpu_sleep_mode_set)       (BOOL_T enable, TUYA_CPU_SLEEP_MODE_E mode);
     OPERATE_RET         (*get_cpu_info)             (TUYA_CPU_INFO_T **cpu_ary, int *cpu_cnt);
     //! output     
-    void              (*log_output)               (const char *log, ...);
+    void              (*log_output)               (const CHAR_T *log, ...);
     OPERATE_RET         (*log_close)                (void);
     OPERATE_RET         (*log_open)                 (void);
     //! ota
@@ -67,9 +67,9 @@ typedef struct {
 #endif
 
     //! thread
-    OPERATE_RET         (*thread_create)            (TKL_THREAD_HANDLE* thread, const char* name, const uint32_t stack_size, const uint32_t priority, const THREAD_FUNC_T func, void* const arg);
+    OPERATE_RET         (*thread_create)            (TKL_THREAD_HANDLE* thread, const CHAR_T* name, const uint32_t stack_size, const uint32_t priority, const THREAD_FUNC_T func, void* const arg);
     OPERATE_RET         (*thread_release)           (const TKL_THREAD_HANDLE thread);
-    OPERATE_RET         (*thread_set_name)          (const char* name);
+    OPERATE_RET         (*thread_set_name)          (const CHAR_T* name);
     OPERATE_RET         (*thread_set_priority)      (TKL_THREAD_HANDLE thread, int  priority);
     OPERATE_RET         (*thread_get_priority)      (TKL_THREAD_HANDLE thread, int *priority);
     OPERATE_RET         (*thread_get_watermark)     (const TKL_THREAD_HANDLE thread, uint32_t* watermark);    
@@ -112,32 +112,32 @@ TKL_OS_T* tkl_os_desc_get(void);
  *
  */
 typedef struct {
-    OPERATE_RET         (*fs_mkdir)                 (const char* path);
-    OPERATE_RET         (*fs_mkdir_r)               (const char* path);
-    OPERATE_RET         (*fs_remove)                (const char* path);
-    OPERATE_RET         (*fs_remove_r)              (const char* path);
-    OPERATE_RET         (*fs_mode)                  (const char* path, uint32_t* mode);
-    OPERATE_RET         (*fs_is_exist)              (const char* path, BOOL_T* is_exist);
-    OPERATE_RET         (*fs_rename)                (const char* path_old, const char* path_new);
-    OPERATE_RET         (*dir_open)                 (const char* path, TUYA_DIR* dir);
+    OPERATE_RET         (*fs_mkdir)                 (const CHAR_T* path);
+    OPERATE_RET         (*fs_mkdir_r)               (const CHAR_T* path);
+    OPERATE_RET         (*fs_remove)                (const CHAR_T* path);
+    OPERATE_RET         (*fs_remove_r)              (const CHAR_T* path);
+    OPERATE_RET         (*fs_mode)                  (const CHAR_T* path, uint32_t* mode);
+    OPERATE_RET         (*fs_is_exist)              (const CHAR_T* path, BOOL_T* is_exist);
+    OPERATE_RET         (*fs_rename)                (const CHAR_T* path_old, const CHAR_T* path_new);
+    OPERATE_RET         (*dir_open)                 (const CHAR_T* path, TUYA_DIR* dir);
     OPERATE_RET         (*dir_close)                (TUYA_DIR dir);
     OPERATE_RET         (*dir_read)                 (TUYA_DIR dir, TUYA_FILEINFO* info);
-    OPERATE_RET         (*dir_name)                 (TUYA_FILEINFO info, const char** name);
+    OPERATE_RET         (*dir_name)                 (TUYA_FILEINFO info, const CHAR_T** name);
     OPERATE_RET         (*dir_is_dir)               (TUYA_FILEINFO info, BOOL_T* is_dir);
     OPERATE_RET         (*dir_is_regular)           (TUYA_FILEINFO info, BOOL_T* is_regular);
-    TUYA_FILE           (*fopen)                    (const char* path, const char* mode);
+    TUYA_FILE           (*fopen)                    (const CHAR_T* path, const CHAR_T* mode);
     OPERATE_RET         (*fclose)                   (TUYA_FILE file);
     OPERATE_RET         (*fread)                    (void* buf, int bytes, TUYA_FILE file);
     OPERATE_RET         (*fwrite)                   (void* buf, int bytes, TUYA_FILE file);
-    char*             (*fgets)                    (char* buf, int len, TUYA_FILE file);
+    CHAR_T*             (*fgets)                    (CHAR_T* buf, int len, TUYA_FILE file);
     OPERATE_RET         (*feof)                     (TUYA_FILE file);
     OPERATE_RET         (*fseek)                    (TUYA_FILE file, INT64_T offs, int whence);
     INT64_T             (*ftell)                    (TUYA_FILE file);
     int               (*fflush)                   (TUYA_FILE file);
     int               (*fileno)                   (TUYA_FILE file);
     int               (*fsync)                    (int fd);
-    int               (*faccess)                  (const char *filepath,IN int mode);
-    int               (*fgetsize)                 (const char *filepath);
+    int               (*faccess)                  (const CHAR_T *filepath,IN int mode);
+    int               (*fgetsize)                 (const CHAR_T *filepath);
     int               (*fgetc)                    (TUYA_FILE file);
     int               (*ftruncate)                (int fd, UINT64_T length);
 } TKL_FS_T;

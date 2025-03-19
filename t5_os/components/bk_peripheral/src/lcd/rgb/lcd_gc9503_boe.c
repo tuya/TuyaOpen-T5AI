@@ -144,27 +144,12 @@ static void lcd_gc9503_boe_config(void)
 
 }
 
-// Modified by TUYA Start
-#if CONFIG_TUYA_GPIO_MAP
-uint8_t lcd_bl_en_pin  = 56;
-#else
 #define LCD_BL_EN_PIN   (GPIO_7)
-#endif
 
 static void lcd_gc9503_boe_backlight_init(void)
 {
 	os_printf("lcd_gc9503_boe: backlight init.\r\n");
-    // Modified by TUYA Start
-#if CONFIG_TUYA_GPIO_MAP
-    uint8_t lcd_bl, active_level;
-    tkl_display_bl_ctrl_io(&lcd_bl, &active_level);
-    lcd_bl_en_pin = lcd_bl;
-    gpio_dev_unmap(lcd_bl_en_pin);
-    bk_gpio_set_capacity(lcd_bl_en_pin, 0);
-    BK_LOG_ON_ERR(bk_gpio_disable_input(lcd_bl_en_pin));
-    BK_LOG_ON_ERR(bk_gpio_enable_output(lcd_bl_en_pin));
-    bk_gpio_set_output_low(lcd_bl_en_pin);
-#else
+
     gpio_dev_unmap(LCD_BL_EN_PIN);
     bk_gpio_set_capacity(LCD_BL_EN_PIN, 0);
     BK_LOG_ON_ERR(bk_gpio_disable_input(LCD_BL_EN_PIN));
@@ -174,33 +159,23 @@ static void lcd_gc9503_boe_backlight_init(void)
 	#else
 	bk_gpio_set_output_high(LCD_BL_EN_PIN);
 	#endif
-#endif // CONFIG_TUYA_GPIO_MAP
-    // Modified by TUYA End
 }
 
 static bk_err_t lcd_gc9503_boe_backlight_open(void)
 {
 	os_printf("lcd_gc9503_boe: backlight open.\r\n");
-    // Modified by TUYA Start
-#if CONFIG_TUYA_GPIO_MAP
-	bk_gpio_set_output_high(lcd_bl_en_pin);
-#else
+
 	bk_gpio_set_output_high(LCD_BL_EN_PIN);
-#endif // CONFIG_TUYA_GPIO_MAP
-    // Modified by TUYA End
+
 	return 0;
 }
 
 static bk_err_t lcd_gc9503_boe_backlight_close(void)
 {
 	os_printf("lcd_gc9503_boe: backlight close.\r\n");
-    // Modified by TUYA Start
-#if CONFIG_TUYA_GPIO_MAP
-	bk_gpio_set_output_low(lcd_bl_en_pin);
-#else
+
 	bk_gpio_set_output_low(LCD_BL_EN_PIN);
-#endif // CONFIG_TUYA_GPIO_MAP
-    // Modified by TUYA End
+	
 	return 0;
 }
 

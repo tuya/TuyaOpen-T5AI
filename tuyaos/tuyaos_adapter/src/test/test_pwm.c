@@ -308,7 +308,7 @@ static void pwm_simple_demo(void *param)
         }
         bk_printf("pwm%d , frequency: %d\r\n", pwm_chan,  frequency);
 
-        tal_system_sleep(2000);
+        tkl_system_sleep(2000);
 
         /*close pwm*/
         count++;

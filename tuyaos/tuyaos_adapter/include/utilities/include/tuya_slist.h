@@ -110,7 +110,7 @@ SLIST_HEAD name = {NULL}
  * @param[in] node the sigle list head
  * @return void 
  */
-static INLINE void tuya_init_slist_node(INOUT SLIST_HEAD *node) 
+STATIC INLINE void tuya_init_slist_node(INOUT SLIST_HEAD *node) 
 {
     node->next = NULL;
 } 
@@ -121,7 +121,7 @@ static INLINE void tuya_init_slist_node(INOUT SLIST_HEAD *node)
  * @param[in] list the sigle list head
  * @return 0 means not empty, others means empty 
  */
-static INLINE int tuya_slist_empty(IN const SLIST_HEAD *list) 
+STATIC INLINE int tuya_slist_empty(IN const SLIST_HEAD *list) 
 {
     return !(list->next);
 }
@@ -133,7 +133,7 @@ static INLINE int tuya_slist_empty(IN const SLIST_HEAD *list)
  * @param[in] node the node need delete
  * @return void 
  */
-static INLINE void tuya_slist_del(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *node) 
+STATIC INLINE void tuya_slist_del(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *node) 
 {
     SLIST_HEAD *pos = NULL;
     SLIST_HEAD *last = list;
@@ -158,7 +158,7 @@ static INLINE void tuya_slist_del(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *node)
  * @param[in] n the new node
  * @return void 
  */
-static INLINE void tuya_slist_add_head(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *n) 
+STATIC INLINE void tuya_slist_add_head(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *n) 
 {
     n->next = list->next;
     list->next = n;
@@ -171,7 +171,7 @@ static INLINE void tuya_slist_add_head(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *
  * @param[in] n the new node
  * @return void
  */
-static INLINE void tuya_slist_add_tail(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *n) 
+STATIC INLINE void tuya_slist_add_tail(INOUT SLIST_HEAD *list,INOUT SLIST_HEAD *n) 
 {
     SLIST_HEAD *pos = NULL;
     SLIST_HEAD *last = list;

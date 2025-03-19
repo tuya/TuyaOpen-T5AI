@@ -25,7 +25,10 @@
 
 OPERATE_RET tkl_rtc_init(void)
 {
+    
+#if (CONFIG_AON_RTC && (!CONFIG_AON_RTC_MANY_USERS))
     bk_aon_rtc_tick_init();
+#endif
 
     return OPRT_OK;
 }

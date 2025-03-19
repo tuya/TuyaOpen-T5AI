@@ -36,7 +36,7 @@ typedef enum {
 
 typedef struct {
     LIST_HEAD node;
-    UCHAR_T data[];
+    uint8_t data[];
 }QUEUE_ITEM_T;
 
 typedef struct {
@@ -51,7 +51,7 @@ typedef struct {
     LIST_HEAD head;
 }TUYA_QUEUE_T;
 
-static OPERATE_RET __enqueue(TUYA_QUEUE_HANDLE handle, const void *item, ENQUEUE_POLICY_E policy)
+STATIC OPERATE_RET __enqueue(TUYA_QUEUE_HANDLE handle, const void *item, ENQUEUE_POLICY_E policy)
 {
     OPERATE_RET op_ret = OPRT_OK;
 
@@ -312,7 +312,7 @@ OPERATE_RET tuya_queue_get_batch(TUYA_QUEUE_HANDLE handle, const uint32_t start,
         }
 
         queue_item = tuya_list_entry(p, QUEUE_ITEM_T, node);
-        memcpy((UCHAR_T*)items + count * queue->item_size, queue_item->data, queue->item_size);
+        memcpy((uint8_t*)items + count * queue->item_size, queue_item->data, queue->item_size);
         count++;
     }
     QUEUE_UNLOCK(queue);

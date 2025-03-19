@@ -90,7 +90,7 @@ int tkl_system_get_random(uint32_t range);
 *
 * @return reset reason
 */
-TUYA_RESET_REASON_E tkl_system_get_reset_reason(char** describe);
+TUYA_RESET_REASON_E tkl_system_get_reset_reason(CHAR_T** describe);
 
 /**
 * @brief  system sleep
@@ -124,7 +124,6 @@ void tkl_system_delay(uint32_t num_ms);
 */
 
 OPERATE_RET tkl_system_get_cpu_info(TUYA_CPU_INFO_T **cpu_ary, int *cpu_cnt);
-
 
 #ifdef __cplusplus
 }

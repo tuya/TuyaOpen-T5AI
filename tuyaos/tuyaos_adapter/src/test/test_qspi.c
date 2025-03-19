@@ -48,6 +48,7 @@ void cli_xqspi_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **ar
             c = os_strtoul(argv[2], NULL, 10);
         } else if (!strcmp("fce", argv[1])) {
             // full chip erase
+            bk_printf("\r\nfull chip erase %s\r\n", CONFIG_TUYA_QSPI_FLASH_TYPE);
             qflash_erase(0, qflash_dev->total_size);
             return;
         } else {
@@ -56,9 +57,9 @@ void cli_xqspi_cmd(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **ar
     }
 
     test_len <<= 10;
-    test_len += qflash_dev->block_size;
-    test_len /= qflash_dev->block_size;
-    test_len *= qflash_dev->block_size;
+    // test_len += qflash_dev->block_size;
+    // test_len /= qflash_dev->block_size;
+    // test_len *= qflash_dev->block_size;
 
     bk_printf("\r\n------- qspi test init ------\r\n");
 

@@ -52,8 +52,8 @@ void __attribute__((weak)) tuya_gui_main(void)
     __lvgl_local_init();
     bk_printf("-------[%s %d] \r\n", __func__, __LINE__);
     lv_demo_widgets();
-    bk_printf("-------[%s %d] \r\n", __func__, __LINE__);
     // tuya_lvgl_stress_main();
+    bk_printf("-------[%s %d] \r\n", __func__, __LINE__);
 }
 
 void __attribute__((weak)) tuya_gui_pause(void)

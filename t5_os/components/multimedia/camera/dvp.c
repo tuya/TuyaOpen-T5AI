@@ -88,12 +88,12 @@ bk_err_t bk_dvp_camera_open(media_camera_device_t *device)
 	}
 
 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     extern int tkl_vi_set_dvp_i2c_pin(uint8_t clk, uint8_t sda);
     extern int tkl_vi_set_power_info(uint8_t device_type, uint8_t io, uint8_t active);
     tkl_vi_set_power_info(DVP_CAMERA, device->ty_param[2], device->ty_param[3]);
     tkl_vi_set_dvp_i2c_pin(device->ty_param[4], device->ty_param[5]);
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 // Modified by TUYA End
 
 	ret = bk_dvp_camera_driver_init(&config);

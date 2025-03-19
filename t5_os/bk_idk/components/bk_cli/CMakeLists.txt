@@ -144,11 +144,11 @@ if (CONFIG_LWIP)
 	)
 endif()
 
-if (CONFIG_BK_NETIF)
-	list(APPEND srcs
-		cli_netif.c
-	)
-endif()
+# if (CONFIG_BK_NETIF)
+# 	list(APPEND srcs
+# 		cli_netif.c
+# 	)
+# endif()
 
 if ((CONFIG_CPU_CNT GREATER 1))
 	list(APPEND srcs

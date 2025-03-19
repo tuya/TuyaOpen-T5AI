@@ -328,9 +328,9 @@ typedef struct {
 	frame_info_t   d_info;
     media_uvc_device_t uvc_device[2];
 // Modified by TUYA Start
-#ifdef CONFIG_TUYA_GPIO_MAP
+#if CONFIG_TUYA_LOGIC_MODIFY
     uint8_t ty_param[8];
-#endif // CONFIG_TUYA_GPIO_MAP
+#endif // CONFIG_TUYA_LOGIC_MODIFY
 // Modified by TUYA End
 } media_camera_device_t;
 

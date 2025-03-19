@@ -17,7 +17,6 @@ set(EXTRA_COMPONENTS_DIRS
     $ENV{ARMINO_PATH}/../properties/modules
     $ENV{ARMINO_PATH}/../properties/modules/video_codec
     $ENV{ARMINO_PATH}/../properties/modules/audio_codec
-    # $ENV{ARMINO_PATH}/../extra_components
 )
 
 set(lwip_select $ENV{TUYA_LWIP_STACK_USED})
