@@ -610,7 +610,6 @@ OPERATE_RET tkl_i2c_master_send(TUYA_I2C_NUM_E port, USHORT_T dev_addr, const vo
         return OPRT_INVALID_PARM;
     }
 
-    bk_printf("iic write %02x %02x %d\n", dev_addr, *(uint8_t *)data, size);
     delay_us = sg_i2c_cfg[port].delay_us;
     ret = __sw_i2c_write_data(port, dev_addr, data, (uint8_t)size, xfer_pending);
     if(ret < 0)
@@ -642,7 +641,6 @@ OPERATE_RET tkl_i2c_master_receive(TUYA_I2C_NUM_E port, USHORT_T dev_addr, void 
     if(ret < 0)
         return OPRT_COM_ERROR;
 
-    bk_printf("iic read %02x %02x\n", dev_addr, *(uint8_t *)data);
     return OPRT_OK;
 }
 /**

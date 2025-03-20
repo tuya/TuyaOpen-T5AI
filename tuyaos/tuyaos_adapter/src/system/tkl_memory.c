@@ -12,7 +12,7 @@
 #include <os/mem.h>
 
 extern void bk_printf(const char *fmt, ...);
-
+extern size_t xPortGetPsramFreeHeapSize( void );
 /**
 * @brief Alloc memory of system
 *
@@ -28,6 +28,8 @@ void* tkl_system_malloc(const SIZE_T size)
     if(NULL == ptr) {
         bk_printf("tkl_system_malloc failed, size(%d)!\r\n", size);
     }
+
+    // bk_printf("cpu%d heap: %d / %d\r\n", CONFIG_CPU_INDEX, tkl_system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize());
 
     if (size > 4096) {
         bk_printf("tkl_system_malloc big memory, size(%d)!\r\n", size);
@@ -84,14 +86,15 @@ void *tkl_system_memcpy(void* src, const void* dst, const SIZE_T n)
  * @param[in]       nitems      the numbers of memory block
  * @param[in]       size        the size of the memory block
  */
-void *tkl_system_calloc(size_t nitems, size_t size)
-{	
-	if (size && nitems > (~(size_t) 0) / size)
-		return NULL;
+VOID_T *tkl_system_calloc(size_t nitems, size_t size)
+{
+        if (size && nitems > (~(size_t) 0) / size)
+                return NULL;
 
-	void *ptr =  os_zalloc(nitems * size);
+        void *ptr =  os_zalloc(nitems * size);
     if (ptr == NULL) {
-        bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d\r\n", nitems * size,nitems,size);
+        bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d, free: %d psram free: %d\r\n",
+                nitems * size,nitems,size, tkl_system_get_free_heap_size(), xPortGetPsramFreeHeapSize());
     }
     return ptr;
 }

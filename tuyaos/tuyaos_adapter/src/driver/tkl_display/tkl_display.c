@@ -167,7 +167,7 @@ OPERATE_RET tkl_disp_driver_register(int dev_id, TKL_DISP_PORT_E disp_port, \
         return OPRT_INVALID_PARM;
     }
 
-    TKL_DISP_DEV_INFO_T *p_dev = tkl_system_malloc(sizeof(TKL_DISP_DEV_INFO_T));
+    TKL_DISP_DEV_INFO_T *p_dev = tkl_system_psram_malloc(sizeof(TKL_DISP_DEV_INFO_T));
     if(NULL == p_dev) {
         return OPRT_MALLOC_FAILED;
     }

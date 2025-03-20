@@ -3593,6 +3593,7 @@ static bk_err_t aud_tras_drv_set_mic_gain(uint8_t value)
 	bk_err_t ret = BK_ERR_AUD_INTF_OK;
 
 	if (aud_tras_drv_info.mic_info.mic_type == AUD_INTF_MIC_TYPE_BOARD || aud_tras_drv_info.voc_info.mic_type == AUD_INTF_MIC_TYPE_BOARD) {
+		bk_printf("bk_aud_adc_set_gain:%d\r\n", value);
 		bk_aud_adc_set_gain((uint32_t)value);
 		ret = BK_ERR_AUD_INTF_OK;
 	}
@@ -3760,6 +3761,7 @@ static void aud_tras_drv_main(beken_thread_arg_t param_data)
 
 				case AUD_TRAS_DRV_MIC_SET_GAIN:
 					mailbox_msg = (media_mailbox_msg_t *)msg.param;
+					bk_printf("AUD_TRAS_DRV_MIC_SET_GAIN\r\n");
 					ret = aud_tras_drv_set_mic_gain(*((uint8_t *)mailbox_msg->param));
 					msg_send_rsp_to_media_major_mailbox(mailbox_msg, ret, APP_MODULE);
 					break;
@@ -3870,6 +3872,9 @@ static void aud_tras_drv_main(beken_thread_arg_t param_data)
 
 				case AUD_TRAS_DRV_VOC_SET_MIC_GAIN:
 					mailbox_msg = (media_mailbox_msg_t *)msg.param;
+
+					bk_printf("mailbox_msg %p\r\n", mailbox_msg);
+					bk_printf("AUD_TRAS_DRV_VOC_SET_MIC_GAIN val:%d\r\n", *((uint8_t *)mailbox_msg->param));
 					ret = aud_tras_drv_set_mic_gain(*((uint8_t *)mailbox_msg->param));
 					msg_send_rsp_to_media_major_mailbox(mailbox_msg, ret, APP_MODULE);
 					break;
@@ -4192,6 +4197,7 @@ bk_err_t audio_event_handle(media_mailbox_msg_t * msg)
 			break;
 
 		case EVENT_AUD_MIC_SET_GAIN_REQ:
+			bk_printf("EVENT_AUD_MIC_SET_GAIN_REQ msg:%p msg->param:%p\r\n",msg, msg->param );
 			aud_tras_drv_send_msg(AUD_TRAS_DRV_MIC_SET_GAIN, (void *)msg);
 			break;
 
