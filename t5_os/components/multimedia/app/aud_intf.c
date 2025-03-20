@@ -114,6 +114,7 @@ static bk_err_t tuya_single_core_aud(uint32_t event, void *param)
     }
 
     tkl_mutex_lock(aud_mutex);
+	bk_printf("tuya_single_core_aud event:0x%x msg.param:0x%x\r\n", event, msg.param);
     ret = audio_event_handle(&msg);
     tkl_mutex_unlock(aud_mutex);
 
@@ -409,6 +410,7 @@ bk_err_t bk_aud_intf_set_mic_gain(uint8_t value)
 		if (aud_intf_info.mic_status != AUD_INTF_MIC_STA_NULL) {
 			temp = aud_intf_info.mic_info.mic_gain;
 			aud_intf_info.mic_info.mic_gain = value;
+			bk_printf("EVENT_AUD_MIC_SET_GAIN_REQ mic_gain:%p\r\n", &aud_intf_info.mic_info.mic_gain);
 			ret = mailbox_media_aud_send_msg(EVENT_AUD_MIC_SET_GAIN_REQ, &aud_intf_info.mic_info.mic_gain);
 			if (ret != BK_OK)
 				aud_intf_info.mic_info.mic_gain = temp;

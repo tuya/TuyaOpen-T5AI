@@ -42,6 +42,7 @@ void tkl_display_framebuffer_init(void)
 
     frame_buffer_fb_init(FB_INDEX_DISPLAY);
     frame_buffer_fb_register(MODULE_LCD, FB_INDEX_DISPLAY); 
+
     is_init = true;
 }
 
@@ -61,6 +62,7 @@ TKL_DISP_FRAMEBUFFER_S *tkl_disp_create_framebuffer(int width, int height, TKL_D
     fb->format      = format;
 
     pixel_size = tkl_disp_convert_pixel_fmt_to_size(format);
+
     frame_buffer_t *frame = frame_buffer_fb_display_malloc_wait(width*height*pixel_size);
     if (frame == NULL) {
 		bk_printf("frame_buffer_fb_malloc failed\n");

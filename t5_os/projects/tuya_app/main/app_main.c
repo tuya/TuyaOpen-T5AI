@@ -98,6 +98,7 @@ int main(void)
     extern OPERATE_RET tuya_ipc_init(void);
     tuya_ipc_init();
 
+    bk_printf("cpu%d heap: %d / %d\r\n", CONFIG_CPU_INDEX, tkl_system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize());
 
 #if (CONFIG_TUYA_TEST_CLI)
     extern int cli_tuya_test_init(void);

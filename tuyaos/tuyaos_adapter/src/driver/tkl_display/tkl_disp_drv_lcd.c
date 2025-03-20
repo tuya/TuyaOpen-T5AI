@@ -372,7 +372,7 @@ OPERATE_RET tkl_disp_register_lcd_dev(TUYA_LCD_CFG_T *device)
     memset(&intfs, 0x00, sizeof(TKL_DISP_DRV_INTFS_T));
     memset(&disp_info, 0x00, sizeof(TKL_DISP_INFO_S));
 
-    p_lcd_info = (TKL_LCD_INFO_T *)tkl_system_malloc(sizeof(TKL_LCD_INFO_T));
+    p_lcd_info = (TKL_LCD_INFO_T *)tkl_system_psram_malloc(sizeof(TKL_LCD_INFO_T));
     if(NULL == p_lcd_info) {
         return OPRT_MALLOC_FAILED;
     }
