@@ -658,8 +658,8 @@ static bk_err_t aud_tras_aec(void)
 	bk_err_t ret = BK_OK;
 	uint32_t size = 0;
 	uint32 i=0;
-	int16_t temp_buf[640];
-	int16_t temp_ref_buf[640];
+	static int16_t temp_buf[640];
+	static int16_t temp_ref_buf[640];
 
 	if (aud_tras_drv_info.voc_info.status == AUD_TRAS_DRV_VOC_STA_NULL)
 		return BK_OK;

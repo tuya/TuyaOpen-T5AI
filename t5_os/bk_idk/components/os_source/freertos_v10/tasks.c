@@ -47,6 +47,7 @@
 // lwipopts.h条件包含需要放在#include "FreeRTOS.h"之后，宏 CONFIG_SYS_CPU0 依赖其
 // 包含的sdkconfig.h , FreeRTOS.h ---> FreeRTOSConfig.h ---> sdkconfig.h
 #if (CONFIG_CPU_INDEX == 1)
+extern uint32_t start_tuya_thread;
 //#include "lwipopts.h"
 #include "lwip/opt.h"
 #endif // CONFIG_CPU_INDEX == 1
@@ -914,7 +915,8 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
 #if (CONFIG_CPU_INDEX == 1)
 #if (LWIP_NETCONN_SEM_PER_THREAD == 1)
             extern int8_t lwip_socket_thread_init(void *task);
-            lwip_socket_thread_init(pxNewTCB);
+            if (start_tuya_thread)
+                lwip_socket_thread_init(pxNewTCB);
 #endif // LWIP_NETCONN_SEM_PER_THREAD == 1
 #endif // CONFIG_CPU_INDEX == 1
 // Modified by TUYA End
@@ -1294,7 +1296,8 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 #if (CONFIG_CPU_INDEX == 1)
 #if (1 == LWIP_NETCONN_SEM_PER_THREAD)
 		extern int8_t lwip_socket_thread_cleanup(void *task);
-		lwip_socket_thread_cleanup(xTaskToDelete);
+        if (start_tuya_thread)
+		    lwip_socket_thread_cleanup(xTaskToDelete);
 #endif // LWIP_NETCONN_SEM_PER_THREAD == 1
 #endif // CONFIG_CPU_INDEX == 1
 // Modified by TUYA End

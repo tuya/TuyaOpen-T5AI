@@ -47,6 +47,10 @@ static void __feed_wdg(void *arg)
 }
 #endif
 
+#if (CONFIG_SYS_CPU1)
+uint32_t start_tuya_thread = 0;
+#endif
+
 extern void tuya_app_main(void);
 #if (CONFIG_SYS_CPU0)
 void user_app_main(void)
@@ -112,6 +116,7 @@ int main(void)
 
 #if (CONFIG_SYS_CPU1)
     bk_printf("\r\nstart tuya_app_main\r\n");
+    start_tuya_thread = 1;
     tuya_app_main();
 #endif
     return 0;
