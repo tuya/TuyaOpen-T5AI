@@ -94,7 +94,8 @@ OPERATE_RET tkl_ai_init(TKL_AUDIO_CONFIG_T *pconfig, int count)
     if (pconfig == NULL)
         return OPRT_INVALID_PARM;
 
-    aud_voc_setup.aec_enable = pconfig->enable;
+    aud_voc_setup.aec_enable = 1;
+    aud_voc_setup.mic2_disable = !pconfig->enable;
     if (pconfig->card == TKL_AUDIO_TYPE_UAC) {
         aud_voc_setup.data_type = AUD_INTF_VOC_DATA_TYPE_PCM;
         aud_voc_setup.spk_mode = AUD_DAC_WORK_MODE_SIGNAL_END;
@@ -187,19 +188,6 @@ OPERATE_RET tkl_ai_init(TKL_AUDIO_CONFIG_T *pconfig, int count)
         }
     }
     if (pconfig->spk_gpio < 56) {
-        TUYA_GPIO_BASE_CFG_T cfg;
-        cfg.direct = TUYA_GPIO_OUTPUT;
-        if (pconfig->spk_gpio_polarity == 0) {
-            cfg.mode = TUYA_GPIO_PULLUP;
-            cfg.level = TUYA_GPIO_LEVEL_HIGH;
-        }
-        else if (pconfig->spk_gpio_polarity == 1) {
-            cfg.mode = TUYA_GPIO_PULLDOWN;
-            cfg.level = TUYA_GPIO_LEVEL_LOW;
-        }
-
-        tkl_gpio_init(pconfig->spk_gpio, &cfg);
-
         board_spk_gpio = pconfig->spk_gpio;
         board_spk_gpio_polarity = pconfig->spk_gpio_polarity;
     }
@@ -268,6 +256,22 @@ OPERATE_RET tkl_ai_start(int card, TKL_AI_CHN_E chn)
         bk_printf("bk_aud_intf_voc_start fail, ret:%d\n", ret);
         return OPRT_COM_ERROR;
     }
+
+    if (current_card == TKL_AUDIO_TYPE_BOARD) {
+        TUYA_GPIO_BASE_CFG_T cfg;
+        cfg.direct = TUYA_GPIO_OUTPUT;
+        if (board_spk_gpio_polarity == 0) {
+            cfg.mode = TUYA_GPIO_PULLUP;
+            cfg.level = TUYA_GPIO_LEVEL_HIGH;
+        }
+        else if (board_spk_gpio_polarity == 1) {
+            cfg.mode = TUYA_GPIO_PULLDOWN;
+            cfg.level = TUYA_GPIO_LEVEL_LOW;
+        }
+
+        tkl_gpio_init(board_spk_gpio, &cfg);
+    }
+
     s_audio_init.spk_start = true;
     s_audio_init.mic_start = true;
 
@@ -376,6 +380,11 @@ OPERATE_RET tkl_ai_stop(int card, TKL_AI_CHN_E chn)
         s_audio_init.mic_start = false;
         s_audio_init.spk_start = false;
     } else if (current_card == TKL_AUDIO_TYPE_BOARD) {
+        if (board_spk_gpio_polarity == 0)
+            tkl_gpio_write(board_spk_gpio, 0);
+        else
+            tkl_gpio_write(board_spk_gpio, 1);
+
         // ret = bk_aud_intf_mic_deinit();
         ret = bk_aud_intf_voc_stop();
         if (ret != BK_OK) {
@@ -419,13 +428,6 @@ OPERATE_RET tkl_ai_uninit(void)
     }
     s_audio_init.mic_start = false;
     s_audio_init.spk_start = false;
-    if (current_card == TKL_AUDIO_TYPE_BOARD)
-    {
-        if (board_spk_gpio_polarity == 0)
-            tkl_gpio_write(board_spk_gpio, 0);
-        else
-            tkl_gpio_write(board_spk_gpio, 1);
-    }
 
     bk_printf("------ [%s %d]\r\n", __func__, __LINE__);
     return ret;

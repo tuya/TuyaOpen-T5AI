@@ -304,6 +304,16 @@ void sys_hal_set_ana_reg19_value(uint32_t value);
 void sys_hal_set_ana_reg20_value(uint32_t value);
 void sys_hal_set_ana_reg21_value(uint32_t value);
 void sys_hal_set_ana_reg27_value(uint32_t value);
+uint32_t sys_hal_get_ana_reg18_value(void);
+uint32_t sys_hal_get_ana_reg19_value(void);
+uint32_t sys_hal_get_ana_reg20_value(void);
+uint32_t sys_hal_get_ana_reg21_value(void);
+uint32_t sys_hal_get_ana_reg22_value(void);
+uint32_t sys_hal_get_ana_reg23_value(void);
+uint32_t sys_hal_get_ana_reg24_value(void);
+uint32_t sys_hal_get_ana_reg25_value(void);
+uint32_t sys_hal_get_ana_reg26_value(void);
+uint32_t sys_hal_get_ana_reg27_value(void);
 void sys_hal_analog_reg4_bits_or(uint32_t value);
 void sys_hal_set_ana_reg6_value(uint32_t value);
 void sys_hal_set_ana_reg7_value(uint32_t value);
@@ -394,7 +404,7 @@ void sys_hal_aud_dac_dcoc_en(uint32_t value);
 void sys_hal_aud_dac_idac_en(uint32_t value);
 void sys_hal_aud_dac_bypass_dwa_en(uint32_t value);
 void sys_hal_aud_dac_dacmute_en(uint32_t value);
-
+void sys_hal_set_ana_reg23_value(uint32_t value);
 /**  Audio End  **/
 
 void sys_hal_set_sys2flsh_2wire(uint32_t value);
@@ -3271,6 +3281,9 @@ void sys_hal_set_ana_gadc_cmp_ictrl(uint32_t value);
 void sys_hal_set_ana_pwd_gadc_buf(uint32_t value);
 void sys_hal_set_ana_vref_sel(uint32_t value);
 void sys_hal_set_ana_cb_cal_manu(uint32_t value);
+// Modified by TUYA Start
+void sys_hal_set_ana_adc_div(uint32_t value);
+// Modified by TUYA End
 void sys_hal_set_ana_cb_cal_trig(uint32_t value);
 UINT32 sys_hal_get_ana_cb_cal_manu_val(void);
 void sys_hal_set_ana_cb_cal_manu_val(uint32_t value);

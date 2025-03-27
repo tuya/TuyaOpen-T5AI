@@ -971,7 +971,7 @@ bk_err_t bk_aud_intf_voc_init(aud_intf_voc_setup_t setup)
 		aud_intf_info.voc_info.aud_setup.mic_samp_rate_points = 160;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
 		aud_intf_info.voc_info.aud_setup.speaker_samp_rate_points = 160;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
 	}
-	aud_intf_info.voc_info.aud_setup.mic_frame_number = 2;
+	aud_intf_info.voc_info.aud_setup.mic_frame_number = 4;
 	aud_intf_info.voc_info.aud_setup.speaker_frame_number = 2;
 	aud_intf_info.voc_info.aud_setup.spk_mode = setup.spk_mode;
 	aud_intf_info.voc_info.aud_setup.mic_mode = setup.mic_mode;

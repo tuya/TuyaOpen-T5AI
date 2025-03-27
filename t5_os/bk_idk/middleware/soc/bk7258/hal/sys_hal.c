@@ -1855,9 +1855,19 @@ void sys_hal_set_ana_reg18_value(uint32_t value)
     sys_ll_set_ana_reg18_value(value);
 }
 
+uint32_t sys_hal_get_ana_reg18_value()
+{
+    return sys_ll_get_ana_reg18_value();
+}
+
 void sys_hal_set_ana_reg19_value(uint32_t value)
 {
     sys_ll_set_ana_reg19_value(value);
+}
+
+uint32_t sys_hal_get_ana_reg19_value()
+{
+    return sys_ll_get_ana_reg19_value();
 }
 
 void sys_hal_set_ana_reg20_value(uint32_t value)
@@ -1865,14 +1875,67 @@ void sys_hal_set_ana_reg20_value(uint32_t value)
     sys_ll_set_ana_reg20_value(value);
 }
 
+uint32_t sys_hal_get_ana_reg20_value()
+{
+    return sys_ll_get_ana_reg20_value();
+}
+
 void sys_hal_set_ana_reg21_value(uint32_t value)
 {
     sys_ll_set_ana_reg21_value(value);
 }
+uint32_t sys_hal_get_ana_reg21_value()
+{
+    return sys_ll_get_ana_reg21_value();
+}
 
+void sys_hal_set_ana_reg22_value(uint32_t value)
+{
+    sys_ll_set_ana_reg22_value(value);
+}
+uint32_t sys_hal_get_ana_reg22_value()
+{
+    return sys_ll_get_ana_reg22_value();
+}
+void sys_hal_set_ana_reg23_value(uint32_t value)
+{
+    sys_ll_set_ana_reg23_value(value);
+}
+uint32_t sys_hal_get_ana_reg23_value()
+{
+    return sys_ll_get_ana_reg23_value();
+}
+void sys_hal_set_ana_reg24_value(uint32_t value)
+{
+    sys_ll_set_ana_reg24_value(value);
+}
+uint32_t sys_hal_get_ana_reg24_value()
+{
+    return sys_ll_get_ana_reg24_value();
+}
+void sys_hal_set_ana_reg25_value(uint32_t value)
+{
+    sys_ll_set_ana_reg25_value(value);
+}
+uint32_t sys_hal_get_ana_reg25_value()
+{
+    return sys_ll_get_ana_reg25_value();
+}
+void sys_hal_set_ana_reg26_value(uint32_t value)
+{
+    sys_ll_set_ana_reg26_value(value);
+}
+uint32_t sys_hal_get_ana_reg26_value()
+{
+    return sys_ll_get_ana_reg26_value();
+}
 void sys_hal_set_ana_reg27_value(uint32_t value)
 {
     sys_ll_set_ana_reg27_value(value);
+}
+uint32_t sys_hal_get_ana_reg27_value()
+{
+    return sys_ll_get_ana_reg27_value();
 }
 
 uint32_t sys_hal_bias_reg_read(void)
@@ -2104,7 +2167,7 @@ void sys_hal_aud_vdd1v5_en(uint32_t value)
 
 void sys_hal_aud_mic2_en(uint32_t value)
 {
-	//not support
+	sys_ll_set_ana_reg27_micen(value);
 }
 
 void sys_hal_aud_mic2_gain_set(uint32_t value)
@@ -2124,7 +2187,8 @@ uint32_t sys_hal_aud_dacg_get(void)
 
 void sys_hal_aud_aud_en(uint32_t value)
 {
-	//not support
+	sys_ll_set_ana_reg23_audioen(value);
+	sys_ll_set_ana_reg25_audioen(value);
 }
 
 void sys_hal_aud_rvcmd_en(uint32_t value)
@@ -2546,6 +2610,13 @@ void sys_hal_set_ana_cb_cal_manu(uint32_t value)
 {
     sys_ll_set_ana_reg5_bcal_en(value);
 }
+
+// Modified by TUYA Start
+void sys_hal_set_ana_adc_div(uint32_t value)
+{
+    sys_ll_set_ana_reg5_adc_div(value);
+}
+// Modified by TUYA End
 
 void sys_hal_set_ana_cb_cal_trig(uint32_t value)
 {

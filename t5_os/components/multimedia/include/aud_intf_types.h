@@ -210,6 +210,9 @@ typedef enum {
 /* audio interface voice setup configuration */
 typedef struct {
 	bool aec_enable;						/**< true: enable aec, false: disable aec */
+    // Modified by TUYA Start
+    bool mic2_disable;
+    // Modified by TUYA End
 	uint32_t samp_rate;		/**< voice transfer sample rate */
     // Modified by TUYA Start
 	uint32_t spk_samp_rate;		/**< speaker transfer sample rate */
@@ -232,6 +235,7 @@ typedef struct {
 
 #define DEFAULT_AUD_INTF_VOC_SETUP_CONFIG() {          \
         .aec_enable = true,                            \
+        .mic2_disable = false,                         \
         .samp_rate = 8000,        \
         .data_type = AUD_INTF_VOC_DATA_TYPE_G711A,     \
         .mic_gain = 0x2d,                              \

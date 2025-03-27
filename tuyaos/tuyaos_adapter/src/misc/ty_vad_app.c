@@ -50,6 +50,8 @@ typedef struct
     int vad_silence_ms;
     uint16_t sample_rate;
     uint16_t channel;
+    float scale;
+    int (*on_vad_status_change)(int vad_status);
 } VAD_ST, *VAD_ST_PTR;
 
 static VAD_ST_PTR vad_ptr = NULL;
@@ -73,6 +75,10 @@ static void vad_handle_thread(void *arg)
     vad_ptr->sample_rate = cfg->sample_rate;
     vad_ptr->channel = cfg->channel;
     vad_ptr->vad_silence_ms = cfg->silence_threshold_ms;
+    vad_ptr->scale = cfg->scale;
+    if (vad_ptr->scale == 0)
+        vad_ptr->scale = 1.0;   // default scale
+    vad_ptr->on_vad_status_change = cfg->on_vad_status_change;
     vad_work_state = VAD_STATE_IDLE;
     // NOTE: vad_buffer这里的帧长是mic回调过来的帧长，是10ms的帧长，所以要除以2。而底层的ADC采样的帧长是20ms
     vad_buffer = os_malloc((vad_ptr->sample_rate / FRAME_COUNT_PER_SECOND) * 2 * vad_ptr->channel / 2 * VAD_INPUT_BUFF_NUM);
@@ -94,6 +100,8 @@ static void vad_handle_thread(void *arg)
                 wb_vad_deinit();
                 wb_vad_enter(vad_ptr->vad_start_ms, vad_ptr->vad_end_ms, vad_frame_len, vad_ptr->vad_silence_ms); // vad start
                 os_printf("---vad_enter:%d---\r\n", vad_frame_len);
+                if (vad_ptr->on_vad_status_change)
+                    vad_ptr->on_vad_status_change(TY_VAD_FLAG_VAD_NONE);
             }
             vad_work_state = VAD_STATE_WORKING;
             break;
@@ -102,7 +110,7 @@ static void vad_handle_thread(void *arg)
             in_pcm_buf = msg.data_buf;
             data_len = msg.data_len;
             if (vad_work_state == VAD_STATE_WORKING) {
-                ret = wb_vad_entry((char *)in_pcm_buf, data_len); /*vad process*/
+                ret = wb_vad_entry((char *)in_pcm_buf, data_len, vad_ptr->scale); /*vad process*/
                 if (ret == 1) {
                     os_printf("------------vad start----------\r\n");
                     vad_flag = TY_VAD_FLAG_VAD_START;
@@ -117,6 +125,8 @@ static void vad_handle_thread(void *arg)
                     os_printf("------------silence----------\r\n");
                     vad_silence_flag = 1;
                 }
+                if (vad_ptr->on_vad_status_change)
+                    vad_ptr->on_vad_status_change(vad_flag);
             }
             break;
 
@@ -125,10 +135,14 @@ static void vad_handle_thread(void *arg)
             wb_vad_deinit();
             vad_flag = TY_VAD_FLAG_VAD_NONE;
             vad_work_state = VAD_STATE_IDLE;
+            if (vad_ptr->on_vad_status_change)
+                vad_ptr->on_vad_status_change(vad_flag);
             break;
 
         case CMD_VAD_FLAG_CLEAR:
             vad_flag = TY_VAD_FLAG_VAD_NONE;
+            if (vad_ptr->on_vad_status_change)
+                vad_ptr->on_vad_status_change(vad_flag);
             break;
 
         default:

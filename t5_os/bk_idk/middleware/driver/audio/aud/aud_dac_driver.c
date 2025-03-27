@@ -355,18 +355,27 @@ bk_err_t bk_aud_dac_get_status(uint32_t *dac_status)
 	return BK_OK;
 }
 
+static int g_dac_flag = 0;
 bk_err_t bk_aud_dac_start(void)
 {
-	AUD_DAC_RETURN_ON_NOT_INIT();
-	aud_hal_set_audio_config_dac_enable(1);
+	if(0 == g_dac_flag)
+	{
+		g_dac_flag = 1;
+		AUD_DAC_RETURN_ON_NOT_INIT();
+		aud_hal_set_audio_config_dac_enable(1);
+	}
 
 	return BK_OK;
 }
 
 bk_err_t bk_aud_dac_stop(void)
 {
-	AUD_DAC_RETURN_ON_NOT_INIT();
-	aud_hal_set_audio_config_dac_enable(0);
+	if(g_dac_flag)
+	{
+		g_dac_flag = 0;
+		AUD_DAC_RETURN_ON_NOT_INIT();
+		aud_hal_set_audio_config_dac_enable(0);
+	}
 
 	return BK_OK;
 }
