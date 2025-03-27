@@ -259,6 +259,8 @@ static OPERATE_RET __tkl_disp_drv_spi_lcd_write_ram(TUYA_LCD_SPI_CFG_T *p_cfg, u
     tkl_gpio_write(p_cfg->cs_pin, TUYA_GPIO_LEVEL_LOW);
     tkl_gpio_write(p_cfg->dc_pin, TUYA_GPIO_LEVEL_HIGH);
 
+    tkl_spi_irq_enable(p_cfg->spi_port);
+
     tkl_spi_send(p_cfg->spi_port , data, len);
 
     tkl_gpio_write(p_cfg->cs_pin, TUYA_GPIO_LEVEL_HIGH);
@@ -348,8 +350,6 @@ static OPERATE_RET __tkl_disp_drv_spi_lcd_display_frame(TKL_DISP_DRV_HANDLE hand
     p_cfg = (TUYA_LCD_SPI_CFG_T *)p_lcd_info->cfg.p_spi;
 
     __tkl_disp_drv_spi_lcd_set_window(p_cfg, &fb->rect);
-
-    tkl_spi_irq_enable(p_cfg->spi_port);
 
     len = fb->rect.width * fb->rect.height * tkl_disp_convert_pixel_fmt_to_size(fb->format);
     __tkl_disp_drv_spi_lcd_write_ram(p_cfg, (uint8_t*)fb->buffer, len);
