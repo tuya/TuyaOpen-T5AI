@@ -376,12 +376,17 @@ bk_err_t bk_aud_adc_disable_int(void)
 	return BK_OK;
 }
 
+static int g_adc_flag = 0;
 /* enable adc and adc start work */
 bk_err_t bk_aud_adc_start(void)
 {
-	AUD_ADC_RETURN_ON_NOT_INIT();
-	aud_hal_set_audio_config_adc_enable(1);
-	aud_hal_set_audio_config_line_enable(1);
+	if(0 == g_adc_flag)
+	{
+		g_adc_flag = 1;
+		AUD_ADC_RETURN_ON_NOT_INIT();
+		aud_hal_set_audio_config_adc_enable(1);
+		aud_hal_set_audio_config_line_enable(1);
+	}
 
 	return BK_OK;
 }
@@ -389,9 +394,13 @@ bk_err_t bk_aud_adc_start(void)
 /* disable adc and adc stop work */
 bk_err_t bk_aud_adc_stop(void)
 {
-	AUD_ADC_RETURN_ON_NOT_INIT();
-	aud_hal_set_audio_config_adc_enable(0);
-	aud_hal_set_audio_config_line_enable(0);
+	if(1 == g_adc_flag)
+	{
+		g_adc_flag = 0;
+		AUD_ADC_RETURN_ON_NOT_INIT();
+		aud_hal_set_audio_config_adc_enable(0);
+		aud_hal_set_audio_config_line_enable(0);
+	}
 
 	return BK_OK;
 }

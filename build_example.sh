@@ -118,7 +118,7 @@ disable_python_env() {
 
 check_python_install ||  { echo "Failed to check python environment."; exit 1; }
 
-bash t5_os/toolchain_get.sh $(pwd)/../tools || { echo "Failed to setup toolchain."; exit 1; } 
+bash toolchain_get.sh $(pwd)/../tools || { echo "Failed to setup toolchain."; exit 1; } 
 
 
 export TUYA_APP_PATH=$APP_PATH
@@ -169,7 +169,7 @@ fi
 echo "check bootloader.bin"
 boot_file=bk_idk/components/bk_libs/bk7258/bootloader/normal_bootloader/bootloader.bin
 check_value=$(md5sum ${boot_file} | awk '{print $1}')
-ori_value=f8f45b0779a8269fa089ac84ebd9c149
+ori_value=de1a8f2f2d2a4fa7ea85ce8cd4f59619
 if [ "x${check_value}" != "x${ori_value}" ]; then
     echo -e "\033[1;31m bootloader.bin check failed, the file had been changed, please update md5 value in build.sh \033[0m"
     exit

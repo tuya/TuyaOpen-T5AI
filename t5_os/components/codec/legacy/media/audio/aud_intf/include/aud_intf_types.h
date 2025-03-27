@@ -209,6 +209,9 @@ typedef enum {
 /* audio interface voice setup configuration */
 typedef struct {
 	bool aec_enable;						/**< true: enable aec, false: disable aec */
+	// Modified by TUYA Start
+	bool mic2_disable;
+	// Modified by TUYA End
 	uint32_t samp_rate;		/**< voice transfer sample rate */
 	aud_intf_voc_data_type_t data_type;		/**< voice data type */
 	uint8_t mic_gain;						/**< mic gain: value range:0x0 ~ 0x3f, suggest:0x2d */

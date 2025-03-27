@@ -410,7 +410,6 @@ bk_err_t bk_aud_intf_set_mic_gain(uint8_t value)
 		if (aud_intf_info.mic_status != AUD_INTF_MIC_STA_NULL) {
 			temp = aud_intf_info.mic_info.mic_gain;
 			aud_intf_info.mic_info.mic_gain = value;
-			bk_printf("EVENT_AUD_MIC_SET_GAIN_REQ mic_gain:%p\r\n", &aud_intf_info.mic_info.mic_gain);
 			ret = mailbox_media_aud_send_msg(EVENT_AUD_MIC_SET_GAIN_REQ, &aud_intf_info.mic_info.mic_gain);
 			if (ret != BK_OK)
 				aud_intf_info.mic_info.mic_gain = temp;
@@ -819,7 +818,6 @@ bk_err_t bk_aud_intf_spk_deinit(void)
 	bk_err_t ret = BK_OK;
 	CHECK_AUD_INTF_BUSY_STA();
 	ret = mailbox_media_aud_send_msg(EVENT_AUD_SPK_DEINIT_REQ, NULL);
-
 	if (ret == BK_OK)
 		aud_intf_info.spk_status = AUD_INTF_SPK_STA_NULL;
 
@@ -977,6 +975,10 @@ bk_err_t bk_aud_intf_voc_init(aud_intf_voc_setup_t setup)
 		aud_intf_info.voc_info.aud_setup.mic_samp_rate_points = 320;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
 		aud_intf_info.voc_info.aud_setup.speaker_samp_rate_points = 320;	//if AEC enable , the value is equal to aec_samp_rate_points, and the value not need to set
     }
+    // Modified by TUYA End
+
+    // Modified by TUYA Start
+    aud_intf_info.voc_info.mic2_disable = setup.mic2_disable;
     // Modified by TUYA End
 
 	aud_intf_info.voc_info.aud_setup.mic_frame_number = 2;

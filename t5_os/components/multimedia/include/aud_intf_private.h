@@ -207,6 +207,9 @@ typedef struct {
     // Modified by TUYA End
 	aud_intf_aud_config_t aud_setup;
 	bool aec_enable;
+    // Modified by TUYA Start
+    bool mic2_disable;
+    // Modified by TUYA End
 	aec_config_t *aec_setup;
 	tx_info_t tx_info;
 	rx_info_t rx_info;

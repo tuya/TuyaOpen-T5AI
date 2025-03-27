@@ -981,7 +981,7 @@ static void mb_ipc_task( void *para )
 			{
 				BK_LOGE(MOD_TAG, "IPC core1 timeout\r\n");
 				/*when cpu1 heartbeat timeout, then system reboot*/
-				BK_ASSERT(false);
+				// BK_ASSERT(false);
 			}
 		}
 

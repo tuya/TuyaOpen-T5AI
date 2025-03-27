@@ -73,6 +73,9 @@ static adc_buf_t s_adc_buf = {0};
 static adc_callback_t s_adc_read_isr = {NULL};
 static adc_statis_t* s_adc_statis = NULL;
 UINT8  g_saradc_flag = 0x0;
+// Modified by TUYA Start
+UINT8  g_adc_div = 0x0;
+// Modified by TUYA End
 
 saradc_calibrate_val saradc_val = {
 #if (CONFIG_SOC_BK7256XX)
@@ -585,6 +588,14 @@ bk_err_t bk_adc_set_config(adc_config_t *config)
 	if (&g_adc_cfg != config) {
 		os_memcpy(&g_adc_cfg, config, sizeof(g_adc_cfg));
 	}
+    // Modified by TUYA Start
+	if(config->chan == 4)
+	{
+		sys_drv_set_ana_adc_div(0x3);
+	}
+	else
+		sys_drv_set_ana_adc_div(0x1);
+    // Modified by TUYA End
 
 	adc_hal_set_clk(&s_adc.hal, config->src_clk, config->clk);
 	adc_hal_set_mode(&s_adc.hal, config->adc_mode);
@@ -808,8 +819,20 @@ float saradc_calculate(UINT16 adc_val)
 #elif (CONFIG_SOC_BK7236XX)
     /* (adc_val - low) / (practic_voltage - 1Volt) = (high - low) / 1Volt */
     /* practic_voltage = (adc_val - low) / (high - low) + 1Volt */
-    practic_voltage = (float)(adc_val - saradc_val.low);
-    practic_voltage = (practic_voltage / (float)(saradc_val.high - saradc_val.low)) + 1;
+    // Modified by TUYA Start
+    if(g_adc_div == 1)
+    {
+        practic_voltage = (float)(adc_val - saradc_val.low*3);
+        practic_voltage = (practic_voltage / (float)(saradc_val.high*3 - saradc_val.low*3)) + 1;
+        g_adc_div = 0;
+    }
+    else
+    {
+        practic_voltage = (float)(adc_val - saradc_val.low);
+        practic_voltage = (practic_voltage / (float)(saradc_val.high - saradc_val.low)) + 1;
+        g_adc_div = 0;
+    }
+    // Modified by TUYA End
 #elif ( (CFG_SOC_NAME != SOC_BK7271) && (CFG_SOC_NAME != SOC_BK7221U))
     practic_voltage = ((adc_val - saradc_val.low) * 1.8);
     practic_voltage = (practic_voltage / (saradc_val.high - saradc_val.low)) + 0.2;
@@ -847,6 +870,13 @@ float bk_adc_data_calculate(UINT16 adc_val, UINT8 adc_chan)
     {
         ADC_LOGI("adc_chan %d has been used\r\n", adc_chan);
     }
+    // Modified by TUYA Start
+    else if(adc_chan == 4)
+    {
+        g_adc_div = 1;
+        cali_value = saradc_calculate(adc_val);
+    }
+    // Modified by TUYA End
     else
     {
         cali_value = saradc_calculate(adc_val);

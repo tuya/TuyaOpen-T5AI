@@ -61,7 +61,7 @@
 #define SYS_ANA_REG19_MICDACIH_DEFAULT_VAL                     (0x00)
 #define SYS_ANA_REG19_MICSINGLEEN_DEFAULT_VAL                  (0x00)
 #define SYS_ANA_REG19_DCCOMPEN_DEFAULT_VAL                     (0x00)
-#define SYS_ANA_REG19_MICGAIN_DEFAULT_VAL                      (0x00)
+#define SYS_ANA_REG19_MICGAIN_DEFAULT_VAL                      (0x08)
 #define SYS_ANA_REG19_MICDACEN_DEFAULT_VAL                     (0x00)
 #define SYS_ANA_REG19_STG2LSEN1V_DEFAULT_VAL                   (0x00)
 #define SYS_ANA_REG19_OPENLOOPCAL1V_DEFAULT_VAL                (0x00)
@@ -112,6 +112,25 @@
 #define SYS_ANA_REG21_OCT0V9_DEFAULT_VAL                       (0x00)
 #define SYS_ANA_REG21_SOUT0V9_DEFAULT_VAL                      (0x00)
 #define SYS_ANA_REG21_HC0V9_DEFAULT_VAL                        (0x00)
+#define SYS_ANA_REG27_ISEL_DEFAULT_VAL                         (0x02)
+#define SYS_ANA_REG27_MICIRSEL1_DEFAULT_VAL                    (0x01)
+#define SYS_ANA_REG27_MICDACIT_DEFAULT_VAL                     (0x00)
+#define SYS_ANA_REG27_MICDACIH_DEFAULT_VAL                     (0x00)
+#define SYS_ANA_REG27_MICSINGLEEN_DEFAULT_VAL                  (0x00)
+#define SYS_ANA_REG27_DCCOMPEN_DEFAULT_VAL                     (0x00)
+#define SYS_ANA_REG27_MICGAIN_DEFAULT_VAL                      (0x00)//(0x08)
+#define SYS_ANA_REG27_MICDACEN_DEFAULT_VAL                     (0x00)
+#define SYS_ANA_REG27_STG2LSEN1V_DEFAULT_VAL                   (0x00)
+#define SYS_ANA_REG27_OPENLOOPCAL1V_DEFAULT_VAL                (0x00)
+#define SYS_ANA_REG27_CALLATCH_DEFAULT_VAL                     (0x00)
+#define SYS_ANA_REG27_VCMSEL_DEFAULT_VAL                       (0x01)
+#define SYS_ANA_REG27_DWAMODE_DEFAULT_VAL                      (0x01)
+#define SYS_ANA_REG27_R2REN_DEFAULT_VAL                        (0x00)
+#define SYS_ANA_REG27_NC_26_27_DEFAULT_VAL                     (0x00)
+#define SYS_ANA_REG27_MICEN_DEFAULT_VAL                        (0x00)
+#define SYS_ANA_REG27_RST_DEFAULT_VAL                          (0x00)
+#define SYS_ANA_REG27_BPDWA1V_DEFAULT_VAL                      (0x00)
+#define SYS_ANA_REG27_HCEN1STG_DEFAULT_VAL                     (0x01)
 #endif //#if CONFIG_SOC_BK7236XX
 
 
@@ -233,6 +252,30 @@ static uint32_t ana_reg21_value_cal(void)
 
 	return value;
 }
+static uint32_t ana_reg27_value_cal(void)
+{
+	uint32_t value = 0;
+	value |= ((SYS_ANA_REG27_ISEL_DEFAULT_VAL & SYS_ANA_REG19_ISEL_MASK) << SYS_ANA_REG27_ISEL_POS);
+	value |= ((SYS_ANA_REG27_MICIRSEL1_DEFAULT_VAL & SYS_ANA_REG19_MICIRSEL1_MASK) << SYS_ANA_REG27_MICIRSEL1_POS);
+	value |= ((SYS_ANA_REG27_MICDACIT_DEFAULT_VAL & SYS_ANA_REG19_MICDACIT_MASK) << SYS_ANA_REG27_MICDACIT_POS);
+	value |= ((SYS_ANA_REG27_MICDACIH_DEFAULT_VAL & SYS_ANA_REG19_MICDACIH_MASK) << SYS_ANA_REG27_MICDACIH_POS);
+	value |= ((SYS_ANA_REG27_MICSINGLEEN_DEFAULT_VAL & SYS_ANA_REG19_MICSINGLEEN_MASK) << SYS_ANA_REG27_MICSINGLEEN_POS);
+	value |= ((SYS_ANA_REG27_DCCOMPEN_DEFAULT_VAL & SYS_ANA_REG19_DCCOMPEN_MASK) << SYS_ANA_REG27_DCCOMPEN_POS);
+	value |= ((SYS_ANA_REG27_MICGAIN_DEFAULT_VAL & SYS_ANA_REG19_MICGAIN_MASK) << SYS_ANA_REG27_MICGAIN_POS);
+	value |= ((SYS_ANA_REG27_MICDACEN_DEFAULT_VAL & SYS_ANA_REG19_MICDACEN_MASK) << SYS_ANA_REG27_MICDACEN_POS);
+	value |= ((SYS_ANA_REG27_STG2LSEN1V_DEFAULT_VAL & SYS_ANA_REG19_STG2LSEN1V_MASK) << SYS_ANA_REG27_STG2LSEN1V_POS);
+	value |= ((SYS_ANA_REG27_OPENLOOPCAL1V_DEFAULT_VAL & SYS_ANA_REG19_OPENLOOPCAL1V_MASK) << SYS_ANA_REG27_OPENLOOPCAL1V_POS);
+	value |= ((SYS_ANA_REG27_CALLATCH_DEFAULT_VAL & SYS_ANA_REG19_CALLATCH_MASK) << SYS_ANA_REG27_CALLATCH_POS);
+	value |= ((SYS_ANA_REG27_VCMSEL_DEFAULT_VAL & SYS_ANA_REG19_VCMSEL_MASK) << SYS_ANA_REG27_VCMSEL_POS);
+	value |= ((SYS_ANA_REG27_DWAMODE_DEFAULT_VAL & SYS_ANA_REG19_DWAMODE_MASK) << SYS_ANA_REG27_DWAMODE_POS);
+	value |= ((SYS_ANA_REG27_R2REN_DEFAULT_VAL & SYS_ANA_REG19_R2REN_MASK) << SYS_ANA_REG27_R2REN_POS);
+	value |= ((SYS_ANA_REG27_NC_26_27_DEFAULT_VAL & SYS_ANA_REG19_NC_26_27_MASK) << SYS_ANA_REG27_NC_26_27_POS);
+	value |= ((SYS_ANA_REG27_MICEN_DEFAULT_VAL & SYS_ANA_REG19_MICEN_MASK) << SYS_ANA_REG27_MICEN_POS);
+	value |= ((SYS_ANA_REG27_RST_DEFAULT_VAL & SYS_ANA_REG19_RST_MASK) << SYS_ANA_REG27_RST_POS);
+	value |= ((SYS_ANA_REG27_BPDWA1V_DEFAULT_VAL & SYS_ANA_REG19_BPDWA1V_MASK) << SYS_ANA_REG27_BPDWA1V_POS);
+	value |= ((SYS_ANA_REG27_HCEN1STG_DEFAULT_VAL & SYS_ANA_REG19_HCEN1STG_MASK) << SYS_ANA_REG27_HCEN1STG_POS);
+	return value;
+}
 #endif //#if CONFIG_SOC_BK7236XX
 
 bk_err_t bk_aud_clk_config(aud_clk_t clk)
@@ -293,14 +336,15 @@ bk_err_t bk_aud_driver_init(void)
 	sys_hal_set_ana_reg20_value(0xFBC02423);
 	sys_hal_set_ana_reg21_value(0x00500000);
 */
-	//sys_hal_aud_aud_en(1);
+	sys_hal_aud_aud_en(1);
 	aud_hal_set_clk_control_soft_reset(1);
 
 	sys_hal_set_ana_reg18_value(ana_reg18_value_cal());
 	sys_hal_set_ana_reg19_value(ana_reg19_value_cal());
 	sys_hal_set_ana_reg20_value(ana_reg20_value_cal());
 	sys_hal_set_ana_reg21_value(ana_reg21_value_cal());		//mic1
-	sys_hal_set_ana_reg27_value(0x91800006);				//mic2
+	sys_hal_set_ana_reg27_value(ana_reg27_value_cal());		//mic2
+	//sys_hal_set_ana_reg23_value(0xd0840c07);				//mic2
 
 	/* enable audio bias */
 	sys_drv_aud_audbias_en(1);

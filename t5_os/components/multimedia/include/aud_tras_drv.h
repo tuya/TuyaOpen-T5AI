@@ -156,6 +156,9 @@ typedef struct {
 	//audio_tras_drv_mode_t mode;			//AUD_TRAS_DRV_MODE_CPU0: audio transfer work in cpu0, AUD_TRAS_DRV_MODE_CPU1:audio transfer work in cpu1
 	aud_tras_voc_sta_t status;
 	bool aec_enable;
+    // Modified by TUYA Start
+    bool mic2_disable;
+    // Modified by TUYA End
 	aec_info_t *aec_info;
 
 	dma_id_t adc_dma_id;				//audio transfer ADC DMA id

@@ -46,10 +46,11 @@ void vad_pre_start(void);
 int vad_entry(short samples[], int len);
 
 int wb_vad_enter(int start_threshold,int end_threshold,int frame_len, int pre_frame);
-int wb_vad_entry(char *buffer, int len);
+int wb_vad_entry(char *buffer, int len, float scale);
 void wb_vad_deinit(void);
 int wb_vad_get_frame_len(void);
 void wb_estimate_init(void);
+void wb_vad_set_scale(float scale);
 
 #endif // _VAD_H_
 // eof
