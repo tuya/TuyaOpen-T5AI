@@ -17,7 +17,7 @@ extern "C" {
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
-
+#define INVALID_GPIO_PIN                 0xFF
 
 /***********************************************************
 ***********************typedef define***********************
@@ -89,6 +89,7 @@ typedef struct
 typedef enum {
     TUYA_DISP_BL_GPIO = 0,
     TUYA_DISP_BL_PWM,
+    TUYA_DISP_BL_NOT_EXIST,
 } TUYA_LCD_BL_MODE_E;
 
 typedef struct {
@@ -122,6 +123,8 @@ typedef struct {
         const TUYA_LCD_SPI_CFG_T  *p_spi;
     };
     TUYA_LCD_BL_CFG_T       bl; 
+    TUYA_GPIO_NUM_E         power_io;
+    TUYA_GPIO_LEVEL_E       power_active_lv;   
 }TUYA_LCD_CFG_T;
 
 /***********************************************************
