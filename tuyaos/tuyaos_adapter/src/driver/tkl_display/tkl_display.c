@@ -243,10 +243,6 @@ OPERATE_RET tkl_disp_init(TKL_DISP_DEVICE_S *display_device, TKL_DISP_EVENT_HAND
 
     tkl_display_dma2d_init();
 
-    if(p_dev->dev_info.rotation != TKL_DISP_ROTATION_0) {
-        tkl_display_rotate_init();
-    }
-
     return ret;
 }
 

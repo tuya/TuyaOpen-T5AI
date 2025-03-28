@@ -58,12 +58,34 @@ static void __lcd_blacklight_init(TUYA_LCD_BL_CFG_T *bl_cfg)
         tkl_gpio_init(bl_cfg->gpio.io, &cfg);
     }else if(bl_cfg->mode == TUYA_DISP_BL_PWM) {
         tkl_pwm_init(bl_cfg->pwm.id, &bl_cfg->pwm.cfg);
+    }else if(bl_cfg->mode == TUYA_DISP_BL_NOT_EXIST){
+        bk_printf("There is no backlight control pin on the board.\r\n");
     }else {
         bk_printf("not support bl mode:%d\r\n", bl_cfg->mode);
     }
 
     return;
 }
+
+static void __lcd_blacklight_deinit(TUYA_LCD_BL_CFG_T *bl_cfg)
+{
+    if(NULL == bl_cfg) {
+        return;
+    }
+
+    if(bl_cfg->mode == TUYA_DISP_BL_GPIO) {
+        tkl_gpio_deinit(bl_cfg->gpio.io);
+    }else if(bl_cfg->mode == TUYA_DISP_BL_PWM) {
+        tkl_pwm_deinit(bl_cfg->pwm.id);
+    }else if(bl_cfg->mode == TUYA_DISP_BL_NOT_EXIST){
+        bk_printf("There is no backlight control pin on the board.\r\n");
+    }else {
+        bk_printf("not support bl mode:%d\r\n", bl_cfg->mode);
+    }
+
+    return;
+}
+
 
 static OPERATE_RET __tkl_disp_drv_lcd_init(TKL_DISP_DRV_HANDLE handle)
 {
@@ -75,6 +97,10 @@ static OPERATE_RET __tkl_disp_drv_lcd_init(TKL_DISP_DRV_HANDLE handle)
     }
 
     p_lcd_info = (TKL_LCD_INFO_T *)handle;
+
+    if(p_lcd_info->cfg.power_io != INVALID_GPIO_PIN) {
+        tkl_gpio_write(p_lcd_info->cfg.power_io, p_lcd_info->cfg.power_active_lv);
+    }
 
     bk_ret = lcd_driver_init(&p_lcd_info->bk_lcd_dev);
     if(bk_ret != BK_OK) {
@@ -116,6 +142,27 @@ static OPERATE_RET __tkl_disp_drv_lcd_display_frame(TKL_DISP_DRV_HANDLE handle, 
     return OPRT_OK;
 }
 
+static OPERATE_RET __tkl_disp_drv_lcd_deinit(TKL_DISP_DRV_HANDLE handle)
+{
+    TKL_LCD_INFO_T *p_lcd_info = NULL;
+
+    if(NULL == handle) {
+        return OPRT_INVALID_PARM;
+    }
+
+    p_lcd_info = (TKL_LCD_INFO_T *)handle;
+
+    if(p_lcd_info->cfg.power_io != INVALID_GPIO_PIN) {
+        tkl_gpio_write(p_lcd_info->cfg.power_io, (p_lcd_info->cfg.power_active_lv == TUYA_GPIO_LEVEL_HIGH) ? TUYA_GPIO_LEVEL_LOW: TUYA_GPIO_LEVEL_HIGH);
+    }
+
+    __lcd_blacklight_deinit(&p_lcd_info->cfg.bl);
+
+    lcd_driver_deinit();
+
+    return OPRT_OK;
+}
+
 static OPERATE_RET __tkl_disp_set_brightness(TKL_DISP_DRV_HANDLE handle, int brightness)
 {
     TKL_LCD_INFO_T *p_lcd_info = NULL;
@@ -142,6 +189,8 @@ static OPERATE_RET __tkl_disp_set_brightness(TKL_DISP_DRV_HANDLE handle, int bri
         }else {
             tkl_pwm_stop(bl_cfg->pwm.id);
         }
+    }else if(bl_cfg->mode == TUYA_DISP_BL_NOT_EXIST) {
+        bk_printf("There is no backlight control pin on the board.\r\n");
     }else {
         return OPRT_NOT_SUPPORTED;
     }
@@ -309,6 +358,10 @@ static OPERATE_RET __tkl_disp_drv_spi_lcd_init(TKL_DISP_DRV_HANDLE handle)
     p_lcd_info = (TKL_LCD_INFO_T *)handle;
     p_cfg =(TUYA_LCD_SPI_CFG_T *)p_lcd_info->cfg.p_spi;
 
+    if(p_lcd_info->cfg.power_io != INVALID_GPIO_PIN) {
+        tkl_gpio_write(p_lcd_info->cfg.power_io, p_lcd_info->cfg.power_active_lv);
+    }
+
     ret = __tkl_disp_drv_lcd_spi_init(p_cfg->spi_port, p_cfg->spi_clk);
     if(ret != OPRT_OK) {
         bk_printf("lcd spi init err:%d\r\n", ret);
@@ -321,7 +374,7 @@ static OPERATE_RET __tkl_disp_drv_spi_lcd_init(TKL_DISP_DRV_HANDLE handle)
         return ret;
     }
 
-    __lcd_blacklight_init(&p_lcd_info->cfg.bl);
+    __lcd_blacklight_init(&p_lcd_info->cfg.bl);    
 
     __tkl_disp_drv_spi_lcd_reset(p_cfg->rst_pin);
 
@@ -357,6 +410,33 @@ static OPERATE_RET __tkl_disp_drv_spi_lcd_display_frame(TKL_DISP_DRV_HANDLE hand
     return ret;
 }
 
+static OPERATE_RET __tkl_disp_drv_spi_lcd_deinit(TKL_DISP_DRV_HANDLE handle)
+{
+    TKL_LCD_INFO_T *p_lcd_info = NULL;
+    TUYA_LCD_SPI_CFG_T *p_cfg;
+
+    if(NULL == handle) {
+        return OPRT_INVALID_PARM;
+    }
+
+    p_lcd_info = (TKL_LCD_INFO_T *)handle;
+    p_cfg =(TUYA_LCD_SPI_CFG_T *)p_lcd_info->cfg.p_spi;
+
+    __lcd_blacklight_deinit(&p_lcd_info->cfg.bl);
+
+    if(p_lcd_info->cfg.power_io != INVALID_GPIO_PIN) {
+        tkl_gpio_write(p_lcd_info->cfg.power_io, (p_lcd_info->cfg.power_active_lv == TUYA_GPIO_LEVEL_HIGH) ? TUYA_GPIO_LEVEL_LOW: TUYA_GPIO_LEVEL_HIGH);
+    }
+
+    tkl_spi_deinit(p_cfg->spi_port);
+
+    tkl_gpio_deinit(p_cfg->cs_pin);
+    tkl_gpio_deinit(p_cfg->dc_pin);
+    tkl_gpio_deinit(p_cfg->rst_pin);
+
+    return OPRT_OK;
+}
+
 OPERATE_RET tkl_disp_register_lcd_dev(TUYA_LCD_CFG_T *device)
 {
     TKL_LCD_INFO_T *p_lcd_info = NULL;
@@ -382,8 +462,8 @@ OPERATE_RET tkl_disp_register_lcd_dev(TUYA_LCD_CFG_T *device)
     if(device->lcd_tp == TUYA_LCD_TYPE_SPI) {
         intfs.TKL_DISP_DRV_INIT           = __tkl_disp_drv_spi_lcd_init;
         intfs.TKL_DISP_DRV_DISPLAY_FRAME  = __tkl_disp_drv_spi_lcd_display_frame;
+        intfs.TKL_DISP_DRV_DEINIT         = __tkl_disp_drv_spi_lcd_deinit;
         intfs.TKL_DISP_DRV_CONFIG         = NULL;
-        intfs.TKL_DISP_DRV_DEINIT         = NULL;
     }else {
         ret = tkl_disp_convert_lcd_cfg_tkl_to_bk(device, &p_lcd_info->bk_lcd_dev, &p_lcd_info->bk_rgb_cfg);
         if(ret != OPRT_OK) {
@@ -392,8 +472,8 @@ OPERATE_RET tkl_disp_register_lcd_dev(TUYA_LCD_CFG_T *device)
 
         intfs.TKL_DISP_DRV_INIT           = __tkl_disp_drv_lcd_init;
         intfs.TKL_DISP_DRV_DISPLAY_FRAME  = __tkl_disp_drv_lcd_display_frame;
-        intfs.TKL_DISP_DRV_CONFIG         = NULL;
-        intfs.TKL_DISP_DRV_DEINIT         = NULL;   
+        intfs.TKL_DISP_DRV_DEINIT         = __tkl_disp_drv_lcd_deinit;
+        intfs.TKL_DISP_DRV_CONFIG         = NULL;   
     }
 
     intfs.TKL_DISP_SET_BRIGHTNESS     = __tkl_disp_set_brightness;
@@ -408,6 +488,15 @@ OPERATE_RET tkl_disp_register_lcd_dev(TUYA_LCD_CFG_T *device)
     if(ret != OPRT_OK) {
         goto REG_LCD_ERR;
     }  
+
+    if(p_lcd_info->cfg.power_io != INVALID_GPIO_PIN) {
+        TUYA_GPIO_BASE_CFG_T cfg;
+
+        cfg.mode   = TUYA_GPIO_PUSH_PULL;
+        cfg.direct = TUYA_GPIO_OUTPUT;
+        cfg.level  = (p_lcd_info->cfg.power_active_lv == TUYA_GPIO_LEVEL_HIGH) ? TUYA_GPIO_LEVEL_LOW: TUYA_GPIO_LEVEL_HIGH;
+        tkl_gpio_init(p_lcd_info->cfg.power_io, &cfg);
+    }
 
     return OPRT_OK;
 
