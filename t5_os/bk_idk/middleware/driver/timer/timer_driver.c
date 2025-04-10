@@ -666,7 +666,7 @@ bk_err_t bk_timer_start_us(timer_id_t timer_id, uint64_t time_us, timer_isr_t ca
     if (en_status & BIT(timer_id)) {
         TIMER_LOGD("timer(%d) is running, stop it\r\n", timer_id);
         timer_hal_disable(&s_timer.hal, timer_id);
-        delay(4);
+        bk_delay(4);
     }
 
     timer_hal_init_timer(&s_timer.hal, timer_id, time_us, TIMER_UNIT_US);

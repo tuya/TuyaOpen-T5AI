@@ -147,6 +147,7 @@ typedef struct QueueDefinition   * QueueSetMemberHandle_t;
  */
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
     #define xQueueCreate( uxQueueLength, uxItemSize )    xQueueGenericCreate( ( uxQueueLength ), ( uxItemSize ), ( queueQUEUE_TYPE_BASE ) )
+    #define xQueueCreate_in_Psram( uxQueueLength, uxItemSize )    xQueueGenericCreate_in_Psram( ( uxQueueLength ), ( uxItemSize ), ( queueQUEUE_TYPE_BASE ) )
 #endif
 
 /**
@@ -1549,6 +1550,9 @@ BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex ) PRIVILEGED_FUNCTION;
     QueueHandle_t xQueueGenericCreate( const UBaseType_t uxQueueLength,
                                        const UBaseType_t uxItemSize,
                                        const uint8_t ucQueueType ) PRIVILEGED_FUNCTION;
+    QueueHandle_t xQueueGenericCreate_in_Psram( const UBaseType_t uxQueueLength,
+                                                const UBaseType_t uxItemSize,
+                                                const uint8_t ucQueueType ) PRIVILEGED_FUNCTION;
 #endif
 
 /*

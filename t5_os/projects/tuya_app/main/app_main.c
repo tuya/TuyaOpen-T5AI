@@ -55,40 +55,12 @@ extern void tuya_app_main(void);
 #if (CONFIG_SYS_CPU0)
 void user_app_main(void)
 {
-//     // disable shell echo for gpio test
-//     shell_echo_set(0);
-//
-//     bk_printf("-------- left heap: %d, reset reason: %x\r\n",
-//             xPortGetFreeHeapSize(), bk_misc_get_reset_reason() & 0xFF);
-//     extern int tuya_upgrade_main(void);
-//     extern TUYA_OTA_PATH_E tkl_ota_is_under_seg_upgrade(void);
-//
-//     if(TUYA_OTA_PATH_INVALID != tkl_ota_is_under_seg_upgrade()) {
-//         bk_printf("goto tuya_upgrade_main\r\n");
-//         tuya_upgrade_main();
-//     }else {
-//         bk_printf("go to tuya\r\n");
-//         // tuya_app_main();
-//     }
-//
-// #if (CONFIG_TUYA_TEST_CLI)
-//     extern int cli_tuya_test_init(void);
-//     cli_tuya_test_init();
-// #endif
+
 }
 #endif
 
 int main(void)
 {
-// #if (CONFIG_SYS_CPU0)
-//     if (!ate_is_enabled()) {
-//         rtos_set_user_app_entry((beken_thread_function_t)user_app_main);
-//     } else {
-//         // in ate mode, feed dog
-//         xTaskCreate(__feed_wdg, "feed_wdg", 1024, NULL, 6, (TaskHandle_t * const )&__wdg_handle);
-//     }
-// #endif // CONFIG_SYS_CPUx
-
 #if (CONFIG_SYS_CPU0)
     // TODO ate mode
     xTaskCreate(__feed_wdg, "feed_wdg", 1024, NULL, 6, (TaskHandle_t * const )&__wdg_handle);
@@ -101,8 +73,6 @@ int main(void)
 
     extern OPERATE_RET tuya_ipc_init(void);
     tuya_ipc_init();
-
-    bk_printf("cpu%d heap: %d / %d\r\n", CONFIG_CPU_INDEX, tkl_system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize());
 
 #if (CONFIG_TUYA_TEST_CLI)
     extern int cli_tuya_test_init(void);

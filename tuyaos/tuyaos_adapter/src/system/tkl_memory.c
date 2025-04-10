@@ -13,6 +13,12 @@
 
 extern void bk_printf(const char *fmt, ...);
 extern size_t xPortGetPsramFreeHeapSize( void );
+
+static bool s_psram_malloc_force = true;
+void tkl_system_psram_malloc_force_set(bool enable)
+{
+    s_psram_malloc_force = enable;
+}
 /**
 * @brief Alloc memory of system
 *
@@ -24,18 +30,23 @@ extern size_t xPortGetPsramFreeHeapSize( void );
 */
 void* tkl_system_malloc(const SIZE_T size)
 {
-    void* ptr = os_malloc(size);
-    if(NULL == ptr) {
-        bk_printf("tkl_system_malloc failed, size(%d)!\r\n", size);
+    if (s_psram_malloc_force) {
+        return tkl_system_psram_malloc(size);
+    } else {
+        void* ptr = os_malloc(size);
+        if(NULL == ptr) {
+            bk_printf("tkl_system_malloc failed, size(%d)!\r\n", size);
+        }
+
+        // bk_printf("cpu%d heap: %d / %d\r\n", CONFIG_CPU_INDEX, tkl_system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize());
+
+        if (size > 4096) {
+            bk_printf("tkl_system_malloc big memory, size(%d)!\r\n", size);
+        }
+
+        
+        return ptr;
     }
-
-    // bk_printf("cpu%d heap: %d / %d\r\n", CONFIG_CPU_INDEX, tkl_system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize());
-
-    if (size > 4096) {
-        bk_printf("tkl_system_malloc big memory, size(%d)!\r\n", size);
-    }
-
-    return ptr;
 }
 
 /**
@@ -49,7 +60,11 @@ void* tkl_system_malloc(const SIZE_T size)
 */
 void tkl_system_free(void* ptr)
 {
-    os_free(ptr);
+    if (s_psram_malloc_force) {
+        tkl_system_psram_free(ptr);
+    } else {
+        os_free(ptr);
+    }
 }
 
 /**
@@ -86,15 +101,24 @@ void *tkl_system_memcpy(void* src, const void* dst, const SIZE_T n)
  * @param[in]       nitems      the numbers of memory block
  * @param[in]       size        the size of the memory block
  */
-VOID_T *tkl_system_calloc(size_t nitems, size_t size)
+void *tkl_system_calloc(size_t nitems, size_t size)
 {
-        if (size && nitems > (~(size_t) 0) / size)
-                return NULL;
+    void *ptr = NULL;
 
-        void *ptr =  os_zalloc(nitems * size);
-    if (ptr == NULL) {
-        bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d, free: %d psram free: %d\r\n",
-                nitems * size,nitems,size, tkl_system_get_free_heap_size(), xPortGetPsramFreeHeapSize());
+    if (size && nitems > (~(size_t) 0) / size)
+        return NULL;
+
+    if (s_psram_malloc_force) {
+        ptr = psram_zalloc(nitems * size);
+        if (ptr == NULL) {
+            bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d\r\n", nitems * size,nitems,size);
+        }
+    }else {
+        ptr =  os_zalloc(nitems * size);
+        if (ptr == NULL) {
+            bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d, free: %d psram free: %d\r\n",
+                    nitems * size,nitems,size, tkl_system_get_free_heap_size(), xPortGetPsramFreeHeapSize());
+        }
     }
     return ptr;
 }
@@ -107,7 +131,11 @@ VOID_T *tkl_system_calloc(size_t nitems, size_t size)
  */
 void *tkl_system_realloc(void* ptr, size_t size)
 {
-    return os_realloc(ptr, size);
+    if (s_psram_malloc_force) {
+        return bk_psram_realloc(ptr, size);
+    } else {
+        return os_realloc(ptr, size);
+    }
 }
 
 #define CONFIG_HAVE_PSRAM 1
@@ -172,3 +200,16 @@ void *tkl_system_psram_realloc(void* ptr, size_t size)
 #endif // CONFIG_HAVE_PSRAM
 }
 
+/**
+* @brief Get free heap size in psram
+*
+* @param void
+*
+* @note This API is used for getting free heap size.
+*
+* @return size of free heap
+*/
+int tkl_system_psram_get_free_heap_size(void)
+{
+    return (int)xPortGetPsramFreeHeapSize();
+}
