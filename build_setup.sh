@@ -5,15 +5,15 @@ set -e
 TOP_DIR=$(dirname "$0")
 echo $TOP_DIR
 
-SDKCONFIG_FILE=${TOP_DIR}/t5_os/build/bk7258_cp1/config
-if [ ! -d ${SDKCONFIG_FILE} ]; then
-    mkdir -p ${SDKCONFIG_FILE}
+#SDKCONFIG_FILE=${TOP_DIR}/t5_os/build/bk7258_cp1/config
+#if [ ! -d ${SDKCONFIG_FILE} ]; then
+#    mkdir -p ${SDKCONFIG_FILE}
+#
+#fi
 
-fi
-
-if [ ! -f ${SDKCONFIG_FILE}/sdkconfig.h ]; then
-    cp -rf ${TOP_DIR}/tools/sdkconfig.h ${SDKCONFIG_FILE}/sdkconfig.h
-fi
+#if [ ! -f ${SDKCONFIG_FILE}/sdkconfig.h ]; then
+#    cp -rf ${TOP_DIR}/tools/sdkconfig.h ${SDKCONFIG_FILE}/sdkconfig.h
+#fi
 
 echo "Start board build_setup ..."
 

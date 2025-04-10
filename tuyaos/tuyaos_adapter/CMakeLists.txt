@@ -44,7 +44,8 @@ set(incs
     "include/tal_compatible"
     "include/wired"
     "include/ipc"
-    "include/lcd"
+    "include/asr"
+    "include/asr/wanson_asr"
 )
 
 string(REPLACE " " ";" TUYA_HEADER_DIR_LIST $ENV{TUYA_HEADER_DIR})
@@ -116,6 +117,7 @@ list(APPEND srcs
     src/driver/tkl_watchdog.c
     src/driver/encrypt.c
     src/driver/tkl_wired.c
+    src/driver/tkl_asr.c
 )
 
 file(GLOB_RECURSE utilities_srcs "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/utilities/src/*.c")
@@ -125,11 +127,14 @@ endif()
 
 armino_component_register(SRCS "${srcs}" INCLUDE_DIRS "${incs}" REQUIRES bk_common bk_log multimedia bk_usb bk_draw_blend media_service lvgl bk_vfs bk_cli lwip_intf_v2_1)
 
-# platform/t5ai/tuyaos/tuyaos_adapter/include/vad/lib/libvad.a
-target_link_libraries(${COMPONENT_LIB} INTERFACE "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/vad/lib/libvad.a")
-
 #add tuya lib
 if (CONFIG_SYS_CPU1)
+
+# platform/t5ai/tuyaos/tuyaos_adapter/include/vad/lib/libvad.a
+target_link_libraries(${COMPONENT_LIB} INTERFACE "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/vad/lib/libvad.a")
+# platform/t5ai/tuyaos/tuyaos_adapter/include/asr/wanson_asr/libasrfst.a
+target_link_libraries(${COMPONENT_LIB} INTERFACE "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/asr/wanson_asr/libasrfst.a")
+
 set(tuya_libs "$ENV{TUYA_LIBS}")
 string(REPLACE " " ";" tuya_libs "${tuya_libs}")
 foreach(lib ${tuya_libs})	

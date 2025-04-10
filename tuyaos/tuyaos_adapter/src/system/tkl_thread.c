@@ -30,7 +30,7 @@
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
 OPERATE_RET tkl_thread_create(TKL_THREAD_HANDLE* thread,
-                           const CHAR_T* name,
+                           const char* name,
                            uint32_t stack_size,
                            uint32_t priority,
                            THREAD_FUNC_T func,
@@ -41,7 +41,7 @@ OPERATE_RET tkl_thread_create(TKL_THREAD_HANDLE* thread,
     }
     
     BaseType_t ret = 0;
-    ret = xTaskCreate(func, name, stack_size / sizeof(portSTACK_TYPE), (void *const)arg, priority, (TaskHandle_t * const )thread);
+    ret = xTaskCreateInPsram(func, name, stack_size / sizeof(portSTACK_TYPE), (void *const)arg, priority, (TaskHandle_t * const )thread);
     if (ret != pdPASS) {
         return OPRT_OS_ADAPTER_THRD_CREAT_FAILED;
     }
@@ -81,7 +81,7 @@ OPERATE_RET tkl_thread_release(TKL_THREAD_HANDLE thread)
 */
 OPERATE_RET tkl_thread_get_watermark(TKL_THREAD_HANDLE thread, uint32_t* watermark)
 {
-    // *watermark = uxTaskGetStackHighWaterMark(thread) * sizeof( StackType_t );
+    *watermark = uxTaskGetStackHighWaterMark(thread) * sizeof( StackType_t );
     return OPRT_OK;
 }
 
@@ -109,7 +109,7 @@ OPERATE_RET tkl_thread_get_id(TKL_THREAD_HANDLE *thread)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_thread_set_self_name(const CHAR_T* name)
+OPERATE_RET tkl_thread_set_self_name(const char* name)
 {
     if (!name) {
         return OPRT_INVALID_PARM;
@@ -148,13 +148,6 @@ OPERATE_RET tkl_thread_diagnose(TKL_THREAD_HANDLE thread)
     return OPRT_NOT_SUPPORTED;
 }
 
-extern BaseType_t xTaskCreateInPsram( TaskFunction_t pxTaskCode,
-                                      const char * const pcName, /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
-                                      const configSTACK_DEPTH_TYPE usStackDepth,
-                                      void * const pvParameters,
-                                      UBaseType_t uxPriority,
-                                      TaskHandle_t * const pxCreatedTask );
-
 /**
 * @brief Create thread in PSRAM
 *
@@ -170,7 +163,7 @@ extern BaseType_t xTaskCreateInPsram( TaskFunction_t pxTaskCode,
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
 OPERATE_RET tkl_thread_create_in_psram(TKL_THREAD_HANDLE* thread,
-                           const CHAR_T* name,
+                           const char* name,
                            uint32_t stack_size,
                            uint32_t priority,
                            THREAD_FUNC_T func,

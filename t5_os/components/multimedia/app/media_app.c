@@ -79,7 +79,7 @@ static bk_err_t tuya_single_core_send_media_msg(uint32_t event, uint32_t param)
     media_msg_t msg;
     media_mailbox_msg_t mb_msg;
 
-    // TODO �����룬����
+    // TODO 防重入，加锁
 
     if (media_mutex == NULL) {
         ret = tkl_mutex_create_init(&media_mutex);

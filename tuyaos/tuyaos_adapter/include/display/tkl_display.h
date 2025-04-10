@@ -6,13 +6,13 @@
  *
  * @copyright Copyright 2019-2021 Tuya Inc. All Rights Reserved.
  *
- * 1. 支持图像的位块传输。
- * 2. 支持色彩填充。
- * 3. 需要支持HDMI/VGA/DP等外接设备的热插拔通知。
- * 4. 需要支持HDMI/VGA/DP等外接设备格式/分辨率/刷新率的查询和设置
- * 5. 需要支持帧同步接口，避免图像刷新的撕裂。
- * 6. 需要支持多个图层。
- * 7. 需要提供一个类似gralloc的内存管理接口，用于将内核framebuffer或dma-buf直接映射给应用使用，减少拷贝操作
+ * 1. Support bit block transfer of images.
+ * 2. Support color filling.
+ * 3. It is necessary to support the hot-plug notification of external devices such as HDMI/VGA/DP.
+ * 4. It is necessary to support the query and setting of the format/resolution/refresh rate of external devices such as HDMI/VGA/DP.
+ * 5. It is necessary to support the frame synchronization interface to avoid tearing during image refresh.
+ * 6. It is necessary to support multiple layers.
+ * 7. It is necessary to provide a memory management interface similar to gralloc, which is used to directly map the kernel framebuffer or dma-buf for application use, reducing copy operations.
  */
 
 #ifndef __TKL_DISPLAY_H__
