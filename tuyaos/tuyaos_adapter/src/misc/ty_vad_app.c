@@ -222,7 +222,7 @@ int ty_vad_frame_put(unsigned char *data, unsigned int size)
     return 0;
 }
 
-bk_err_t ty_vad_task_send_msg(uint16_t cmd, uint8_t *buf, uint16_t data_len)
+int ty_vad_task_send_msg(uint16_t cmd, uint8_t *buf, uint16_t data_len)
 {
     bk_err_t ret = kGeneralErr;
     VAD_MSG_ST msg;
