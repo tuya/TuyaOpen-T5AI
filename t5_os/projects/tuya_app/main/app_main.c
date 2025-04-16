@@ -88,6 +88,7 @@ int main(void)
     bk_printf("\r\nstart tuya_app_main\r\n");
     start_tuya_thread = 1;
     tuya_app_main();
+    // TUYA_LwIP_Init(); // 如果调试注释 tuya_app_main, 需要初始化lwip，底层mac数据处理需要pbuf资源
 #endif
     return 0;
 }

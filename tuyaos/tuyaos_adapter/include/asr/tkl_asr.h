@@ -26,16 +26,16 @@ typedef enum {
     TKL_ASR_WAKEUP_XIAOZHI_GUANJIA,
     TKL_ASR_WAKEUP_XIAOAI_XIAOAI,
     TKL_ASR_WAKEUP_XIAODU_XIAODU,
+    TKL_ASR_WAKEUP_WORD_MAX,
 } TKL_ASR_WAKEUP_WORD_E;
-
 
 OPERATE_RET tkl_asr_init(void);
 
-TKL_ASR_WAKEUP_WORD_E tkl_asr_wakeup_word_recognize(uint8_t *audio_date, uint32_t audio_len, TKL_ASR_WAKEUP_WORD_E *wakeup_word_arr, uint8_t arr_cnt);
+OPERATE_RET tkl_asr_wakeup_word_config(TKL_ASR_WAKEUP_WORD_E *wakeup_word_arr, uint8_t arr_cnt);
 
-OPERATE_RET tkl_asr_recognize(uint8_t *audio_date, uint32_t audio_len, char **text);
+uint32_t tkl_asr_get_process_uint_size(void);
 
-OPERATE_RET tkl_asr_recognize_text_release(char *text);
+TKL_ASR_WAKEUP_WORD_E tkl_asr_recognize_wakeup_word(uint8_t *data, uint32_t len);
 
 OPERATE_RET tkl_asr_deinit(void);
 

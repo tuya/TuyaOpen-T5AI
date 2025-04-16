@@ -14,7 +14,7 @@
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
-
+#define TKL_ASR_DETECT_CHUNK_SIZE (960)
 
 /***********************************************************
 ***********************typedef define***********************
@@ -25,6 +25,8 @@
 ***********************variable define**********************
 ***********************************************************/
 static Fst sg_wanson_fst;
+static TKL_ASR_WAKEUP_WORD_E sg_wakeup_word_list[TKL_ASR_WAKEUP_WORD_MAX];
+static uint8_t sg_wakeup_word_cnt = 0;
 
 /***********************************************************
 ***********************function define**********************
@@ -109,60 +111,69 @@ OPERATE_RET tkl_asr_init(void)
     return OPRT_OK;
 }
 
-TKL_ASR_WAKEUP_WORD_E tkl_asr_wakeup_word_recognize(uint8_t *audio_date, uint32_t audio_len, TKL_ASR_WAKEUP_WORD_E *wakeup_word_arr, uint8_t arr_cnt)
+OPERATE_RET tkl_asr_wakeup_word_config(TKL_ASR_WAKEUP_WORD_E *wakeup_word_arr, uint8_t arr_cnt)
+{
+    TKL_ASR_WAKEUP_WORD_E *tmp_list = NULL;
+
+    if(NULL == wakeup_word_arr || 0 == arr_cnt || arr_cnt > TKL_ASR_WAKEUP_WORD_MAX) {
+        return OPRT_INVALID_PARM;
+    }
+
+    memcpy(sg_wakeup_word_list, wakeup_word_arr, arr_cnt * sizeof(TKL_ASR_WAKEUP_WORD_E));
+    sg_wakeup_word_cnt  = arr_cnt;
+
+    return OPRT_OK;
+}
+
+uint32_t tkl_asr_get_process_uint_size(void)
+{
+    return TKL_ASR_DETECT_CHUNK_SIZE;
+}
+
+TKL_ASR_WAKEUP_WORD_E tkl_asr_recognize_wakeup_word(uint8_t *data, uint32_t len)
 {
     uint8_t i = 0;
     int ret = 0;
     char *text;
     float score;
 
-    if(NULL == audio_date || 0 == audio_len || NULL == wakeup_word_arr || 0 == arr_cnt ) {
+    if(NULL == data || 0 == len) {
+        bk_printf("param err\r\n");
         return TKL_ASR_WAKEUP_WORD_UNKNOWN;
     }
 
-    ret = Wanson_ASR_Recog((short*)audio_date, audio_len/2, (const char **)&text, &score);
+    if(0 == sg_wakeup_word_cnt) {
+        bk_printf("wakeup word not config\r\n");
+        return TKL_ASR_WAKEUP_WORD_UNKNOWN;
+    }
+
+    if(len < TKL_ASR_DETECT_CHUNK_SIZE) {
+        bk_printf("datalen not enough \r\n");
+        return TKL_ASR_WAKEUP_WORD_UNKNOWN;
+    }
+
+    ret = Wanson_ASR_Recog((short*)data, len/2, (const char **)&text, &score);
     if(ret != 1) {
-        bk_printf("Wanson_ASR_Recog err:%d\r\n", ret);
         return TKL_ASR_WAKEUP_WORD_UNKNOWN;
     }
 
     bk_printf("Wanson_ASR_Recog -> %s \n", text);
 
-    for(i=0; i<arr_cnt; i++) {
-        if(true ==__compare_wakeup_word(text, wakeup_word_arr[i])) {
-            return wakeup_word_arr[i];
+    for(i=0; i<sg_wakeup_word_cnt; i++) {
+        if(true ==__compare_wakeup_word(text, sg_wakeup_word_list[i])) {
+            return sg_wakeup_word_list[i];
         }
     }
 
     return TKL_ASR_WAKEUP_WORD_UNKNOWN;
 }
 
-OPERATE_RET tkl_asr_recognize(uint8_t *audio_date, uint32_t audio_len, char **text)
-{
-    int ret = 0;
-    float score;
-
-    if(NULL == audio_date || 0 == audio_len || NULL == text) {
-        return TKL_ASR_WAKEUP_WORD_UNKNOWN;
-    }
-
-    ret = Wanson_ASR_Recog((short*)audio_date, audio_len/2, (const char **)text, &score);
-    if(ret != 1) {
-        bk_printf("Wanson_ASR_Recog err:%d\r\n", ret);
-        return OPRT_COM_ERROR;
-    }
-
-    return OPRT_OK;
-}
-
-OPERATE_RET tkl_asr_recognize_text_release(char *text)
-{
-    return OPRT_OK;
-}
-
 OPERATE_RET tkl_asr_deinit(void)
 {
     Wanson_ASR_Release();
+
+    memset(sg_wakeup_word_list, 0x00, sizeof(sg_wakeup_word_list));
+    sg_wakeup_word_cnt = 0;
 
     return OPRT_OK;
 }

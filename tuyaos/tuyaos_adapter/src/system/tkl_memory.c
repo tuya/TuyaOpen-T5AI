@@ -8,14 +8,25 @@
  * 
  */
 
+#include "sdkconfig.h"
 #include "tkl_memory.h"
 #include <os/mem.h>
 
-extern void bk_printf(const char *fmt, ...);
-extern size_t xPortGetPsramFreeHeapSize( void );
+#define CONFIG_HAVE_PSRAM 1
+extern void *tkl_system_calloc(size_t nitems, size_t size);
+extern void *tkl_system_realloc(VOID_T* ptr, size_t size);
+extern void *tkl_system_psram_malloc(CONST SIZE_T size);
+extern void tkl_system_psram_free(VOID_T* ptr);
 
-static bool s_psram_malloc_force = true;
-void tkl_system_psram_malloc_force_set(bool enable)
+extern void bk_printf(const char *fmt, ...);
+
+#ifdef CONFIG_SYS_CPU0
+STATIC bool s_psram_malloc_force = 0;
+#else
+STATIC bool s_psram_malloc_force = 1;
+#endif
+
+VOID_T tkl_system_psram_malloc_force_set(BOOL_T enable)
 {
     s_psram_malloc_force = enable;
 }
@@ -38,13 +49,10 @@ void* tkl_system_malloc(const SIZE_T size)
             bk_printf("tkl_system_malloc failed, size(%d)!\r\n", size);
         }
 
-        // bk_printf("cpu%d heap: %d / %d\r\n", CONFIG_CPU_INDEX, tkl_system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize());
+        // if (size > 4096) {
+        //     bk_printf("tkl_system_malloc big memory, size(%d)!\r\n", size);
+        // }
 
-        if (size > 4096) {
-            bk_printf("tkl_system_malloc big memory, size(%d)!\r\n", size);
-        }
-
-        
         return ptr;
     }
 }
