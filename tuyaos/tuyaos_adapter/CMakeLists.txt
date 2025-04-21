@@ -110,7 +110,7 @@ list(APPEND srcs
     src/misc/qflash.c
     src/misc/sflash.c
     src/misc/tuya_tkl_ipc.c
-    src/misc/ty_vad_app.c
+    src/driver/tkl_vad.c
     src/driver/tkl_adc.c
     src/driver/tkl_pwm.c
     src/driver/tkl_uart.c

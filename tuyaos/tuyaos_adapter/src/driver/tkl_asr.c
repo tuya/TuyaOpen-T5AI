@@ -154,6 +154,9 @@ TKL_ASR_WAKEUP_WORD_E tkl_asr_recognize_wakeup_word(uint8_t *data, uint32_t len)
 
     ret = Wanson_ASR_Recog((short*)data, len/2, (const char **)&text, &score);
     if(ret != 1) {
+        if(ret == -1) {
+            bk_printf("Wanson_ASR_Recog error\r\n");
+        }
         return TKL_ASR_WAKEUP_WORD_UNKNOWN;
     }
 

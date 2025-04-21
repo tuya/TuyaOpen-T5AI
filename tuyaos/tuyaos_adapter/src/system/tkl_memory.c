@@ -165,7 +165,7 @@ void* tkl_system_psram_malloc(const SIZE_T size)
     }
 
     if (size > 4096) {
-        bk_printf("tkl_psram_malloc big memory, size(%d)!\r\n", size);
+        // bk_printf("tkl_psram_malloc big memory, size(%d)!\r\n", size);
     }
 
     return ptr;
