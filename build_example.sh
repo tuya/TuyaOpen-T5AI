@@ -13,16 +13,17 @@ USER_CMD=$7
 
 TARGET_PLATFORM=bk7258
 
-echo APP_BIN_NAME=$APP_BIN_NAME
-echo APP_VERSION=$APP_VERSION
-echo USER_CMD=$USER_CMD
-echo LIBS_DIR=$LIBS_DIR
-echo LIBS=$LIBS
-echo OUTPUT_DIR=$OUTPUT_DIR
-echo HEADER_DIR=$HEADER_DIR
-echo TARGET_PLATFORM=$TARGET_PLATFORM
+# echo APP_BIN_NAME=$APP_BIN_NAME
+# echo APP_VERSION=$APP_VERSION
+# echo USER_CMD=$USER_CMD
+# echo LIBS_DIR=$LIBS_DIR
+# echo LIBS=$LIBS
+# echo OUTPUT_DIR=$OUTPUT_DIR
+# echo HEADER_DIR=$HEADER_DIR
+# echo TARGET_PLATFORM=$TARGET_PLATFORM
 
 USER_SW_VER=`echo $APP_VERSION | cut -d'-' -f1`
+TOOLSCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PYTHON_CMD="python3"
 check_python_install() {
@@ -68,6 +69,7 @@ enable_python_env() {
         exit 1
     fi
 
+
     VIRTUAL_NAME=$1
     SCRIPT_DIR=$PWD/${TARGET_PROJECT}
     VIRTUAL_ENV=$SCRIPT_DIR/$VIRTUAL_NAME
@@ -82,17 +84,19 @@ enable_python_env() {
 
     ACTIVATE_SCRIPT=${VIRTUAL_ENV}/bin/activate
     PIP_CMD=${VIRTUAL_ENV}/bin/pip3
+    
     if [ -f "$ACTIVATE_SCRIPT" ] && [ -f ${PIP_CMD} ]; then
         echo "Activate python virtual environment."
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
+        
         ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
     else
         echo "Activate script not found."
         rm -rf "${VIRTUAL_ENV}"
         $PYTHON_CMD -m venv "${VIRTUAL_ENV}" || { echo "Failed to create virtual environment."; exit 1; }
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
-        ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
 
+        ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
     fi
 }
 
@@ -143,7 +147,7 @@ if [ -f $tmp_gen_files_list ]; then
 fi
 touch $tmp_gen_files_list
 
-TOP_DIR=$(pwd)
+TOP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f ${TOP_DIR}/.app ]; then
     OLD_APP_BIN_NAME=$(cat ${TOP_DIR}/.app)
     echo OLD_APP_BIN_NAME: ${OLD_APP_BIN_NAME}
