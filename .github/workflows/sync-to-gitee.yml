@@ -1,0 +1,19 @@
+name: syncToGitee
+on:
+  push:
+    branches:
+      - gh-pages
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror the Github organization repos to Gitee.
+        uses: tuya/tuyaopen-T5AI@master
+        with:
+          src: 'github/tuya'
+          dst: 'gitee/tuya-open'
+          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          dst_token:  ${{ secrets.GITEE_TOKEN }}
+          static_list: "tuyaopen-T5AI"
+          force_update: true
+          debug: true
