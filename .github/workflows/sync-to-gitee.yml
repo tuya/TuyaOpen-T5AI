@@ -1,19 +1,18 @@
 name: syncToGitee
-on:
-  push:
-    branches:
-      - master
+on: 
+  - push
+  - delete
+
 jobs:
-  repo-sync:
+  sync:
     runs-on: ubuntu-latest
+    name: Git Repo Sync
     steps:
-      - name: Mirror the Github organization repos to Gitee.
-        uses: tuya/tuyaopen-T5AI@master
-        with:
-          src: 'github/tuya'
-          dst: 'gitee/tuya-open'
-          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-          dst_token:  ${{ secrets.GITEE_TOKEN }}
-          static_list: "tuyaopen-T5AI"
-          force_update: true
-          debug: true
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: tuya/TuyaOpen-T5AI@master
+      with:
+        target-url: 'https://gitee.com/tuya-open/TuyaOpen-T5AI.git'
+        target-username: 'flyingcys'
+        target-token: ${{ secrets.GITEE_TOKEN }}
