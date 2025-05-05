@@ -18,7 +18,7 @@ def get_country_code():
             else:
                 MORROR = 2
         except requests.exceptions.RequestException as e:
-            print(f"curl http://www.ip-api.com/json failed ... Error: {e}")
+            # print(f"curl http://www.ip-api.com/json failed ... Error: {e}")
             MORROR = 1
     
     print(MORROR)
