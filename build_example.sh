@@ -63,6 +63,35 @@ check_python_install() {
     fi 
 }
 
+MIRROR=0
+
+function get_country_code()
+{
+    if [ -f ${TOOLSCRIPT_DIR}/.mirror ]; then
+        echo "Use existing country code."
+        MIRROR=$(cat ${TOOLSCRIPT_DIR}/.mirror)
+        echo "MIRROR=${MIRROR}"
+    else
+        echo "get_country_code ..."
+        if command -v python3 &>/dev/null; then
+            PYTHON_CMD=python3
+        elif command -v python &>/dev/null && python --version | grep -q '^Python 3'; then
+            PYTHON_CMD=python
+        else
+            echo "Python 3 is not installed."
+            exit 1
+        fi
+
+        MIRROR=$(${PYTHON_CMD} ${TOOLSCRIPT_DIR}/tools/get_conutry.py)
+        echo "country code: ${MIRROR}"
+        if [ x"$MIRROR" = x"1" ]; then
+            echo "enable cn mirror"
+        fi
+
+        echo ${MIRROR} > ${TOOLSCRIPT_DIR}/.mirror
+    fi
+}
+
 enable_python_env() {
     if [ -z $1 ]; then
         echo "Please input virtual environment name."
@@ -88,15 +117,23 @@ enable_python_env() {
     if [ -f "$ACTIVATE_SCRIPT" ] && [ -f ${PIP_CMD} ]; then
         echo "Activate python virtual environment."
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
-        
-        ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        echo "country code: ${MIRROR}"
+        if [ x"$MIRROR" = x"1" ]; then
+            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        else
+            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        fi
     else
         echo "Activate script not found."
         rm -rf "${VIRTUAL_ENV}"
         $PYTHON_CMD -m venv "${VIRTUAL_ENV}" || { echo "Failed to create virtual environment."; exit 1; }
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
-
-        ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        echo "country code: ${MIRROR}"
+        if [ x"$MIRROR" = x"1" ]; then
+            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt"  -i https://pypi.tuna.tsinghua.edu.cn/simple || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        else
+            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+        fi
     fi
 }
 
@@ -138,6 +175,8 @@ APP_PATH=../../$APP_DIR
 cd t5_os
 
 TARGET_PROJECT=projects/tuya_app
+
+get_country_code
 
 enable_python_env "tuya_build_env" || { echo "Failed to enable python virtual environment."; exit 1; }
 

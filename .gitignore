@@ -41,3 +41,5 @@ xx*.sh
 /t5_os/projects/tuya_app/config/bk7258/usr_gpio_cfg.h
 /t5_os/.app
 *.build/
+
+.mirror
