@@ -119,7 +119,7 @@ enable_python_env() {
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
         echo "country code: ${MIRROR}"
         if [ x"$MIRROR" = x"1" ]; then
-            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" -i https://mirrors.aliyun.com/pypi/simple || { echo "Failed to install required Python packages."; deactivate; exit 1; }
         else
             ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
         fi
@@ -130,7 +130,7 @@ enable_python_env() {
         . ${ACTIVATE_SCRIPT} || { echo "Failed to activate virtual environment."; exit 1; }
         echo "country code: ${MIRROR}"
         if [ x"$MIRROR" = x"1" ]; then
-            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt"  -i https://pypi.tuna.tsinghua.edu.cn/simple || { echo "Failed to install required Python packages."; deactivate; exit 1; }
+            ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt"  -i https://mirrors.aliyun.com/pypi/simple || { echo "Failed to install required Python packages."; deactivate; exit 1; }
         else
             ${PIP_CMD} install -r "projects/tuya_app/tuya_scripts/requirements.txt" || { echo "Failed to install required Python packages."; deactivate; exit 1; }
         fi
