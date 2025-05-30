@@ -172,7 +172,7 @@ check_python_install ||  { echo "Failed to check python environment."; exit 1; }
 bash toolchain_get.sh $(pwd)/../tools || { echo "Failed to setup toolchain."; exit 1; } 
 
 
-export TUYA_APP_PATH=$APP_PATH
+export TUYA_APP_PATH=$APP_PATH  # warning: undefined
 export TUYA_APP_NAME=$APP_BIN_NAME
 
 export TUYA_PROJECT_DIR=$(pwd)
