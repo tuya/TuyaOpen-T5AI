@@ -11,7 +11,6 @@
 #include "sdkconfig.h"
 #include <driver/hal/hal_gpio_types.h>
 
-#include "tkl_display.h"
 #include "tkl_video_in.h"
 
 

@@ -19,7 +19,6 @@ set(incs
     "include"
     "include/adc"
     "include/bluetooth"
-    "include/display"
     "include/flash"
     "include/gpio"
     "include/hci"
@@ -46,6 +45,9 @@ set(incs
     "include/ipc"
     "include/asr"
     "include/asr/wanson_asr"
+    "include/rgb"
+    "include/qspi"
+    "include/mcu8080"
 )
 
 string(REPLACE " " ";" TUYA_HEADER_DIR_LIST $ENV{TUYA_HEADER_DIR})
@@ -81,10 +83,6 @@ if (CONFIG_SYS_CPU1)
         src/driver/tkl_audio.c
         src/system/tkl_ota.c
     )
-
-file(GLOB_RECURSE display_srcs "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/src/driver/tkl_display/*.c")
-list(APPEND srcs ${display_srcs})
-
 endif() # CONFIG_SYS_CPU1
 
 if (NOT "${CONFIG_CPU_INDEX}" STREQUAL "2")
@@ -96,6 +94,7 @@ list(APPEND srcs
     src/driver/tkl_i2c.c
     src/driver/tkl_timer.c
     src/driver/tkl_ipc.c
+    src/driver/tkl_qspi.c
     src/system/tkl_memory.c
     src/system/tkl_mutex.c
     src/system/tkl_network.c
@@ -118,6 +117,8 @@ list(APPEND srcs
     src/driver/encrypt.c
     src/driver/tkl_wired.c
     src/driver/tkl_asr.c
+    src/driver/tkl_rgb.c
+    src/driver/tkl_8080.c
 )
 
 file(GLOB_RECURSE utilities_srcs "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/utilities/src/*.c")

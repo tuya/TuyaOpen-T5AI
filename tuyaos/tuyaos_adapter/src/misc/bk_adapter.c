@@ -56,9 +56,9 @@ void tuya_get_usb_dev(uint32_t *vid, uint32_t *pid)
         return;
 
     TUYA_GPIO_BASE_CFG_T cfg;
-    cfg.mode = TUYA_GPIO_PULLUP;
+    cfg.mode   = TUYA_GPIO_PULLUP;
     cfg.direct = TUYA_GPIO_OUTPUT;
-    cfg.level = TUYA_GPIO_LEVEL_HIGH;
+    cfg.level  = TUYA_GPIO_LEVEL_HIGH;
     tkl_gpio_init(TUYA_GPIO_NUM_28, &cfg);
 
     tkl_gpio_write(TUYA_GPIO_NUM_28, TUYA_GPIO_LEVEL_HIGH);
@@ -81,8 +81,6 @@ void tuya_get_usb_dev(uint32_t *vid, uint32_t *pid)
 #if CONFIG_SYS_CPU0 && CONFIG_SOC_BK7258
 #include "tuya_cloud_types.h"
 #include "tkl_gpio.h"
-#include "tkl_display.h"
-
 enum {
     MUTIL_INIT = 0,
     MUTIL_ON,
