@@ -107,7 +107,7 @@ typedef struct  hlist_head{
  * @param[in] h the hash list head
  * @return void 
  */
-STATIC INLINE void tuya_init_hlist_node(INOUT HLIST_NODE *h) 
+static inline void tuya_init_hlist_node(HLIST_NODE *h) 
 {
     h->next = NULL;
     h->pprev = NULL;
@@ -119,7 +119,7 @@ STATIC INLINE void tuya_init_hlist_node(INOUT HLIST_NODE *h)
  * @param[in] h the hash list head
  * @return 1 means empty,  0 means not empty
  */
-STATIC INLINE int tuya_hlist_empty(IN const HLIST_HEAD *h) 
+static inline int tuya_hlist_empty(const HLIST_HEAD *h) 
 {
     return !h->first;
 }
@@ -130,7 +130,7 @@ STATIC INLINE int tuya_hlist_empty(IN const HLIST_HEAD *h)
  * @param[in] h the hash list head
  * @return 1 means unhashed,  0 means not hashed 
  */
-STATIC INLINE int tuya_hlist_unhashed(IN const HLIST_NODE *h) 
+static inline int tuya_hlist_unhashed(const HLIST_NODE *h) 
 {
     return !h->pprev;
 }
@@ -143,7 +143,7 @@ STATIC INLINE int tuya_hlist_unhashed(IN const HLIST_NODE *h)
  * 
  * @note call in  tuya_hlist_del
  */
-STATIC INLINE void __tuya_hlist_del(INOUT HLIST_NODE *n) 
+static inline void __tuya_hlist_del(HLIST_NODE *n) 
 {
     HLIST_NODE *next =  n->next;  
     HLIST_NODE **pprev = n->pprev;
@@ -158,7 +158,7 @@ STATIC INLINE void __tuya_hlist_del(INOUT HLIST_NODE *n)
  * @param[in] n the hash node need to delete
  * @return void 
  */
-STATIC INLINE void tuya_hlist_del(INOUT HLIST_NODE *n) 
+static inline void tuya_hlist_del(HLIST_NODE *n) 
 {
     __tuya_hlist_del(n);
     // n->next = NULL;
@@ -171,7 +171,7 @@ STATIC INLINE void tuya_hlist_del(INOUT HLIST_NODE *n)
  * @param[in] n the hash node need to delete
  * @return void
  */
-STATIC INLINE void tuya_hlist_del_init(INOUT HLIST_NODE *n) 
+static inline void tuya_hlist_del_init(HLIST_NODE *n) 
 {
     if (!tuya_hlist_unhashed(n)) {
         __tuya_hlist_del(n);
@@ -186,7 +186,7 @@ STATIC INLINE void tuya_hlist_del_init(INOUT HLIST_NODE *n)
  * @param[in] h the hash list head
  * @return void
  */
-STATIC INLINE void tuya_hlist_add_head(INOUT HLIST_NODE *n, INOUT HLIST_HEAD *h) 
+static inline void tuya_hlist_add_head(HLIST_NODE *n, HLIST_HEAD *h) 
 {
     struct hlist_node *first = h->first;
     n->next = first;
@@ -205,7 +205,7 @@ STATIC INLINE void tuya_hlist_add_head(INOUT HLIST_NODE *n, INOUT HLIST_HEAD *h)
  * 
  * @note the next must not NULL 
  */
-STATIC INLINE void tuya_hlist_add_before(INOUT HLIST_NODE *n, INOUT HLIST_NODE *next) 
+static inline void tuya_hlist_add_before(HLIST_NODE *n, HLIST_NODE *next) 
 {
     n->pprev = next->pprev;
     n->next = next;
@@ -222,7 +222,7 @@ STATIC INLINE void tuya_hlist_add_before(INOUT HLIST_NODE *n, INOUT HLIST_NODE *
  * 
  * @note the next must not NULL 
  */
-STATIC INLINE void tuya_hlist_add_after(INOUT HLIST_NODE *n, INOUT HLIST_NODE *next) 
+static inline void tuya_hlist_add_after(HLIST_NODE *n, HLIST_NODE *next) 
 {
     next->next = n->next;
     n->next = next;

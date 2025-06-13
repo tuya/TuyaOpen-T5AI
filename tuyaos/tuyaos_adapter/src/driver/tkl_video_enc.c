@@ -18,7 +18,7 @@ static void __frame_test_cb(frame_buffer_t *frame)
 {
     if (upper_trans_cb != NULL) {
         TKL_VENC_FRAME_T out_frame;
-        out_frame.pbuf      = (CHAR_T *)frame->frame;
+        out_frame.pbuf      = (char *)frame->frame;
         out_frame.buf_size  = frame->length;
         out_frame.width     = frame->width;
         out_frame.height    = frame->height;

@@ -52,12 +52,12 @@ typedef enum
 
 typedef struct
 {
-    CHAR_T conf[128];                                             // isp conf path
-    CHAR_T conf1[128];                                            // isp conf1 path
-    CHAR_T conf2[128];                                            // isp conf2 path
-    CHAR_T conf3[128];                                            // isp conf3 path
-    CHAR_T version[32];                                           // version num
-    CHAR_T name[16];                                              // isp sensor num
+    char conf[128];                                             // isp conf path
+    char conf1[128];                                            // isp conf1 path
+    char conf2[128];                                            // isp conf2 path
+    char conf3[128];                                            // isp conf3 path
+    char version[32];                                           // version num
+    char name[16];                                              // isp sensor num
     TKL_ISP_DN_SWITCH_CONFIG_T isp_dn_switch_config;              // ADN switch config
     TKL_VI_SENSOR_CBUS_TYPE_E  sensor_type;                       // sensor control bus type
     int              addr;                                    // sensor address
@@ -116,10 +116,10 @@ typedef struct
 
 typedef struct
 {
-    FLOAT_T x;                                                     // 矩形框x坐标 | [0.0 - 1.0]
-    FLOAT_T y;                                                     // 矩形框y坐标 | [0.0 - 1.0]
-    FLOAT_T width;                                                 // 矩形框宽度　| [0.0 - 1.0]
-    FLOAT_T height;                                                // 矩形框高度　| [0.0 - 1.0]
+    float x;                                                     // 矩形框x坐标 | [0.0 - 1.0]
+    float y;                                                     // 矩形框y坐标 | [0.0 - 1.0]
+    float width;                                                 // 矩形框宽度　| [0.0 - 1.0]
+    float height;                                                // 矩形框高度　| [0.0 - 1.0]
 } TKL_VI_RECT_T;
 
 typedef struct
@@ -131,7 +131,7 @@ typedef struct
 typedef struct
 {
     TKL_VI_RECT_T    draw_rect;                                   // coordinate region
-    FLOAT_T          score;                                       // score       | [0.0 - 1.0]
+    float          score;                                       // score       | [0.0 - 1.0]
     TKL_MEDIA_DETECT_TYPE_E type;                                 // 目标类型，人形，宠物，火焰等
 	uint32_t         id;                                          // 目标编号
 } TKL_VI_DETECT_TARGET_T;
@@ -149,7 +149,7 @@ typedef struct
     union{
         TKL_VI_MD_RESULT_T md;
     };
-    UINT64_T timestamp;                                           // utc time, 单位:ms
+    uint64_t timestamp;                                           // utc time, 单位:ms
 } TKL_VI_DETECT_RESULT_T;
 
 typedef struct
@@ -176,7 +176,7 @@ typedef struct
 
 typedef struct
 {
-    CHAR_T         *pmodel;                                       // 检测模型数据指针
+    char         *pmodel;                                       // 检测模型数据指针
     int         model_len;                                    // 检测模型的数据长度
 }TKL_VI_DETECT_CONFIG_T;
 

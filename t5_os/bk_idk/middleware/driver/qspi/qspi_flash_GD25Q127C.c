@@ -544,7 +544,7 @@ uint32_t bk_qspi_flash_gd25_test(uint32_t test_len)
     uint8_t *read_buffer = (uint8_t *)psram_malloc(test_len);
     if (read_buffer == NULL) {
         bk_printf("------- malloc read buffer error ------\r\n");
-        return;
+        return -1;
     }
     os_memset(read_buffer, 0, test_len);
 
@@ -553,7 +553,7 @@ uint32_t bk_qspi_flash_gd25_test(uint32_t test_len)
         bk_printf("------- malloc write buffer error ------\r\n");
         tkl_system_free(read_buffer);
         read_buffer = NULL;
-        return;
+        return -1;
     }
 
     uint32_t c = 0x1;
@@ -602,6 +602,8 @@ uint32_t bk_qspi_flash_gd25_test(uint32_t test_len)
             break;
         }
     }
+
+    return 0;
 }
 
 qspi_driver_desc_t qspi_gd25q127c_desc = {

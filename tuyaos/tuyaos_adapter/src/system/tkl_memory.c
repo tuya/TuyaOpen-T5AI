@@ -14,19 +14,19 @@
 
 #define CONFIG_HAVE_PSRAM 1
 extern void *tkl_system_calloc(size_t nitems, size_t size);
-extern void *tkl_system_realloc(VOID_T* ptr, size_t size);
-extern void *tkl_system_psram_malloc(CONST SIZE_T size);
-extern void tkl_system_psram_free(VOID_T* ptr);
+extern void *tkl_system_realloc(void* ptr, size_t size);
+extern void *tkl_system_psram_malloc(const size_t size);
+extern void tkl_system_psram_free(void* ptr);
 
 extern void bk_printf(const char *fmt, ...);
 
 #ifdef CONFIG_SYS_CPU0
-STATIC bool s_psram_malloc_force = 0;
+static bool s_psram_malloc_force = 0;
 #else
-STATIC bool s_psram_malloc_force = 1;
+static bool s_psram_malloc_force = 1;
 #endif
 
-VOID_T tkl_system_psram_malloc_force_set(BOOL_T enable)
+void tkl_system_psram_malloc_force_set(BOOL_T enable)
 {
     s_psram_malloc_force = enable;
 }
@@ -39,7 +39,7 @@ VOID_T tkl_system_psram_malloc_force_set(BOOL_T enable)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-void* tkl_system_malloc(const SIZE_T size)
+void* tkl_system_malloc(const size_t size)
 {
     if (s_psram_malloc_force) {
         return tkl_system_psram_malloc(size);
@@ -84,7 +84,7 @@ void tkl_system_free(void* ptr)
 *
 * @return the memory address malloced
 */
-void *tkl_system_memset(void* src, int ch, const SIZE_T n)
+void *tkl_system_memset(void* src, int ch, const size_t n)
 {
     return os_memset(src, ch, n);
 }
@@ -98,7 +98,7 @@ void *tkl_system_memset(void* src, int ch, const SIZE_T n)
 *
 * @return the memory address malloced
 */
-void *tkl_system_memcpy(void* src, const void* dst, const SIZE_T n)
+void *tkl_system_memcpy(void* src, const void* dst, const size_t n)
 {
     return os_memcpy(src, dst, n);
 }
@@ -158,7 +158,7 @@ void *tkl_system_realloc(void* ptr, size_t size)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-void* tkl_system_psram_malloc(const SIZE_T size)
+void* tkl_system_psram_malloc(const size_t size)
 {
 #if CONFIG_HAVE_PSRAM
     void* ptr = psram_malloc(size);

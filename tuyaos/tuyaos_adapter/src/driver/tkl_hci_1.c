@@ -52,7 +52,7 @@ void tkl_hci_ipc_func(struct ipc_msg_s *msg)
 }
 
 
-OPERATE_RET tkl_hci_init(VOID)
+OPERATE_RET tkl_hci_init(void)
 {
     struct ipc_msg_s hci_msg;
     memset(&hci_msg, 0, sizeof(struct ipc_msg_s));
@@ -65,7 +65,7 @@ OPERATE_RET tkl_hci_init(VOID)
     return hci_msg.ret_value;
 }
 
-OPERATE_RET tkl_hci_deinit(VOID)
+OPERATE_RET tkl_hci_deinit(void)
 {
     struct ipc_msg_s hci_msg;
     memset(&hci_msg, 0, sizeof(struct ipc_msg_s));
@@ -78,7 +78,7 @@ OPERATE_RET tkl_hci_deinit(VOID)
     return hci_msg.ret_value;
 }
 
-OPERATE_RET tkl_hci_reset(VOID)
+OPERATE_RET tkl_hci_reset(void)
 {
     struct ipc_msg_s hci_msg;
     memset(&hci_msg, 0, sizeof(struct ipc_msg_s));
@@ -91,7 +91,7 @@ OPERATE_RET tkl_hci_reset(VOID)
     return hci_msg.ret_value;
 }
 
-OPERATE_RET tkl_hci_cmd_packet_send(CONST UCHAR_T *p_buf, USHORT_T buf_len)
+OPERATE_RET tkl_hci_cmd_packet_send(const uint8_t *p_buf, uint16_t buf_len)
 {
     struct ipc_msg_s hci_msg;
     memset(&hci_msg, 0, sizeof(struct ipc_msg_s));
@@ -117,7 +117,7 @@ OPERATE_RET tkl_hci_cmd_packet_send(CONST UCHAR_T *p_buf, USHORT_T buf_len)
 }
 
 
-OPERATE_RET tkl_hci_acl_packet_send(CONST UCHAR_T *p_buf, USHORT_T buf_len)
+OPERATE_RET tkl_hci_acl_packet_send(const uint8_t *p_buf, uint16_t buf_len)
 {
     struct ipc_msg_s hci_msg;
     memset(&hci_msg, 0, sizeof(struct ipc_msg_s));
@@ -180,7 +180,7 @@ static int _ble_hci_acl_to_host_cb(uint8_t *buf, uint16_t len)
 }
 
 
-OPERATE_RET tkl_hci_callback_register(CONST TKL_HCI_FUNC_CB hci_evt_cb, CONST TKL_HCI_FUNC_CB acl_pkt_cb)
+OPERATE_RET tkl_hci_callback_register(const TKL_HCI_FUNC_CB hci_evt_cb, const TKL_HCI_FUNC_CB acl_pkt_cb)
 {
     s_evt_cb = hci_evt_cb;
     s_acl_cb = acl_pkt_cb;

@@ -306,7 +306,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
         p = (struct pbuf *)mem_malloc(alloc_len);
 #else
       // p = (struct pbuf *)mem_malloc(alloc_len);
-      extern VOID_T* tkl_system_malloc(CONST SIZE_T size);
+      extern void* tkl_system_malloc(const size_t size);
       p = tkl_system_malloc(alloc_len);
 #endif
       if (p == NULL) {
@@ -817,7 +817,7 @@ pbuf_free(struct pbuf *p)
           /* type == PBUF_RAM */
         } else if (alloc_src == PBUF_TYPE_ALLOC_SRC_MASK_STD_HEAP) {
           // mem_free(p);
-          extern VOID_T tkl_system_free(VOID_T* ptr);
+          extern void tkl_system_free(void* ptr);
           tkl_system_free(p);
         } else {
           /* @todo: support freeing other types */

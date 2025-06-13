@@ -111,10 +111,10 @@ struct ipc_msg_s {
 };
 
 struct ipc_msg_param_s {
-    VOID_T  *p1;
-    VOID_T  *p2;
-    VOID_T  *p3;
-    VOID_T  *p4;
+    void  *p1;
+    void  *p2;
+    void  *p3;
+    void  *p4;
 };
 
 typedef void* TKL_IPC_HANDLE;

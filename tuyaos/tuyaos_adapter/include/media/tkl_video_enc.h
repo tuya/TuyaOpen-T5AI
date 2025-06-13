@@ -50,17 +50,17 @@ typedef struct
 {
     TKL_MEDIA_FRAME_TYPE_E frametype;                    // bitrate,kbps
     TKL_MEDIA_CODEC_TYPE_E codectype;                    // codec type
-    CHAR_T    *pbuf;                                     // frame buffer
+    char    *pbuf;                                     // frame buffer
     uint32_t     buf_size;                                 // buffer size
     uint32_t     used_size;                                // used buffer size
     uint32_t     width;                                    // frame width
     uint32_t     height;                                   // frame height
-    UINT64_T   pts;                                      // sdk pts
-    UINT64_T   timestamp;                                // system utc time，unit: ms
+    uint64_t   pts;                                      // sdk pts
+    uint64_t   timestamp;                                // system utc time，unit: ms
     uint32_t seq;                                          // frame sequence number
     uint32_t fragment;                                     // frame sequence's fragment  第几个分包
-    BYTE_T seq_error;                                    // frame sequence is error  这张图片是否错误
-    BYTE_T fragment_is_last;                             // frame sequence's fragment is last fragment
+    uint8_t seq_error;                                    // frame sequence is error  这张图片是否错误
+    uint8_t fragment_is_last;                             // frame sequence's fragment is last fragment
 }TKL_VENC_FRAME_T;                                       // video frame
 
 typedef int (*TKL_VENC_PUT_CB)(TKL_VENC_FRAME_T *pframe);
@@ -117,10 +117,10 @@ typedef struct
     uint32_t enable;                                       // 0, 不显示遮挡; 1, 区域遮挡
     uint32_t id;                                           // 遮挡编号
     uint32_t color;                                        // 遮挡的颜色，ARGB8888类型
-    FLOAT_T x;                                           // 矩形区域左上点水平方向上的坐标, [0~100]
-    FLOAT_T y;                                           // 矩形区域左上点垂直方向上的坐标, [0~100]
-    FLOAT_T width;                                       // 矩形区域的宽度, [0~100]
-    FLOAT_T height;                                      // 矩形区域的高度, [0~100]
+    float x;                                           // 矩形区域左上点水平方向上的坐标, [0~100]
+    float y;                                           // 矩形区域左上点垂直方向上的坐标, [0~100]
+    float width;                                       // 矩形区域的宽度, [0~100]
+    float height;                                      // 矩形区域的高度, [0~100]
 }TKL_VENC_MASK_T;
 
 typedef struct

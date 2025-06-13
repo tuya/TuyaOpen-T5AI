@@ -59,7 +59,7 @@ OPERATE_RET tkl_uart_deinit(TUYA_UART_NUM_E port_id);
  *
  * @return return > 0: number of data written; return <= 0: write errror
  */
-int tkl_uart_write(TUYA_UART_NUM_E port_id, void *buff, UINT16_T len);
+int tkl_uart_write(TUYA_UART_NUM_E port_id, void *buff, uint16_t len);
 
 /**
  * @brief enable uart rx interrupt and regist interrupt callback
@@ -107,7 +107,7 @@ void tkl_uart_tx_irq_cb_reg(TUYA_UART_NUM_E port_id, TUYA_UART_IRQ_CB tx_cb);
  * 
  * @return return >= 0: number of data read; return < 0: read errror
  */
-int tkl_uart_read(TUYA_UART_NUM_E port_id, void *buff, UINT16_T len);
+int tkl_uart_read(TUYA_UART_NUM_E port_id, void *buff, uint16_t len);
 
 /**
  * @brief set uart transmit interrupt status

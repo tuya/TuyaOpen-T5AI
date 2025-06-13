@@ -75,7 +75,7 @@ typedef struct {
 } TKL_BLE_GAP_ADDR_T;
 
 typedef struct {
-    USHORT_T    length;                                 /**< Ble Data Len */
+    uint16_t    length;                                 /**< Ble Data Len */
     uint8_t     *p_data;                                /**< Ble Data Pointer */
 } TKL_BLE_DATA_T;
 
@@ -102,8 +102,8 @@ typedef struct {
     uint8_t                 adv_type;                   /**< Adv Type. Refer to TKL_BLE_GAP_ADV_TYPE_CONN_SCANNABLE_UNDIRECTED etc.*/
     TKL_BLE_GAP_ADDR_T      direct_addr;                /**< For Directed Advertising, you can fill in direct address */
     
-    USHORT_T                adv_interval_min;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
-    USHORT_T                adv_interval_max;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
+    uint16_t                adv_interval_min;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
+    uint16_t                adv_interval_max;           /**< Range: 0x0020 to 0x4000  Time = N * 0.625 msec Time Range: 20 ms to 10.24 sec */
     uint8_t                 adv_channel_map;            /**< Advertising Channel Map, 0x01 = adv channel index 37,  0x02 = adv channel index 38,
                                                                 0x04 = adv channel index 39. Default Value: 0x07*/
 } TKL_BLE_GAP_ADV_PARAMS_T;
@@ -142,7 +142,7 @@ typedef struct {
 typedef struct {
     TKL_BLE_GAP_ADV_TYPE_E  adv_type;                   /**< Advertising report type. Refer to @TKL_BLE_GAP_ADV_TYPE_E */
     TKL_BLE_GAP_ADDR_T      peer_addr;                  /**< Bluetooth address of the peer device. */
-    CHAR_T                  rssi;                       /**< Received Signal Strength Indication in dBm of the last packet received. */
+    char                  rssi;                       /**< Received Signal Strength Indication in dBm of the last packet received. */
     uint8_t                 channel_index;              /**< Channel Index on which the last advertising packet is received (37-39).channel index = 37, it means that we do advertisement in channel 37. */
     TKL_BLE_DATA_T          data;                       /**< Received advertising or scan response data.  */
 } TKL_BLE_GAP_ADV_REPORT_T;
@@ -169,20 +169,20 @@ typedef struct {
     uint8_t                 active : 1;                 /**< [Tuya Need]!!!! If 1, perform active scanning by sending scan requests.
                                                             This parameter is ignored when used with @ref tkl_ble_gap_connect. */
     uint8_t                 scan_phys;                  /**< Refer to @TKL_BLE_GAP_PHY_1MBPS. TKL_BLE_GAP_PHY_2MBPS*/
-    USHORT_T                interval;                   /**< Scan interval in 625 us units. */
-    USHORT_T                window;                     /**< Scan window in 625 us units. */
-    USHORT_T                timeout;                    /**< Scan timeout in 10 ms units. */
+    uint16_t                interval;                   /**< Scan interval in 625 us units. */
+    uint16_t                window;                     /**< Scan window in 625 us units. */
+    uint16_t                timeout;                    /**< Scan timeout in 10 ms units. */
     uint8_t                 scan_channel_map;           /**< Scan Channel Index */
 } TKL_BLE_GAP_SCAN_PARAMS_T;
 
 /** @brief  Definition of LE connection request parameter.*/
 typedef struct {
-    USHORT_T                conn_interval_min;          /**< Minimum value for the connection interval.  */
-    USHORT_T                conn_interval_max;          /**< Maximum value for the connection interval. */
-    USHORT_T                conn_latency;               /**< Slave latency for the connection in number of connection events.*/
-    USHORT_T                conn_sup_timeout;           /**< Supervision timeout for the LE Link.*/
+    uint16_t                conn_interval_min;          /**< Minimum value for the connection interval.  */
+    uint16_t                conn_interval_max;          /**< Maximum value for the connection interval. */
+    uint16_t                conn_latency;               /**< Slave latency for the connection in number of connection events.*/
+    uint16_t                conn_sup_timeout;           /**< Supervision timeout for the LE Link.*/
     
-    USHORT_T                connection_timeout;
+    uint16_t                connection_timeout;
 } TKL_BLE_GAP_CONN_PARAMS_T;
 
 typedef enum {
@@ -196,7 +196,7 @@ typedef struct {
     TKL_BLE_UUID_TYPE_E     uuid_type;                  /**< UUID Type, Refer to @TKL_BLE_UUID_TYPE_E */
 
     union {
-        USHORT_T            uuid16;                     /**< 16-bit UUID value  */
+        uint16_t            uuid16;                     /**< 16-bit UUID value  */
         uint32_t              uuid32;                     /**< 32-bit UUID value */
         uint8_t             uuid128[16];                /**< Little-Endian UUID bytes. 128bit uuid*/
     }uuid;
@@ -227,7 +227,7 @@ typedef enum {
 } TKL_BLE_ATTR_PERM_E;
 
 typedef struct {
-    USHORT_T        handle;                             /**< [Output] After init the characteristic, we will get the char-handle, we need to restore it */
+    uint16_t        handle;                             /**< [Output] After init the characteristic, we will get the char-handle, we need to restore it */
 
     TKL_BLE_UUID_T  char_uuid;                          /**< Characteristics UUID */
     uint8_t         property;                           /**< Characteristics property , Refer to TKL_BLE_CHAR_PROP_TYPE_E */
@@ -244,7 +244,7 @@ typedef enum {
 } TKL_BLE_SERVICE_TYPE_E;
 
 typedef struct {
-    USHORT_T                    handle;                 /**< After init the service, we will get the svc-handle */
+    uint16_t                    handle;                 /**< After init the service, we will get the svc-handle */
 
     TKL_BLE_UUID_T              svc_uuid;               /**< Service UUID */
     TKL_BLE_SERVICE_TYPE_E      type;                   /**< Service Type */
@@ -319,14 +319,14 @@ typedef struct {
 } TKL_BLE_GAP_DISCONNECT_EVT_T;
 
 typedef struct {
-    USHORT_T                        char_handle;        /**< Notify Characteristic Handle */
+    uint16_t                        char_handle;        /**< Notify Characteristic Handle */
     int                           result;             /**< Notify Result */
 } TKL_BLE_NOTIFY_RESULT_EVT_T;
 
 typedef struct {
     TKL_BLE_UUID_T              uuid;               /**< Discovery Service UUID */
-    USHORT_T                    start_handle;       /**< Discovery Start Handle */
-    USHORT_T                    end_handle;         /**< Discovery End Handle */
+    uint16_t                    start_handle;       /**< Discovery Start Handle */
+    uint16_t                    end_handle;         /**< Discovery End Handle */
 } TKL_BLE_GATT_SVC_HANDLE_T;
 
 typedef struct {
@@ -337,7 +337,7 @@ typedef struct {
 
 typedef struct {
     TKL_BLE_UUID_T              uuid;               /**< Discovery Service UUID */
-    USHORT_T                    handle;             /**< Discovery Char Handle */
+    uint16_t                    handle;             /**< Discovery Char Handle */
 }TKL_BLE_GATT_CHAR_HANDLE_T;
 
 typedef struct {
@@ -347,17 +347,17 @@ typedef struct {
 } TKL_BLE_GATT_CHAR_DISC_TYPE_T;
 
 typedef struct {
-    USHORT_T                        cccd_handle;        /**< Discovery Descriptor Handle, Return CCCD Handle */
+    uint16_t                        cccd_handle;        /**< Discovery Descriptor Handle, Return CCCD Handle */
 } TKL_BLE_GATT_DESC_DISC_TYPE_T;
 
 typedef struct {
-    USHORT_T                        char_handle;        /**< Specify one characteristic handle */
+    uint16_t                        char_handle;        /**< Specify one characteristic handle */
     TKL_BLE_DATA_T                  report;             /**< Report Data, Refer to @ TKL_BLE_DATA_T */
 } TKL_BLE_DATA_REPORT_T;
 
 typedef struct {
     TKL_BLE_GAP_EVT_TYPE_E              type;           /**< Gap Event */
-    USHORT_T                            conn_handle;    /**< Connection Handle */
+    uint16_t                            conn_handle;    /**< Connection Handle */
     int                               result;         /**< Will Refer to HOST STACK Error Code */
 
     union {
@@ -366,11 +366,11 @@ typedef struct {
         TKL_BLE_GAP_ADV_REPORT_T        adv_report;     /**< Receive Adv and Respond report*/
         TKL_BLE_GAP_EXT_ADV_REPORT_T    ext_adv_report; /**< Receive Ext Adv report*/
         TKL_BLE_GAP_CONN_PARAMS_T       conn_param;     /**< We will update connect parameters.This value can be used with TKL_BLE_EVT_CONN_PARAM_REQ and TKL_BLE_EVT_CONN_PARAM_UPDATE*/
-        CHAR_T                          link_rssi;      /**< Peer device RSSI value */
+        char                          link_rssi;      /**< Peer device RSSI value */
     }gap_event;
 } TKL_BLE_GAP_PARAMS_EVT_T;
 typedef struct {
-    USHORT_T                        char_handle;                /**< Specify one characteristic handle */
+    uint16_t                        char_handle;                /**< Specify one characteristic handle */
     uint8_t                         reason;
     uint8_t                         prev_notify     :    1;     /**< previously subscribed */
     uint8_t                         cur_notify      :    1;     /** currently notifications. */
@@ -378,17 +378,17 @@ typedef struct {
     uint8_t                         cur_indicate    :    1;     /** currently subscribed to indications. */
 } TKL_BLE_SUBSCRBE_EVT_T;
 typedef struct {
-    USHORT_T                        char_handle;                /**< Specify one characteristic handle */
-    USHORT_T                        offset;
+    uint16_t                        char_handle;                /**< Specify one characteristic handle */
+    uint16_t                        offset;
 } TKL_BLE_READ_CHAR_EVT_T;
 
 typedef struct {
     TKL_BLE_GATT_EVT_TYPE_E             type;           /**< Gatt Event */
-    USHORT_T                            conn_handle;    /**< Connection Handle */
+    uint16_t                            conn_handle;    /**< Connection Handle */
     int                               result;         /**< Will Refer to HOST STACK Error Code */
 
     union {
-        USHORT_T                        exchange_mtu;   /**< This value can be used with TKL_BLE_GATT_EVT_MTU_REQUEST and TKL_BLE_GATT_EVT_MTU_RSP*/
+        uint16_t                        exchange_mtu;   /**< This value can be used with TKL_BLE_GATT_EVT_MTU_REQUEST and TKL_BLE_GATT_EVT_MTU_RSP*/
         TKL_BLE_GATT_SVC_DISC_TYPE_T    svc_disc;       /**< Discovery All Service */
         TKL_BLE_GATT_CHAR_DISC_TYPE_T   char_disc;      /**< Discovery Specific Characteristic */
         TKL_BLE_GATT_DESC_DISC_TYPE_T   desc_disc;      /**< Discovery Specific Descriptors*/

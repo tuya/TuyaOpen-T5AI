@@ -73,7 +73,7 @@ TUYA_ERRNO tkl_net_get_errno(void)
 //  * @param[in]      ip    ip字符串    "192.168.1.1"
 //  * @return  ip地址(4B)
 //  */
-// CHAR_T* tkl_net_addr(const char *ip)
+// char* tkl_net_addr(const char *ip)
 // {
 //     if (ip == NULL) {
 //         return NULL;
@@ -749,7 +749,7 @@ int tkl_net_set_keepalive(int fd, const bool_t alive, const uint32_t idle, const
  * @param[inout]         addr
  * @return  0: success  <0: fail
  */
-OPERATE_RET tkl_net_gethostbyname(const CHAR_T *domain, TUYA_IP_ADDR_T *addr)
+OPERATE_RET tkl_net_gethostbyname(const char *domain, TUYA_IP_ADDR_T *addr)
 {
     if ((domain == NULL) || (addr == NULL)) {
         return OPRT_OS_ADAPTER_INVALID_PARM;
@@ -783,7 +783,7 @@ OPERATE_RET tkl_net_gethostbyname(const CHAR_T *domain, TUYA_IP_ADDR_T *addr)
 * @return ip string
 */
 
-CHAR_T* tkl_net_addr2str(const TUYA_IP_ADDR_T ipaddr)
+char* tkl_net_addr2str(const TUYA_IP_ADDR_T ipaddr)
 {
 #if defined(ENABLE_LWIP) && (ENABLE_LWIP == 1)
     uint32_t addr = lwip_htonl(ipaddr);
@@ -834,7 +834,7 @@ OPERATE_RET tkl_net_get_socket_ip(const int fd, TUYA_IP_ADDR_T *addr)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_set_cloexec(IN const int fd)
+OPERATE_RET tkl_net_set_cloexec(const int fd)
 {
     return OPRT_OK;
 }
@@ -850,7 +850,7 @@ OPERATE_RET tkl_net_set_cloexec(IN const int fd)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_getsockname(int fd, TUYA_IP_ADDR_T *addr, UINT16_T *port)
+OPERATE_RET tkl_net_getsockname(int fd, TUYA_IP_ADDR_T *addr, uint16_t *port)
 {
     return 0;
 }
@@ -880,7 +880,7 @@ OPERATE_RET tkl_net_set_broadcast(const int fd)
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_getpeername(int fd, TUYA_IP_ADDR_T *addr, UINT16_T *port)
+OPERATE_RET tkl_net_getpeername(int fd, TUYA_IP_ADDR_T *addr, uint16_t *port)
 {
     return 0;
 }
@@ -894,7 +894,7 @@ char g_tkl_station_hostname[16] = {0};
 *
 * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
 */
-OPERATE_RET tkl_net_sethostname(const CHAR_T *hostname)
+OPERATE_RET tkl_net_sethostname(const char *hostname)
 {
     extern int net_dhcp_hostname_set(char *hostname);
     snprintf(g_tkl_station_hostname, sizeof(g_tkl_station_hostname), "%s", hostname);

@@ -28,7 +28,7 @@ typedef struct {
 #define RINGBUFF_SIZE   sizeof(__RINGBUFF_T)
 
 
-STATIC void __ringbuff_init(__RINGBUFF_T *ringbuff, uint32_t len)
+static void __ringbuff_init(__RINGBUFF_T *ringbuff, uint32_t len)
 {
     ringbuff->in = 0;
     ringbuff->out = 0;

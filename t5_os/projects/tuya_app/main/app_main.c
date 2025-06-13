@@ -15,7 +15,7 @@
 #endif
 
 extern void rtos_set_user_app_entry(beken_thread_function_t entry);
-extern VOID_T tkl_system_sleep(const uint32_t num_ms);
+extern void tkl_system_sleep(const uint32_t num_ms);
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -25,7 +25,7 @@ extern VOID_T tkl_system_sleep(const uint32_t num_ms);
 
 #if (CONFIG_SYS_CPU0)
 extern size_t xPortGetMinimumEverFreeHeapSize( void );
-extern INT_T tkl_system_get_free_heap_size(VOID_T);
+extern int tkl_system_get_free_heap_size(void);
 TaskHandle_t __wdg_handle;
 static void __feed_wdg(void *arg)
 {
@@ -88,7 +88,7 @@ int main(void)
     bk_printf("\r\nstart tuya_app_main\r\n");
     start_tuya_thread = 1;
     tuya_app_main();
-    // TUYA_LwIP_Init(); // Èç¹ûµ÷ÊÔ×¢ÊÍ tuya_app_main, ÐèÒª³õÊ¼»¯lwip£¬µ×²ãmacÊý¾Ý´¦ÀíÐèÒªpbuf×ÊÔ´
+    // TUYA_LwIP_Init(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ tuya_app_main, ï¿½ï¿½Òªï¿½ï¿½Ê¼ï¿½ï¿½lwipï¿½ï¿½ï¿½×²ï¿½macï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½ï¿½Òªpbufï¿½ï¿½Ô´
 #endif
     return 0;
 }

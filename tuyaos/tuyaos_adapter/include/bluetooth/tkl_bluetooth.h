@@ -33,7 +33,7 @@ OPERATE_RET tkl_ble_stack_deinit(uint8_t role);
  * @return  SUCCESS             Support Gatt Link
  *          ERROR               Only Beacon or Mesh Beacon, Not Support Gatt Link.
  * */
-OPERATE_RET tkl_ble_stack_gatt_link(USHORT_T *p_link);
+OPERATE_RET tkl_ble_stack_gatt_link(uint16_t *p_link);
 
 /**
  * @brief   Register GAP Event Callback
@@ -210,7 +210,7 @@ OPERATE_RET tkl_ble_gap_connect(TKL_BLE_GAP_ADDR_T const *p_peer_addr, TKL_BLE_G
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gap_disconnect(USHORT_T conn_handle, uint8_t hci_reason);
+OPERATE_RET tkl_ble_gap_disconnect(uint16_t conn_handle, uint8_t hci_reason);
 
 /**
  * @brief   Start to update connection parameters
@@ -219,7 +219,7 @@ OPERATE_RET tkl_ble_gap_disconnect(USHORT_T conn_handle, uint8_t hci_reason);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_gap_conn_param_update(USHORT_T conn_handle, TKL_BLE_GAP_CONN_PARAMS_T const *p_conn_params);
+OPERATE_RET tkl_ble_gap_conn_param_update(uint16_t conn_handle, TKL_BLE_GAP_CONN_PARAMS_T const *p_conn_params);
 
 /**
  * @brief   Set the radio's transmit power.
@@ -237,7 +237,7 @@ OPERATE_RET tkl_ble_gap_tx_power_set(uint8_t role, int tx_power);
  * @return  SUCCESS             Successfully read the RSSI.
  *          ERROR               No sample is available.
  * */
-OPERATE_RET tkl_ble_gap_rssi_get(USHORT_T conn_handle);
+OPERATE_RET tkl_ble_gap_rssi_get(uint16_t conn_handle);
 
 /**
  * @brief   Set the GAP Name For Bluetooth
@@ -245,7 +245,7 @@ OPERATE_RET tkl_ble_gap_rssi_get(USHORT_T conn_handle);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_gap_name_set(CHAR_T *p_name);
+OPERATE_RET tkl_ble_gap_name_set(char *p_name);
 
 /**
  * @brief   Add Ble Gatt Service
@@ -266,7 +266,7 @@ OPERATE_RET tkl_ble_gatts_service_add(TKL_BLE_GATTS_PARAMS_T *p_service);
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_service_change(USHORT_T conn_handle, USHORT_T start_handle, USHORT_T end_handle);
+OPERATE_RET tkl_ble_gatts_service_change(uint16_t conn_handle, uint16_t start_handle, uint16_t end_handle);
 
 /**
  * @brief   Set the value of a given attribute. After Config Tuya Read-Char, we can update read-value at any time.
@@ -278,7 +278,7 @@ OPERATE_RET tkl_ble_gatts_service_change(USHORT_T conn_handle, USHORT_T start_ha
  *
  * @note Values other than system attributes can be set at any time, regardless of whether any active connections exist. 
  * */ 
-OPERATE_RET tkl_ble_gatts_value_set(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_set(uint16_t conn_handle, uint16_t char_handle, uint8_t *p_data, uint16_t length);
 
 /**
  * @brief   Get the value of a given attribute.
@@ -287,7 +287,7 @@ OPERATE_RET tkl_ble_gatts_value_set(USHORT_T conn_handle, USHORT_T char_handle, 
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_value_get(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_get(uint16_t conn_handle, uint16_t char_handle, uint8_t *p_data, uint16_t length);
 
 /**
  * @brief   Notify an attribute value.
@@ -298,7 +298,7 @@ OPERATE_RET tkl_ble_gatts_value_get(USHORT_T conn_handle, USHORT_T char_handle, 
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_value_notify(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_notify(uint16_t conn_handle, uint16_t char_handle, uint8_t *p_data, uint16_t length);
 
 /**
  * @brief   Indicate an attribute value.
@@ -309,7 +309,7 @@ OPERATE_RET tkl_ble_gatts_value_notify(USHORT_T conn_handle, USHORT_T char_handl
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_value_indicate(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gatts_value_indicate(uint16_t conn_handle, uint16_t char_handle, uint8_t *p_data, uint16_t length);
 
 /**
  * @brief   Reply to an ATT_MTU exchange request by sending an Exchange MTU Response to the client.
@@ -318,7 +318,7 @@ OPERATE_RET tkl_ble_gatts_value_indicate(USHORT_T conn_handle, USHORT_T char_han
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gatts_exchange_mtu_reply(USHORT_T conn_handle, USHORT_T server_rx_mtu);
+OPERATE_RET tkl_ble_gatts_exchange_mtu_reply(uint16_t conn_handle, uint16_t server_rx_mtu);
 
 /******************************************************************************************************************************/
 /** @brief Define All Gatt Client Interface, Refer to current ble gw and ble stack.
@@ -333,7 +333,7 @@ OPERATE_RET tkl_ble_gatts_exchange_mtu_reply(USHORT_T conn_handle, USHORT_T serv
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gattc_all_service_discovery(USHORT_T conn_handle);
+OPERATE_RET tkl_ble_gattc_all_service_discovery(uint16_t conn_handle);
 
 /**
  * @brief   [Ble Central] Will Discovery All Characteristic
@@ -345,7 +345,7 @@ OPERATE_RET tkl_ble_gattc_all_service_discovery(USHORT_T conn_handle);
  * @Note:   For Tuya Service, it may contains more optional service, it is more better to find all Characteristic 
  *          instead of find specific uuid.
  * */  
-OPERATE_RET tkl_ble_gattc_all_char_discovery(USHORT_T conn_handle, USHORT_T start_handle, USHORT_T end_handle);
+OPERATE_RET tkl_ble_gattc_all_char_discovery(uint16_t conn_handle, uint16_t start_handle, uint16_t end_handle);
 
 /**
  * @brief   [Ble Central] Will Discovery All Descriptor of Characteristic
@@ -356,7 +356,7 @@ OPERATE_RET tkl_ble_gattc_all_char_discovery(USHORT_T conn_handle, USHORT_T star
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gattc_char_desc_discovery(USHORT_T conn_handle, USHORT_T start_handle, USHORT_T end_handle);
+OPERATE_RET tkl_ble_gattc_char_desc_discovery(uint16_t conn_handle, uint16_t start_handle, uint16_t end_handle);
 
 /**
  * @brief   [Ble Central] Write Data without Response
@@ -367,7 +367,7 @@ OPERATE_RET tkl_ble_gattc_char_desc_discovery(USHORT_T conn_handle, USHORT_T sta
  * @return  SUCCESS
  *          ERROR
  * */ 
-OPERATE_RET tkl_ble_gattc_write_without_rsp(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gattc_write_without_rsp(uint16_t conn_handle, uint16_t char_handle, uint8_t *p_data, uint16_t length);
 
 /**
  * @brief   [Ble Central] Write Data with response
@@ -378,7 +378,7 @@ OPERATE_RET tkl_ble_gattc_write_without_rsp(USHORT_T conn_handle, USHORT_T char_
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_gattc_write(USHORT_T conn_handle, USHORT_T char_handle, uint8_t *p_data, USHORT_T length);
+OPERATE_RET tkl_ble_gattc_write(uint16_t conn_handle, uint16_t char_handle, uint8_t *p_data, uint16_t length);
 
 /**
  * @brief   [Ble Central] Read Data
@@ -387,7 +387,7 @@ OPERATE_RET tkl_ble_gattc_write(USHORT_T conn_handle, USHORT_T char_handle, uint
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_gattc_read(USHORT_T conn_handle, USHORT_T char_handle);
+OPERATE_RET tkl_ble_gattc_read(uint16_t conn_handle, uint16_t char_handle);
 
 /**
  * @brief   Start an ATT_MTU exchange by sending an Exchange MTU Request to the server.
@@ -396,7 +396,7 @@ OPERATE_RET tkl_ble_gattc_read(USHORT_T conn_handle, USHORT_T char_handle);
  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_gattc_exchange_mtu_request(USHORT_T conn_handle, USHORT_T client_rx_mtu);
+OPERATE_RET tkl_ble_gattc_exchange_mtu_request(uint16_t conn_handle, uint16_t client_rx_mtu);
 
 /**
  * @brief   [Special Command Control] Base on Bluetooth, We can do some special commands for exchanging some informations.
@@ -421,7 +421,7 @@ OPERATE_RET tkl_ble_gattc_exchange_mtu_request(USHORT_T conn_handle, USHORT_T cl
  *  * @return  SUCCESS
  *          ERROR
  * */
-OPERATE_RET tkl_ble_vendor_command_control(USHORT_T opcode, void *user_data, USHORT_T data_len);
+OPERATE_RET tkl_ble_vendor_command_control(uint16_t opcode, void *user_data, uint16_t data_len);
 
 /**
  * @brief set ble mode, used in wifi ble coexist mode
