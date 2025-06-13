@@ -1,5 +1,5 @@
 {
-    "count": 13,
+    "count": 15,
     "inseqs": {
         "configuration_new.json": [
             "1",
@@ -49,10 +49,26 @@
             "0",
             "0"
         ],
-        "genAllSag": [
+        "application.sag": [
             "1",
             "2",
             "2",
+            "0",
+            "0",
+            "0"
+        ],
+        "application1.sag": [
+            "1",
+            "2",
+            "3",
+            "0",
+            "0",
+            "0"
+        ],
+        "genAllSag": [
+            "1",
+            "2",
+            "4",
             "0",
             "0",
             "0"
