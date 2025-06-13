@@ -56,7 +56,7 @@ static int __tkl_audio_mic_trans_callback(unsigned char *data, unsigned int len)
             frame.sample = aud_intf_mic_setup.samp_rate;
         }
 
-        frame.pbuf = (CHAR_T*)data;
+        frame.pbuf = (char*)data;
         frame.buf_size = len;
         frame.used_size = len;
         frame.timestamp = -1;

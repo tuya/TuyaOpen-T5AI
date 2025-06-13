@@ -388,7 +388,7 @@ TUYA_WEAK_ATTRIBUTE int tkl_fclose(TUYA_FILE file)
  *
  * @return the bytes read from file
  */
-TUYA_WEAK_ATTRIBUTE int tkl_fread(VOID_T *buf, int bytes, TUYA_FILE file)
+TUYA_WEAK_ATTRIBUTE int tkl_fread(void *buf, int bytes, TUYA_FILE file)
 {
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
@@ -412,7 +412,7 @@ TUYA_WEAK_ATTRIBUTE int tkl_fread(VOID_T *buf, int bytes, TUYA_FILE file)
  *
  * @return the bytes write to file
  */
-TUYA_WEAK_ATTRIBUTE int tkl_fwrite(VOID_T *buf, int bytes, TUYA_FILE file)
+TUYA_WEAK_ATTRIBUTE int tkl_fwrite(void *buf, int bytes, TUYA_FILE file)
 {
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
@@ -548,7 +548,7 @@ TUYA_WEAK_ATTRIBUTE int tkl_feof(TUYA_FILE file)
  *
  * @return 0 on success, others on failed
  */
-TUYA_WEAK_ATTRIBUTE int tkl_fseek(TUYA_FILE file, INT64_T offs, int whence)
+TUYA_WEAK_ATTRIBUTE int tkl_fseek(TUYA_FILE file, int64_t offs, int whence)
 {
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
@@ -569,7 +569,7 @@ TUYA_WEAK_ATTRIBUTE int tkl_fseek(TUYA_FILE file, INT64_T offs, int whence)
  *
  * @return the current offset of the file
  */
-TUYA_WEAK_ATTRIBUTE INT64_T tkl_ftell(TUYA_FILE file)
+TUYA_WEAK_ATTRIBUTE int64_t tkl_ftell(TUYA_FILE file)
 {
     int fd = (int)file;
     fd -= FILE_HANDLE_OFFSET;
@@ -695,7 +695,7 @@ TUYA_WEAK_ATTRIBUTE int tkl_fileno(TUYA_FILE file)
  *
  * @return 0 success,-1 failed
  */
-TUYA_WEAK_ATTRIBUTE int tkl_ftruncate(int fd, UINT64_T length)
+TUYA_WEAK_ATTRIBUTE int tkl_ftruncate(int fd, uint64_t length)
 {
     int plat_fd = (int)fd;
     plat_fd -= FILE_HANDLE_OFFSET;

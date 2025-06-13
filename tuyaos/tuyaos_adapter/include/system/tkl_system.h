@@ -90,7 +90,7 @@ int tkl_system_get_random(uint32_t range);
 *
 * @return reset reason
 */
-TUYA_RESET_REASON_E tkl_system_get_reset_reason(CHAR_T** describe);
+TUYA_RESET_REASON_E tkl_system_get_reset_reason(char** describe);
 
 /**
 * @brief  system sleep

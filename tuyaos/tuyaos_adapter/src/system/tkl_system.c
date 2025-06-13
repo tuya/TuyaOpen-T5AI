@@ -159,7 +159,7 @@ int tkl_system_get_free_heap_size(void)
 *
 * @return reset reason of system
 */
-TUYA_RESET_REASON_E tkl_system_get_reset_reason(CHAR_T** describe)
+TUYA_RESET_REASON_E tkl_system_get_reset_reason(char** describe)
 {
     unsigned char value = bk_misc_get_reset_reason() & 0xFF;
     TUYA_RESET_REASON_E ty_value;

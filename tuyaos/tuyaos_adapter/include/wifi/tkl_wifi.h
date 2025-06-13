@@ -23,7 +23,7 @@ extern "C" {
 typedef struct
 {
     uint8_t channel;                 ///< AP channel
-    SCHAR_T rssi;                             ///< AP rssi
+    signed char rssi;                             ///< AP rssi
     uint8_t bssid[6];                ///< AP bssid
     uint8_t ssid[WIFI_SSID_LEN+1];   ///< AP ssid array
     uint8_t s_len;                   ///< AP ssid len
@@ -82,7 +82,7 @@ typedef struct {
     WF_AP_AUTH_MODE_E md;                ///< encryption type
     uint8_t ssid_hidden;                 ///< ssid hidden  default:0
     uint8_t max_conn;                    ///< max sta connect nums default:1
-    USHORT_T ms_interval;                ///< broadcast interval default:100
+    uint16_t ms_interval;                ///< broadcast interval default:100
     NW_IP_S ip;                          ///< ip info for ap mode
 }WF_AP_CFG_IF_S; 
 
@@ -99,10 +99,10 @@ typedef enum {
 }WF_STATION_STAT_E;
 
 typedef struct {
-    CHAR_T ip[16];
-    CHAR_T mask[16];
-    CHAR_T gw[16];
-    CHAR_T dns[16];
+    char ip[16];
+    char mask[16];
+    char gw[16];
+    char dns[16];
 } FAST_DHCP_INFO_T;
 /* for fast connect*/
 typedef struct {
@@ -177,7 +177,7 @@ typedef struct {
     uint8_t     channel;
     NW_MAC_S    mac;
     uint32_t      vsie_data_len;
-    BYTE_T     *vsie_data;
+    uint8_t     *vsie_data;
 } WF_IOCTL_BEACON_T;
 
 typedef struct {
@@ -196,7 +196,7 @@ typedef struct {
  * @param[in]       buf         the buf wifi recv
  * @param[in]       len         the len of buf
  */
-typedef void (*SNIFFER_CALLBACK)(const uint8_t *buf, const UINT16_T len, const INT8_T rssi);
+typedef void (*SNIFFER_CALLBACK)(const uint8_t *buf, const uint16_t len, const int8_t rssi);
 
 /**
  * @brief callback function: WIFI_REV_MGNT_CB
@@ -237,7 +237,7 @@ OPERATE_RET tkl_wifi_init(WIFI_EVENT_CB cb);
  *
  * @note if ssid == NULL means scan all ap, otherwise means scan the specific ssid
  */
-OPERATE_RET tkl_wifi_scan_ap(const SCHAR_T *ssid, AP_IF_S **ap_ary, uint32_t *num);
+OPERATE_RET tkl_wifi_scan_ap(const signed char *ssid, AP_IF_S **ap_ary, uint32_t *num);
 
 /**
  * @brief release the memory malloced in <tkl_wifi_ap_scan>
@@ -413,7 +413,7 @@ OPERATE_RET tkl_wifi_station_fast_connect(const FAST_WF_CONNECTED_AP_INFO_T *fas
  * @param[in]       passwd
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd);
+OPERATE_RET tkl_wifi_station_connect(const signed char *ssid, const signed char *passwd);
 
 /**
  * @brief disconnect wifi from connect ap
@@ -428,7 +428,7 @@ OPERATE_RET tkl_wifi_station_disconnect(void);
  * @param[out]      rssi        the return rssi
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_get_conn_ap_rssi(SCHAR_T *rssi);
+OPERATE_RET tkl_wifi_station_get_conn_ap_rssi(signed char *rssi);
 
 
 /**

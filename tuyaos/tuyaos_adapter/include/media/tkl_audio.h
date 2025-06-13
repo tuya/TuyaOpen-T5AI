@@ -77,22 +77,22 @@ typedef enum
 
 typedef struct
 {
-    BYTE_T platform_dai_type;                           // 0--IIS类型的AUDIO 1--DAC类型的AUDIO
-    BYTE_T platform_dai_port;                           // 选择哪个DAC ADC 或者 IIS
-    BYTE_T platform_dai_left_subport;                   // platform_dai_type == 1时，选择哪个DAC,ADC Chanel 作为左声道 0xff无效
-    BYTE_T platform_dai_right_subport;                  // platform_dai_type == 1时   选择哪个DAC,ADC Chanel 作为右声道          0xff无效
-    BYTE_T codec_i2c;                                   // platform_dai_type == 0时 codec使用哪个I2C 0xff无效
-    BYTE_T codec_i2c_addr;                              // platform_dai_type == 0时 codec的I2C地址       0xff无效
+    uint8_t platform_dai_type;                           // 0--IIS类型的AUDIO 1--DAC类型的AUDIO
+    uint8_t platform_dai_port;                           // 选择哪个DAC ADC 或者 IIS
+    uint8_t platform_dai_left_subport;                   // platform_dai_type == 1时，选择哪个DAC,ADC Chanel 作为左声道 0xff无效
+    uint8_t platform_dai_right_subport;                  // platform_dai_type == 1时   选择哪个DAC,ADC Chanel 作为右声道          0xff无效
+    uint8_t codec_i2c;                                   // platform_dai_type == 0时 codec使用哪个I2C 0xff无效
+    uint8_t codec_i2c_addr;                              // platform_dai_type == 0时 codec的I2C地址       0xff无效
 }TKL_AUDIO_HARDWARE_SOURCE;
 
 typedef struct
 {
     TKL_MEDIA_FRAME_TYPE_E   type;                       // frame type
-    CHAR_T                  *pbuf;                       // buffer
+    char                  *pbuf;                       // buffer
     uint32_t                   buf_size;                   // buffer size
     uint32_t                   used_size;                  // used buffer
-    UINT64_T                 pts;                        // sdk pts
-    UINT64_T                 timestamp;                  // system utc time，unit: ms
+    uint64_t                 pts;                        // sdk pts
+    uint64_t                 timestamp;                  // system utc time，unit: ms
     TKL_MEDIA_CODEC_TYPE_E   codectype;                  // codec type
     TKL_AUDIO_SAMPLE_E       sample;                     // sample
     TKL_AUDIO_DATABITS_E     datebits;                   // date bit
@@ -133,7 +133,7 @@ typedef struct
 typedef struct
 {
     int    val;
-    CHAR_T     res[8];
+    char     res[8];
 } TKL_AUDIO_DETECT_RESULT_T;                             // DETECT result
 
 typedef enum

@@ -25,7 +25,7 @@ extern "C" {
 *
 * @return the memory address malloced
 */
-void *tkl_system_malloc(SIZE_T size);
+void *tkl_system_malloc(size_t size);
 
 /**
 * @brief Free memory of system
@@ -47,7 +47,7 @@ void tkl_system_free(void* ptr);
 *
 * @return the memory address malloced
 */
-void *tkl_system_memset(void* src, int ch, const SIZE_T n);
+void *tkl_system_memset(void* src, int ch, const size_t n);
 
 /**
 * @brief Alloc memory of system
@@ -58,7 +58,7 @@ void *tkl_system_memset(void* src, int ch, const SIZE_T n);
 *
 * @return the memory address malloced
 */
-void *tkl_system_memcpy(void* src, const void* dst, const SIZE_T n);
+void *tkl_system_memcpy(void* src, const void* dst, const size_t n);
 
 /**
  * @brief Allocate and clear the memory
@@ -89,7 +89,7 @@ void *tkl_system_realloc(void* ptr, size_t size);
 */
 int tkl_system_get_free_heap_size(void);
 
-int tkl_system_memcmp(const void *str1, const void *str2, SIZE_T n);
+int tkl_system_memcmp(const void *str1, const void *str2, size_t n);
 
 
 #if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM==1)
@@ -102,7 +102,7 @@ int tkl_system_memcmp(const void *str1, const void *str2, SIZE_T n);
 *
 * @return the memory address malloced
 */
-void *tkl_system_psram_malloc(SIZE_T size);
+void *tkl_system_psram_malloc(size_t size);
 
 /**
 * @brief Free psram memory of system

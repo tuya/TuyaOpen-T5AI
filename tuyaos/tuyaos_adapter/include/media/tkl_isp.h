@@ -89,43 +89,43 @@ typedef struct
     uint32_t dayToNight;                              // day to night threshold
     uint32_t nightToDay;                              // night to day threshold
     uint32_t dnSwitchOffset;                          // day and night switch offset
-    FLOAT_T offsetR[2];                               // offsetR，R[0] default 0.01
-    FLOAT_T offsetG[2];                               // offsetG，G[0] default 0.01
-    FLOAT_T offsetB[2];                               // offsetB，B[0] default 0.01
-    FLOAT_T coffR[6];                                 // coefficient - R
-    FLOAT_T coffG[6];                                 // coefficient - G
-    FLOAT_T coffB[6];                                 // coefficient - B
+    float offsetR[2];                               // offsetR，R[0] default 0.01
+    float offsetG[2];                               // offsetG，G[0] default 0.01
+    float offsetB[2];                               // offsetB，B[0] default 0.01
+    float coffR[6];                                 // coefficient - R
+    float coffG[6];                                 // coefficient - G
+    float coffB[6];                                 // coefficient - B
 }TKL_ISP_DN_SWITCH_CONFIG_T;                          // ADN config   
 
 /*ISP数据格式*/
 typedef struct
 {
-    FLOAT_T  coffR[6];                                // coefficient - R
-    FLOAT_T  coffG[6];                                // coefficient - G
-    FLOAT_T  coffB[6];                                // coefficient - B
-    UINT16_T GlobalR;                                 // global R mean
-    UINT16_T GlobalG;                                 // global G mean
-    UINT16_T GlobalB;                                 // global B mean
-    UINT16_T RGain;                                   // RGain
-    UINT16_T BGain;                                   // BGain
-    UINT16_T GrGain;                                  // GrGain
-    UINT16_T GbGain;                                  // GbGain
+    float  coffR[6];                                // coefficient - R
+    float  coffG[6];                                // coefficient - G
+    float  coffB[6];                                // coefficient - B
+    uint16_t GlobalR;                                 // global R mean
+    uint16_t GlobalG;                                 // global G mean
+    uint16_t GlobalB;                                 // global B mean
+    uint16_t RGain;                                   // RGain
+    uint16_t BGain;                                   // BGain
+    uint16_t GrGain;                                  // GrGain
+    uint16_t GbGain;                                  // GbGain
     int ExpTime;                                  // sensor exposure time
     int AGain;                                    // sensor analog gain
     int DGain;                                    // sensor digital gain
     int ISPDGain;                                 // ISP gain
     int ISO;                                      // sensor total gain, again*dgain*ispdgain
     int OverExpFlag;                              // over exposure flag
-    FLOAT_T RGBComponent;                             // sum of RGB
-    FLOAT_T Illumination;                             // temporary illumination
-    FLOAT_T Exposure;                                 // total exposure value
+    float RGBComponent;                             // sum of RGB
+    float Illumination;                             // temporary illumination
+    float Exposure;                                 // total exposure value
 }TKL_ISP_DN_SWITCH_CALC_DATA_T;
 
 typedef struct
 {
-	FLOAT_T R_Return;
-	FLOAT_T G_Return;
-	FLOAT_T B_Return;
+	float R_Return;
+	float G_Return;
+	float B_Return;
 }TKL_ISP_DN_RETURN_T;
 
 typedef struct                                            
@@ -176,9 +176,9 @@ typedef struct
 {
     /*AWB*/
     int isAwbStable;
-    UINT16_T colorTemp;
-    UINT16_T RGain;
-    UINT16_T BGain;
+    uint16_t colorTemp;
+    uint16_t RGain;
+    uint16_t BGain;
     /*AE*/
     int isAeStable;
     uint32_t US;

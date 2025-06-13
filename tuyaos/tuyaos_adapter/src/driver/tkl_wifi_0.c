@@ -103,7 +103,7 @@ extern void bk_printf(const char *fmt, ...);
 extern OPERATE_RET tuya_ipc_send_sync(struct ipc_msg_s *msg);
 extern OPERATE_RET tuya_ipc_send_no_sync(struct ipc_msg_s *msg);
 
-static __notify_wifi_event(WF_EVENT_E event, VOID_T *arg)
+static void __notify_wifi_event(WF_EVENT_E event, void *arg)
 {
     if (wifi_event_cb == NULL) {
         return;
@@ -121,7 +121,7 @@ void tkl_wifi_ipc_func(struct ipc_msg_s *msg)
         {
             AP_IF_S *ap_ary = NULL;
             uint32_t num = 0;
-            SCHAR_T *ssid = (SCHAR_T *)msg->req_param;
+            signed char *ssid = (signed char *)msg->req_param;
             ret = tkl_wifi_scan_ap(ssid, &ap_ary, &num);//异步？。。。待确认
         }
             break;
@@ -501,7 +501,7 @@ static OPERATE_RET tkl_wifi_all_ap_scan(AP_IF_S **ap_ary, unsigned int *num)
     return  OPRT_OK;
 }
 
-static OPERATE_RET tkl_wifi_single_ap_scan(const SCHAR_T *ssid, AP_IF_S **ap_ary, uint32_t *num)
+static OPERATE_RET tkl_wifi_single_ap_scan(const signed char *ssid, AP_IF_S **ap_ary, uint32_t *num)
 {
     if((NULL == ssid) || (NULL == ap_ary)) {
         return OPRT_OS_ADAPTER_INVALID_PARM;
@@ -531,7 +531,7 @@ static OPERATE_RET tkl_wifi_single_ap_scan(const SCHAR_T *ssid, AP_IF_S **ap_ary
  *
  * @note if ssid == NULL means scan all ap, otherwise means scan the specific ssid
  */
-OPERATE_RET tkl_wifi_scan_ap(const SCHAR_T *ssid, AP_IF_S **ap_ary, uint32_t *num)
+OPERATE_RET tkl_wifi_scan_ap(const signed char *ssid, AP_IF_S **ap_ary, uint32_t *num)
 {
     if(first_set_flag) {
         // extern void extended_app_waiting_for_launch(void);
@@ -647,7 +647,7 @@ OPERATE_RET tkl_wifi_start_ap(const WF_AP_CFG_IF_S *cfg)
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_stop_ap(VOID_T)
+OPERATE_RET tkl_wifi_stop_ap(void)
 {
     BK_LOG_ON_ERR(bk_wifi_ap_stop());
     return OPRT_OK;
@@ -1111,7 +1111,7 @@ OPERATE_RET tkl_wifi_get_country_code(uint8_t *ccode)
  *
  * @return true on success. faile on failure
  */
-BOOL_T tkl_wifi_set_rf_calibrated(VOID_T)
+BOOL_T tkl_wifi_set_rf_calibrated(void)
 {
     int stat = bk_wifi_manual_cal_rfcali_status();
 
@@ -1332,7 +1332,7 @@ OPERATE_RET tkl_wifi_station_fast_connect(const FAST_WF_CONNECTED_AP_INFO_T *fas
  * @param[in]       passwd
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd)
+OPERATE_RET tkl_wifi_station_connect(const signed char *ssid, const signed char *passwd)
 {
     bk_printf("%s %d\r\n", __func__, __LINE__);
     int ret = OPRT_COM_ERROR;
@@ -1378,7 +1378,7 @@ OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd)
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_disconnect(VOID_T)
+OPERATE_RET tkl_wifi_station_disconnect(void)
 {
     bk_printf("station disconnect ap\r\n");
     // etharp_remove_all_static();
@@ -1392,11 +1392,11 @@ OPERATE_RET tkl_wifi_station_disconnect(VOID_T)
  * @param[out]      rssi        the return rssi
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_get_conn_ap_rssi(SCHAR_T *rssi)
+OPERATE_RET tkl_wifi_station_get_conn_ap_rssi(signed char *rssi)
 {
     int ret = OPRT_OK;
-    SHORT_T tmp_rssi = 0, sum_rssi = 0;
-    SCHAR_T max_rssi = -128, min_rssi = 127;
+    signed short tmp_rssi = 0, sum_rssi = 0;
+    signed char max_rssi = -128, min_rssi = 127;
     wifi_link_status_t link_status = {0};
     int i = 0, error_cnt = 0;
 

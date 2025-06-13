@@ -44,7 +44,7 @@ extern void bk_printf(const char *fmt, ...);
 // struct ipc_msg_s wf_ipc_msg = {0};
 FAST_DHCP_INFO_T fast_dhcp_s = {0};
 AP_IF_S *scanap = NULL;
-UINT32_T apcnt = 0;
+uint32_t apcnt = 0;
 static uint8_t get_ip_flag = 0;
 static uint8_t station_connect_flag = 0;
 static WF_WK_MD_E wf_mode = WWM_POWERDOWN;
@@ -90,7 +90,7 @@ void __dhcp_cb(LWIP_EVENT_E event, void *arg)
 
 extern void tuya_dhcpv4_client_start_by_wq(void (*cb)(LWIP_EVENT_E event, void *arg), FAST_DHCP_INFO_T *ip_info);
 
-static void __handle_wifi_event(WF_EVENT_E event, VOID_T *arg)
+static void __handle_wifi_event(WF_EVENT_E event, void *arg)
 {
     bk_printf("_wifi_event_cb %d\r\n", event);
     switch (event) {
@@ -170,7 +170,7 @@ OPERATE_RET tkl_wifi_init(WIFI_EVENT_CB cb)
  *
  * @note if ssid == NULL means scan all ap, otherwise means scan the specific ssid
  */
-OPERATE_RET tkl_wifi_scan_ap(const SCHAR_T *ssid, AP_IF_S **ap_ary, uint32_t *num)
+OPERATE_RET tkl_wifi_scan_ap(const signed char *ssid, AP_IF_S **ap_ary, uint32_t *num)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -276,7 +276,7 @@ OPERATE_RET tkl_wifi_start_ap(const WF_AP_CFG_IF_S *cfg)
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_stop_ap(VOID_T)
+OPERATE_RET tkl_wifi_stop_ap(void)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -301,7 +301,7 @@ OPERATE_RET tkl_wifi_stop_ap(VOID_T)
  * @param[in]       chan        the channel to set
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_set_cur_channel(const UCHAR_T chan)
+OPERATE_RET tkl_wifi_set_cur_channel(const uint8_t chan)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -322,7 +322,7 @@ OPERATE_RET tkl_wifi_set_cur_channel(const UCHAR_T chan)
  * @param[out]      chan        the channel wifi works
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_get_cur_channel(UCHAR_T *chan)
+OPERATE_RET tkl_wifi_get_cur_channel(uint8_t *chan)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -552,7 +552,7 @@ OPERATE_RET tkl_wifi_get_connected_ap_info(FAST_WF_CONNECTED_AP_INFO_T **fast_ap
  * @param[out]      mac         uplink mac
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_get_bssid(UCHAR_T *mac)
+OPERATE_RET tkl_wifi_get_bssid(uint8_t *mac)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -594,7 +594,7 @@ OPERATE_RET tkl_wifi_set_country_code(const COUNTRY_CODE_E ccode)
  * @param[in]       ccode  country code
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_set_country_code_v2(const UCHAR_T *ccode)
+OPERATE_RET tkl_wifi_set_country_code_v2(const uint8_t *ccode)
 {
     COUNTRY_CODE_E country_code = COUNTRY_CODE_CN;
 
@@ -635,7 +635,7 @@ OPERATE_RET tkl_wifi_set_country_code_v2(const UCHAR_T *ccode)
  * @param[in]       ccode   country code buffer to restore
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_get_country_code(UCHAR_T *ccode)
+OPERATE_RET tkl_wifi_get_country_code(uint8_t *ccode)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -665,7 +665,7 @@ OPERATE_RET tkl_wifi_get_country_code(UCHAR_T *ccode)
  *
  * @return true on success. faile on failure
  */
-BOOL_T tkl_wifi_set_rf_calibrated(VOID_T)
+BOOL_T tkl_wifi_set_rf_calibrated(void)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -685,7 +685,7 @@ BOOL_T tkl_wifi_set_rf_calibrated(VOID_T)
  * @param[in]       dtim     the wifi dtim
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_set_lp_mode(const BOOL_T enable, const UCHAR_T dtim)
+OPERATE_RET tkl_wifi_set_lp_mode(const BOOL_T enable, const uint8_t dtim)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     struct ipc_msg_param_s param = {0};
@@ -740,7 +740,7 @@ OPERATE_RET tkl_wifi_station_fast_connect(const FAST_WF_CONNECTED_AP_INFO_T *fas
  * @param[in]       passwd
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd)
+OPERATE_RET tkl_wifi_station_connect(const signed char *ssid, const signed char *passwd)
 {
     memset(&fast_dhcp_s, 0, sizeof(FAST_DHCP_INFO_T));
 
@@ -765,7 +765,7 @@ OPERATE_RET tkl_wifi_station_connect(const SCHAR_T *ssid, const SCHAR_T *passwd)
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_disconnect(VOID_T)
+OPERATE_RET tkl_wifi_station_disconnect(void)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -784,7 +784,7 @@ OPERATE_RET tkl_wifi_station_disconnect(VOID_T)
  * @param[out]      rssi        the return rssi
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_station_get_conn_ap_rssi(SCHAR_T *rssi)
+OPERATE_RET tkl_wifi_station_get_conn_ap_rssi(signed char *rssi)
 {
     struct ipc_msg_s wf_ipc_msg = {0};
     memset(&wf_ipc_msg, 0, sizeof(struct ipc_msg_s));
@@ -893,13 +893,13 @@ OPERATE_RET tkl_wifi_register_recv_mgnt_callback(const BOOL_T enable, const WIFI
  * @param[in]       args    args associated with the command
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_wifi_ioctl(WF_IOCTL_CMD_E cmd, VOID *args)
+OPERATE_RET tkl_wifi_ioctl(WF_IOCTL_CMD_E cmd, void *args)
 {
     return OPRT_NOT_SUPPORTED;
 #if 0
     struct parm{
         WF_IOCTL_CMD_E cmd;
-        VOID *args;
+        void *args;
     };
     struct parm tmp  = {0};
     tmp.cmd = cmd;

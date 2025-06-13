@@ -134,7 +134,7 @@ for (p = (head)->next; n = p->next, p != (head); p = n)
  * @param[in] pHead the bidirection list
  * @return 0 means empty, others means empty
  */
-int tuya_list_empty(IN const P_LIST_HEAD pHead);
+int tuya_list_empty(const P_LIST_HEAD pHead);
 
 /**
  * @brief add new list node into bidirection list
@@ -143,7 +143,7 @@ int tuya_list_empty(IN const P_LIST_HEAD pHead);
  * @param[in] pHead the bidirection list
  * @return void 
  */
-void tuya_list_add(IN const P_LIST_HEAD pNew, IN const P_LIST_HEAD pHead);
+void tuya_list_add(const P_LIST_HEAD pNew, const P_LIST_HEAD pHead);
 
 /**
  * @brief add new list node to the tail of the bidirection list
@@ -152,7 +152,7 @@ void tuya_list_add(IN const P_LIST_HEAD pNew, IN const P_LIST_HEAD pHead);
  * @param[in] pHead the bidirection list
  * @return void 
  */
-void tuya_list_add_tail(IN const P_LIST_HEAD pNew, IN const P_LIST_HEAD pHead);
+void tuya_list_add_tail(const P_LIST_HEAD pNew, const P_LIST_HEAD pHead);
 
 /**
  * @brief splice two dibrection list
@@ -161,7 +161,7 @@ void tuya_list_add_tail(IN const P_LIST_HEAD pNew, IN const P_LIST_HEAD pHead);
  * @param[in] pHead the bidirection list
  * @return void 
  */
-void tuya_list_splice(IN const P_LIST_HEAD pList, IN const P_LIST_HEAD pHead);
+void tuya_list_splice(const P_LIST_HEAD pList, const P_LIST_HEAD pHead);
 
 /**
  * @brief remove a list node from bidirection list
@@ -169,7 +169,7 @@ void tuya_list_splice(IN const P_LIST_HEAD pList, IN const P_LIST_HEAD pHead);
  * @param[in] pEntry the list node need to remove
  * @return void 
  */
-void tuya_list_del(IN const P_LIST_HEAD pEntry);
+void tuya_list_del(const P_LIST_HEAD pEntry);
 
 /**
  * @brief remove a list node from bidirection list and initialize it
@@ -177,7 +177,7 @@ void tuya_list_del(IN const P_LIST_HEAD pEntry);
  * @param[in] pEntry the list node need to remove and initialize
  * @return void 
  */
-void tuya_list_del_init(IN const P_LIST_HEAD pEntry);
+void tuya_list_del_init(const P_LIST_HEAD pEntry);
 
 #ifdef __cplusplus
 }

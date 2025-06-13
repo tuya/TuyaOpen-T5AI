@@ -18,7 +18,7 @@
 #define ADC_DEV_CHANNEL_SUM 7
 #define ADC_BUF_SIZE 32
 
-static WORD_T adc_buf[ADC_BUF_SIZE];
+static unsigned short adc_buf[ADC_BUF_SIZE];
 
 static uint8_t g_adc_init[ADC_DEV_CHANNEL_SUM] = {FALSE};
 static uint32_t g_adc_ref_voltage[ADC_DEV_CHANNEL_SUM] = {0};
@@ -204,7 +204,7 @@ uint32_t tkl_adc_ref_voltage_get(TUYA_ADC_NUM_E port_num)
  *
  * @return OPRT_OK on success. Others on error, please refer to tuya_error_code.h
  */
-OPERATE_RET tkl_adc_read_data(TUYA_ADC_NUM_E unit_num, int *buff, UINT16_T len)
+OPERATE_RET tkl_adc_read_data(TUYA_ADC_NUM_E unit_num, int *buff, uint16_t len)
 {
     OPERATE_RET ret = OPRT_OK;
     unsigned char i = 0, j = 0;
@@ -256,7 +256,7 @@ OPERATE_RET tkl_adc_read_single_channel(TUYA_ADC_NUM_E unit_num, uint8_t ch_id, 
         bk_adc_read_raw(g_config[curr_ch_index].output_buf, g_adc_read_size[unit_num], time_out);
 
         for (int i = 0; i < g_adc_read_size[unit_num]; i++) {
-            data[i] = (INT32_T)g_config[curr_ch_index].output_buf[i];
+            data[i] = (int32_t)g_config[curr_ch_index].output_buf[i];
             bk_printf("%d ", g_config[curr_ch_index].output_buf[i]);
         }
         bk_printf("\r\n");
@@ -291,7 +291,7 @@ int tkl_adc_temperature_get(void)
  *
  */
 extern float saradc_calculate(UINT16 adc_val);
-OPERATE_RET tkl_adc_read_voltage(TUYA_ADC_NUM_E port_num, int *buff, UINT16_T len)
+OPERATE_RET tkl_adc_read_voltage(TUYA_ADC_NUM_E port_num, int *buff, uint16_t len)
 { 
     uint16_t value   = 0;
     float cali_value = 0;

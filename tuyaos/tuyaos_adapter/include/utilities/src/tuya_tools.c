@@ -5,24 +5,24 @@
 #define __TOLOWER(c) ((('A' <= (c))&&((c) <= 'Z')) ? ((c) - 'A' + 'a') : (c))
 
 
-SIZE_T tuya_strlen(const CHAR_T *str)
+size_t tuya_strlen(const char *str)
 {
     return strlen(str);
 }
 
-CHAR_T *tuya_strcpy(CHAR_T *dst, const CHAR_T *src)
+char *tuya_strcpy(char *dst, const char *src)
 {
     return strcpy(dst, src);
 }
 
-CHAR_T *tuya_strcat(CHAR_T* dst, const CHAR_T* src)
+char *tuya_strcat(char* dst, const char* src)
 {
     return strcat(dst, src);
 }
 
 
 
-int tuya_strncasecmp(const CHAR_T *s1, const CHAR_T *s2, size_t n)
+int tuya_strncasecmp(const char *s1, const char *s2, size_t n)
 {
     const uint8_t *p1 = (const uint8_t *) s1;
     const uint8_t *p2 = (const uint8_t *) s2;
@@ -52,7 +52,7 @@ int tuya_strncasecmp(const CHAR_T *s1, const CHAR_T *s2, size_t n)
     return result;
 }
 
-int tuya_strcmp(const CHAR_T *src,const CHAR_T *dst)
+int tuya_strcmp(const char *src,const char *dst)
 {
     int ret = 0;
 
@@ -70,7 +70,7 @@ int tuya_strcmp(const CHAR_T *src,const CHAR_T *dst)
 }
 
 
-uint8_t tuya_asc2hex(CHAR_T asccode)
+uint8_t tuya_asc2hex(char asccode)
 {
     uint8_t ret;
 
@@ -109,7 +109,7 @@ void tuya_ascs2hex(uint8_t *hex, uint8_t *ascs, int srclen)
 
 void tuya_hex2str(uint8_t *str, uint8_t *hex, int hexlen)
 {
-    CHAR_T ddl,ddh;
+    char ddl,ddh;
     int i;
 
     for (i=0; i<hexlen; i++) {
@@ -124,7 +124,7 @@ void tuya_hex2str(uint8_t *str, uint8_t *hex, int hexlen)
     str[hexlen*2] = '\0';
 }
 
-BOOL_T tuya_str2num(uint32_t *number, const CHAR_T *str, uint8_t strlen)
+BOOL_T tuya_str2num(uint32_t *number, const char *str, uint8_t strlen)
 {
     uint32_t value = 0;
     uint8_t i;
@@ -182,11 +182,11 @@ uint32_t tuya_int2intArray(uint32_t num, uint8_t *intArray, uint8_t len)
     return i;
 }
 
-void tuya_buff_reverse(uint8_t *buf, UINT16_T len)
+void tuya_buff_reverse(uint8_t *buf, uint16_t len)
 {
     uint8_t* p_tmp = buf;
     uint8_t  tmp;
-    UINT16_T i;
+    uint16_t i;
 
     for(i=0; i<len/2; i++) {
         tmp = *(p_tmp+i);
@@ -195,10 +195,10 @@ void tuya_buff_reverse(uint8_t *buf, UINT16_T len)
     }
 }
 
-void tuya_data_reverse(uint8_t *dst, uint8_t *src, UINT16_T srclen)
+void tuya_data_reverse(uint8_t *dst, uint8_t *src, uint16_t srclen)
 {
-    UINT16_T i;
-    UINT16_T max_len = srclen;
+    uint16_t i;
+    uint16_t max_len = srclen;
 
     for(i=0; i<srclen; i++) {
         dst[i] = src[--max_len];
@@ -207,9 +207,9 @@ void tuya_data_reverse(uint8_t *dst, uint8_t *src, UINT16_T srclen)
 
 // input: str->string
 //        index->reverse index,start from 0
-//        ch->find CHAR_T
+//        ch->find char
 // return: find position
-int tuya_find_char_with_reverse_idx(const CHAR_T *str, const int index, const CHAR_T ch)
+int tuya_find_char_with_reverse_idx(const char *str, const int index, const char ch)
 {
     if(NULL == str) {
         return -1;
@@ -289,9 +289,9 @@ uint8_t tuya_check_sum8(uint8_t *buf, uint32_t len)
     return sum;
 }
 
-UINT16_T tuya_check_sum16(uint8_t *buf, uint32_t len)
+uint16_t tuya_check_sum16(uint8_t *buf, uint32_t len)
 {
-    UINT16_T sum = 0;
+    uint16_t sum = 0;
     uint32_t idx=0;
     for(idx=0; idx<len; idx++) {
         sum += buf[idx];
