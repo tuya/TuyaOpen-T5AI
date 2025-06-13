@@ -120,7 +120,6 @@ static inline int __attribute__((always_inline)) gpio_level_check_and_set(uint32
     return expect;
 }
 
-static uint32_t is_init = 0;
 static void __mutil_power_init(void)
 {
 #if CONFIG_TUYA_LOGIC_MODIFY

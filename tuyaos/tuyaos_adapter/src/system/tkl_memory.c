@@ -103,6 +103,8 @@ void *tkl_system_memcpy(void* src, const void* dst, const SIZE_T n)
     return os_memcpy(src, dst, n);
 }
 
+extern size_t xPortGetPsramFreeHeapSize(void);
+
 /**
  * @brief Allocate and clear the memory
  * 

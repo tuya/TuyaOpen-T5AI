@@ -284,7 +284,7 @@ void tkl_wifi_ipc_func(struct ipc_msg_s *msg)
     msg->ret_value = ret;
     tuya_ipc_send_no_sync(msg);
 
-    return 0;
+    return;
 }
 
 BOOL_T tkl_get_lp_flag(VOID)

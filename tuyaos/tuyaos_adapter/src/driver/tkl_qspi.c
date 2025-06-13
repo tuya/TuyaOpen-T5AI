@@ -23,7 +23,7 @@ static struct qspi_irq_config qspi_irq[TUYA_QSPI_NUM_MAX] = {0};
 static TUYA_QSPI_BASE_CFG_T qspi_base_config[TUYA_QSPI_NUM_MAX] = {0};
 
 // rx isr callback
-static void qspi_tx_callback_dispatch(TUYA_QSPI_NUM_E id, void *param)
+static void qspi_tx_callback_dispatch(qspi_id_t id, void *param)
 {
     if (qspi_irq[id].cb) {
         qspi_irq[id].cb((TUYA_QSPI_NUM_E)id, TUYA_QSPI_EVENT_TX);
@@ -31,7 +31,7 @@ static void qspi_tx_callback_dispatch(TUYA_QSPI_NUM_E id, void *param)
 }
 
 // tx isr callback
-static void qspi_rx_callback_dispatch(TUYA_QSPI_NUM_E id, void *param)
+static void qspi_rx_callback_dispatch(qspi_id_t id, void *param)
 {
     if (qspi_irq[id].cb) {
         qspi_irq[id].cb((TUYA_QSPI_NUM_E)id, TUYA_QSPI_EVENT_RX);
@@ -119,11 +119,15 @@ OPERATE_RET tkl_qspi_send(TUYA_QSPI_NUM_E port, void *data, uint16_t size)
 OPERATE_RET tkl_qspi_send_cmd(TUYA_QSPI_NUM_E port, uint8_t cmd)
 {
     bk_qspi_write_cmd(port, cmd);
+
+    return OPRT_OK;
 }
 
 OPERATE_RET tkl_qspi_send_data_indirect_mode(TUYA_QSPI_NUM_E port, uint8_t *data, uint32_t data_len)
 {
     bk_qspi_write_data_indirect_mode(port, data, data_len);
+
+    return OPRT_OK;
 }
 
 /**
