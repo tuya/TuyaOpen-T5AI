@@ -1,4 +1,5 @@
 #include "sflash.h"
+#include <os/mem.h>
 
 #if CONFIG_SPI_MST_FLASH
 #define TAG "sflash"

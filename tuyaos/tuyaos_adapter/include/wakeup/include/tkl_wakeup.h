@@ -18,6 +18,7 @@ extern "C" {
  */
 
 OPERATE_RET tkl_wakeup_source_set(const TUYA_WAKEUP_SOURCE_BASE_CFG_T  *param);
+
 /**
  * @brief wake up source clear
  * 

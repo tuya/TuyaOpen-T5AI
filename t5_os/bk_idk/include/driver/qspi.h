@@ -88,6 +88,7 @@ bk_err_t bk_qspi_deinit(qspi_id_t id);
  */
 bk_err_t bk_qspi_command(qspi_id_t id, const qspi_cmd_t *cmd);
 
+
 /**
  * @brief     QSPI indirect mode write
  *
@@ -100,6 +101,10 @@ bk_err_t bk_qspi_command(qspi_id_t id, const qspi_cmd_t *cmd);
  *    - others: other errors.
  */
 bk_err_t bk_qspi_write(qspi_id_t id, const void *data, uint32_t size);
+
+void bk_qspi_write_cmd(qspi_id_t id, uint8_t cmd);
+
+void bk_qspi_write_data_indirect_mode(qspi_id_t id, uint8_t *data, uint32_t data_len);
 
 /**
  * @brief     QSPI indirect mode read

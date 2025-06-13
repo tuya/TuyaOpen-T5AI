@@ -276,6 +276,77 @@ bk_err_t bk_qspi_write(qspi_id_t id, const void *data, uint32_t size)
 	return BK_OK;
 }
 
+void bk_qspi_write_cmd(qspi_id_t id, uint8_t cmd)
+{
+	qspi_hal_set_cmd_c_l(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_h(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_cfg1(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_cfg2(&s_qspi[id].hal, 0);
+
+    qspi_hal_set_cmd_c_h(&s_qspi[id].hal, cmd);
+    qspi_hal_set_cmd_c_cfg1(&s_qspi[id].hal, 0xC);
+    qspi_hal_cmd_c_start(&s_qspi[id].hal);
+    qspi_hal_wait_cmd_done(&s_qspi[id].hal);
+}
+
+static void bk_qspi_write_word_direct(qspi_id_t id, uint8_t *data, uint32_t data_len)
+{
+	uint32_t value = 0;
+
+	if(data_len > 4) {
+		bk_printf("word length %d is too long\r\n", data_len);
+		return;
+	}
+
+    qspi_hal_set_cmd_c_l(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_h(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_cfg1(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_cfg2(&s_qspi[id].hal, 0);
+
+    for (uint8_t i = 0; i < data_len; i++) {
+        value |= (data[i] << (i * 8));
+    }
+
+    qspi_hal_set_cmd_c_h(&s_qspi[id].hal, value);
+    qspi_hal_set_cmd_c_cfg1(&s_qspi[id].hal, 0x3 << (data_len * 2));
+    qspi_hal_cmd_c_start(&s_qspi[id].hal);
+    qspi_hal_wait_cmd_done(&s_qspi[id].hal);
+}
+
+void bk_qspi_write_data_indirect_mode(qspi_id_t id, uint8_t *data, uint32_t data_len)
+{
+    uint32_t value = 0;
+    uint32_t send_len = 0;
+    uint32_t remain_len = data_len;
+    uint8_t *data_tmp = data;
+
+    qspi_hal_set_cmd_c_l(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_h(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_cfg1(&s_qspi[id].hal, 0);
+    qspi_hal_set_cmd_c_cfg2(&s_qspi[id].hal, 0);
+
+    while (remain_len > 0) {
+        if (remain_len <= 4) {
+            bk_qspi_write_word_direct(id, data, remain_len);
+            break;
+        }
+
+        value = (data_tmp[3] << 24) | (data_tmp[2] << 16) | (data_tmp[1] << 8) | data_tmp[0];
+        remain_len -= 4;
+        send_len = remain_len < 0x100 ? remain_len : 0x100;
+        qspi_hal_set_cmd_c_h(&s_qspi[id].hal, value);
+        qspi_hal_set_cmd_c_cfg1(&s_qspi[id].hal, 0x300);
+        qspi_hal_set_cmd_c_cfg2(&s_qspi[id].hal, send_len << 2);
+        data_tmp += 4;
+        bk_qspi_write(id, data_tmp, send_len);
+        qspi_hal_cmd_c_start(&s_qspi[id].hal);
+        qspi_hal_wait_cmd_done(&s_qspi[id].hal);
+        remain_len -= send_len;
+        data_tmp += send_len;
+    }
+}
+
+
 bk_err_t bk_qspi_read(qspi_id_t id, void *data, uint32_t size)
 {
 	BK_RETURN_ON_NULL(data);
