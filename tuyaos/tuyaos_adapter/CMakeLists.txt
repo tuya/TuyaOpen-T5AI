@@ -1,6 +1,17 @@
 set(incs)
 set(srcs)
 
+# Read TuyaOpen SDK configuration without overwriting platform settings.
+# Export additional SDK options here as platform integrations need them.
+function(tuyaopen_read_config)
+    set(CONFIG_ENABLE_TUYAOPEN_OPUS OFF)
+    if (DEFINED ENV{BUILD_PARAM_DIR}
+        AND NOT "$ENV{BUILD_PARAM_DIR}" STREQUAL "")
+        include("$ENV{BUILD_PARAM_DIR}/build_param.cmake")
+    endif()
+    set(CONFIG_ENABLE_TUYAOPEN_OPUS "${CONFIG_ENABLE_TUYAOPEN_OPUS}" PARENT_SCOPE)
+endfunction()
+
 macro(FIND_INCLUDE_DIR result curdir)
     file(GLOB_RECURSE children "${curdir}/*.h")
     set(dirlist "")
@@ -239,8 +250,12 @@ if ("${CONFIG_CPU_INDEX}" STREQUAL "1")
 # platform/t5ai/tuyaos/tuyaos_adapter/include/vad/lib/libaudio_subsys.a
 target_link_libraries(${COMPONENT_LIB} INTERFACE "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/vad/lib/libaudio_subsys.a")
 
-# platform/t5ai/tuyaos/tuyaos_adapter/include/opus/libopus.a
-target_link_libraries(${COMPONENT_LIB} INTERFACE "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/opus/libopus.a")
+tuyaopen_read_config()
+# TuyaOpen Opus objects are already included in the SDK libtuyaos.a.
+if (NOT CONFIG_ENABLE_TUYAOPEN_OPUS)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE
+        "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/opus/libopus.a")
+endif()
 
 # platform/t5ai/tuyaos/tuyaos_adapter/include/kws/libtutuClear/libtutuClear_wakeup_nihaotuya_xiaozhitongxue_heytuya_hituya_20251024_small_model.a
 target_link_libraries(${COMPONENT_LIB} INTERFACE "$ENV{ARMINO_PATH}/../../tuyaos/tuyaos_adapter/include/kws/libtutuClear/libtutuClear_wakeup_nihaotuya_xiaozhitongxue_heytuya_hituya_20251024_small_model.a")
