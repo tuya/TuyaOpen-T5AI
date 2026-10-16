@@ -58,6 +58,7 @@ set(incs
     "include/jpeg_codec"
     "include/audio"
     "tuyaopen"
+    "tuyaopen/interface"
 )
 
 string(REPLACE " " ";" TUYA_HEADER_DIR_LIST $ENV{TUYA_HEADER_DIR})
@@ -108,6 +109,7 @@ else()
         src/driver/tkl_flash.c
         # src/driver/tkl_otp_flash.c
         tuyaopen/tuyaopen_license.c
+        tuyaopen/tuyaopen-core_ops.c
         src/driver/tkl_rtc.c
         src/driver/tkl_spi.c
         src/driver/tkl_qspi.c
