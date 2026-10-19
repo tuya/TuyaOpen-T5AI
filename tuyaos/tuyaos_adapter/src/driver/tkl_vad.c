@@ -30,6 +30,8 @@ extern void *speex_aes_create(int framesize);
 extern void speex_aes_destory(void *obj);
 extern int speex_aes_process(void *obj, short *mic, short *ref, short *aec);
 extern float speex_get_param(void *obj, float *out, short *linearout);
+extern int speex_aes_set_param(void *obj, int level);
+extern int speex_ns_set_param(void *obj, int level1, int level2);
 
 // extern void *rnn_vad_create();
 // extern void rnn_vad_destroy(void *obj);
@@ -117,6 +119,8 @@ OPERATE_RET tkl_vad_init(TKL_VAD_CONFIG_T *config)
             tkl_log_output("__s_speex_aec_handle create failed\r\n");
             goto __err_exit;
         }
+        speex_aes_set_param(__s_speex_aec_handle, 5);
+        speex_ns_set_param(__s_speex_aec_handle, 8, 10);
     }
 
     if (__s_rnn_vad_handle == NULL) {
