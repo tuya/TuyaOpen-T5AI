@@ -2,9 +2,9 @@
 # coding=utf-8
 
 import os
+import datetime
 import platform
 import shutil
-import requests
 import hashlib
 import tarfile
 import zipfile
@@ -18,17 +18,27 @@ def set_country_code():
     if len(COUNTRY_CODE):
         return COUNTRY_CODE
 
+    # The SDK detects the region once and hands it down; a platform is a
+    # separate repository and cannot call into it. Any non-empty value is
+    # authoritative -- "Other" means overseas, not "unknown".
+    COUNTRY_CODE = os.environ.get("OPEN_COUNTRY_CODE", "")
+    if COUNTRY_CODE:
+        print(f"country code: {COUNTRY_CODE} (from SDK)")
+        return COUNTRY_CODE
+
+    # Older SDKs don't pass it. Infer from the timezone rather than asking
+    # a web service: choosing a download mirror must not itself depend on
+    # the network, and this keeps the prepare step free of third-party
+    # imports -- one of which used to break the build outright whenever
+    # the SDK invoked us with an interpreter that lacked it.
     try:
-        response = requests.get('http://www.ip-api.com/json', timeout=5)
-        response.raise_for_status()
-
-        result = response.json()
-        country = result.get("country", "")
-        print(f"country code: {country}")
-
-        COUNTRY_CODE = country
-    except requests.exceptions.RequestException as e:
+        offset = datetime.datetime.now().astimezone().utcoffset()
+        china = offset is not None and int(offset.total_seconds()) == 8 * 3600
+        COUNTRY_CODE = "China" if china else "Other"
+        print(f"country code: {COUNTRY_CODE} (from timezone)")
+    except Exception as e:
         print(f"country code error: {e}")
+        COUNTRY_CODE = "Other"
 
     return COUNTRY_CODE
 
