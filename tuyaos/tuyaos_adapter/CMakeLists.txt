@@ -14,6 +14,10 @@ macro(FIND_INCLUDE_DIR result curdir)
     #message(STATUS "result=${dirlist}")
 endmacro()
 
+# Shared ops cards, single source in the core repository.
+# The relative path assumes this platform is checked out at <delivery>/platform/T5AI.
+set(TUYAOPEN_CORE_PORT_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../../tuyaopen-core/port/tuyaopen")
+
 #add tuya include dir
 set(incs
     "include"
@@ -58,7 +62,7 @@ set(incs
     "include/jpeg_codec"
     "include/audio"
     "tuyaopen"
-    "tuyaopen/interface"
+    "${TUYAOPEN_CORE_PORT_DIR}/interface"
 )
 
 string(REPLACE " " ";" TUYA_HEADER_DIR_LIST $ENV{TUYA_HEADER_DIR})
@@ -109,7 +113,7 @@ else()
         src/driver/tkl_flash.c
         # src/driver/tkl_otp_flash.c
         tuyaopen/tuyaopen_license.c
-        tuyaopen/tuyaopen-core_ops.c
+        ${TUYAOPEN_CORE_PORT_DIR}/tuyaopen-core_ops.c
         src/driver/tkl_rtc.c
         src/driver/tkl_spi.c
         src/driver/tkl_qspi.c
