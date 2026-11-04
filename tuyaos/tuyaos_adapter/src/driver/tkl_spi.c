@@ -1163,7 +1163,7 @@ static OPERATE_RET spi_dma_read_bytes(spi_id_t id, void *data, uint32_t size)
 	spi_hal_disable_rx_fifo_int(&spi[id].hal);
 	spi_hal_disable_rx_overflow_int(&spi[id].hal);
 	spi_exit_critical(int_level);
-	tkl_dma_read(spi[id].spi_rx_dma_chan, (uint32_t)data, size);
+	tkl_dma_read(spi[id].spi_rx_dma_chan, (uint32_t)xfer, size);
 
 	spi_hal_enable_rx(&spi[id].hal);
 	rtos_get_semaphore(&spi[id].rx_sema, BEKEN_NEVER_TIMEOUT);
@@ -1171,6 +1171,11 @@ static OPERATE_RET spi_dma_read_bytes(spi_id_t id, void *data, uint32_t size)
 	spi_hal_disable_rx(&spi[id].hal);
 	tkl_dma_stop(spi[id].spi_rx_dma_chan);
 	spi_exit_critical(int_level);
+
+	if (bounce != NULL) {
+		memcpy(data, bounce, size);
+		os_free(bounce);
+	}
 	return OPRT_OK;
 }
 #endif
