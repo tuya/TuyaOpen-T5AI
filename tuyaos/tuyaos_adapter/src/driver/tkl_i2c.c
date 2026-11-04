@@ -591,6 +591,7 @@ OPERATE_RET tkl_i2c_init(uint8_t port, const TUYA_IIC_BASE_CFG_T *cfg)
             return OPRT_INVALID_PARM;
         }
 
+        bk_printf("i2c port %d uses the hardware controller\n", port);
 	    i2c_config_t i2c_cfg = {0};
         bk_i2c_driver_init();
 
