@@ -128,6 +128,22 @@ static bkTimercb_t i2ccallback[SOC_I2C_UNIT_NUM] ={0};
 static i2c_driver_t s_i2c[SOC_I2C_UNIT_NUM] = {0};
 static bool s_i2c_driver_is_init = false;
 
+/*
+ * Cross-core coherency: thread stacks (and most app buffers) live on the
+ * write-back cached PSRAM, while the I2C ISR may run on the other core. A
+ * buffer handed straight to the ISR is then invisible to whichever core did
+ * not touch it: the caller reads back stale bytes while the transfer itself
+ * completes normally. Route small transfers through this uncached SRAM bounce
+ * buffer so both cores see the same memory.
+ */
+#define I2C_BOUNCE_MAX 256
+static uint8_t s_i2c_bounce[SOC_I2C_UNIT_NUM][I2C_BOUNCE_MAX];
+
+static bool i2c_buf_needs_bounce(const void *buf, uint32_t size)
+{
+	return (buf != NULL) && (size > 0) && (size <= I2C_BOUNCE_MAX);
+}
+
 static void i2c0_isr(void);
 #if (SOC_I2C_UNIT_NUM > 1)
 static void i2c1_isr(void);
@@ -437,6 +453,17 @@ static bk_err_t i2c1_master_write_data(i2c_id_t id)
 	} else {
 		data_size = empty_fifo_num;
 	}
+	/*
+	 * Push one byte per interrupt. Writing several bytes back to back into
+	 * the TX FIFO truncates the transfer on this controller: the STOP then
+	 * arrives before the last byte has actually been shifted out, and the
+	 * slave (e.g. the PMIC) silently discards the write. Letting the
+	 * FIFO-empty interrupt pace the bytes costs a few microseconds and keeps
+	 * every byte on the wire.
+	 */
+	if (data_size > 1) {
+		data_size = 1;
+	}
 	for (uint32_t i = 0; i < data_size; i++) {
 		i2c_master_write_byte(id, s_i2c[id].data_ptr[(s_i2c[id].data_offset)++]);
 	}
@@ -668,7 +695,12 @@ bk_err_t bk_i2c_master_write(i2c_id_t id, uint32_t dev_addr, const uint8_t *data
 	s_i2c[id].work_mode = I2C_MASTER_WRITE;
 	s_i2c[id].is_with_mem_addr = false;
 	s_i2c[id].dev_addr = dev_addr;
-	s_i2c[id].data_ptr = (uint8_t *)data;
+	if (i2c_buf_needs_bounce(data, size)) {
+		memcpy(s_i2c_bounce[id], data, size);
+		s_i2c[id].data_ptr = s_i2c_bounce[id];
+	} else {
+		s_i2c[id].data_ptr = (uint8_t *)data;
+	}
 	s_i2c[id].data_size = size;
 	s_i2c[id].data_offset = 0;
 	s_i2c[id].int_status = 0;
@@ -727,7 +759,8 @@ bk_err_t bk_i2c_master_read(i2c_id_t id, uint32_t dev_addr, uint8_t *data, uint3
 	s_i2c[id].work_mode = I2C_MASTER_READ;
 	s_i2c[id].is_with_mem_addr = false;
 	s_i2c[id].dev_addr = dev_addr;
-	s_i2c[id].data_ptr = data;
+	bool bounce = i2c_buf_needs_bounce(data, size);
+	s_i2c[id].data_ptr = bounce ? s_i2c_bounce[id] : data;
 	s_i2c[id].data_size = size;
 	s_i2c[id].data_offset = 0;
 	s_i2c[id].int_status = 0;
@@ -738,6 +771,9 @@ bk_err_t bk_i2c_master_read(i2c_id_t id, uint32_t dev_addr, uint8_t *data, uint3
 	rtos_exit_critical(int_level);
 
 	rtos_get_semaphore(&s_i2c[id].rx_sema, timeout_ms);
+	if (bounce) {
+		memcpy(data, s_i2c_bounce[id], size);
+	}
 
 	return s_i2c[id].err_code;
 }
@@ -863,7 +899,8 @@ bk_err_t bk_i2c_memory_read(i2c_id_t id, const i2c_mem_param_t *mem_param)
 	s_i2c[id].dev_addr = mem_param->dev_addr;
 	s_i2c[id].mem_addr = mem_param->mem_addr;
 	s_i2c[id].mem_addr_size = mem_param->mem_addr_size;
-	s_i2c[id].data_ptr = mem_param->data;
+	bool bounce = i2c_buf_needs_bounce(mem_param->data, mem_param->data_size);
+	s_i2c[id].data_ptr = bounce ? s_i2c_bounce[id] : mem_param->data;
 	s_i2c[id].data_size = mem_param->data_size;
 	s_i2c[id].data_offset = 0;
 	s_i2c[id].int_status = 0;
@@ -873,6 +910,9 @@ bk_err_t bk_i2c_memory_read(i2c_id_t id, const i2c_mem_param_t *mem_param)
 	rtos_exit_critical(int_level);
 
 	rtos_get_semaphore(&s_i2c[id].rx_sema, mem_param->timeout_ms);
+	if (bounce) {
+		memcpy(mem_param->data, s_i2c_bounce[id], mem_param->data_size);
+	}
 
 	return s_i2c[id].err_code;
 }
