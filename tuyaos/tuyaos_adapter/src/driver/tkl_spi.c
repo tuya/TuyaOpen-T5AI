@@ -1163,7 +1163,7 @@ static OPERATE_RET spi_dma_read_bytes(spi_id_t id, void *data, uint32_t size)
 	spi_hal_disable_rx_fifo_int(&spi[id].hal);
 	spi_hal_disable_rx_overflow_int(&spi[id].hal);
 	spi_exit_critical(int_level);
-	tkl_dma_read(spi[id].spi_rx_dma_chan, (uint32_t)data, size);
+	tkl_dma_read(spi[id].spi_rx_dma_chan, (uint32_t)xfer, size);
 
 	spi_hal_enable_rx(&spi[id].hal);
 	rtos_get_semaphore(&spi[id].rx_sema, BEKEN_NEVER_TIMEOUT);
@@ -1171,6 +1171,11 @@ static OPERATE_RET spi_dma_read_bytes(spi_id_t id, void *data, uint32_t size)
 	spi_hal_disable_rx(&spi[id].hal);
 	tkl_dma_stop(spi[id].spi_rx_dma_chan);
 	spi_exit_critical(int_level);
+
+	if (bounce != NULL) {
+		memcpy(data, bounce, size);
+		os_free(bounce);
+	}
 	return OPRT_OK;
 }
 #endif
@@ -1414,7 +1419,7 @@ static OPERATE_RET spi_dma_duplex_xfer(spi_id_t id, const void *tx_data, uint32_
 		spi_hal_set_rx_trans_len(&spi[id].hal, 0);
 		spi_hal_disable_rx_fifo_int(&spi[id].hal);
 		spi_hal_disable_rx_overflow_int(&spi[id].hal);
-		tkl_dma_read(spi[id].spi_rx_dma_chan, (uint32_t)rx_data, rx_size);
+		tkl_dma_read(spi[id].spi_rx_dma_chan, (uint32_t)rx_xfer, rx_size);
 	}
 	if(tx_data) {
 		spi_hal_clear_tx_fifo(&spi[id].hal);
@@ -1448,6 +1453,11 @@ static OPERATE_RET spi_dma_duplex_xfer(spi_id_t id, const void *tx_data, uint32_
 		dma_wait_to_idle(spi[id].spi_rx_dma_chan);
 	}
 	spi_exit_critical(int_level);
+
+	if (rx_bounce != NULL) {
+		memcpy(rx_data, rx_bounce, rx_size);
+		os_free(rx_bounce);
+	}
 
 	return OPRT_OK;
 }
