@@ -128,6 +128,47 @@ static bkTimercb_t i2ccallback[SOC_I2C_UNIT_NUM] ={0};
 static i2c_driver_t s_i2c[SOC_I2C_UNIT_NUM] = {0};
 static bool s_i2c_driver_is_init = false;
 
+/*
+ * Redmine #8131: the AP cores run private, non-coherent D-caches and only the
+ * PSRAM task-stack heap is mapped write-back cacheable. The I2C controller
+ * moves data through its FIFO from interrupt context, which may run on the
+ * other core, so a caller buffer on a task stack is shared through a cache
+ * that nobody keeps coherent:
+ *   - on a write the ISR may read a stale copy, so the source is cleaned to
+ *     physical memory first; clean+invalidate is safe even on a partially
+ *     owned cache line because the dirty data is written back first;
+ *   - on a read a post-transfer invalidate would discard live neighbouring
+ *     stack data sitting on the same line, so a cacheable-stack destination is
+ *     bounced through a non-cacheable heap buffer instead.
+ * Buffers outside the stack heap (SRAM, heap, PSRAM frame buffers) are left
+ * alone.
+ */
+#if (CONFIG_PSRAM_AS_SYS_MEMORY && CONFIG_FREERTOS_SMP && CONFIG_DCACHE)
+extern void flush_dcache(void *va, long size);
+#define I2C_DCACHE_LINE_SIZE 32U
+
+static inline bool i2c_addr_in_cacheable_stack(const void *p)
+{
+	uint32_t a = (uint32_t)p;
+	return (p != NULL) &&
+	       (a >= (uint32_t)CONFIG_AP_PSRAM_STACK_HEAP_ADDR) &&
+	       (a < (uint32_t)(CONFIG_AP_PSRAM_STACK_HEAP_ADDR + CONFIG_AP_PSRAM_STACK_HEAP_SIZE));
+}
+
+static inline void i2c_cacheable_stack_clean(const void *p, uint32_t len)
+{
+	if (i2c_addr_in_cacheable_stack(p) && (len != 0U)) {
+		uint32_t s = (uint32_t)p & ~(I2C_DCACHE_LINE_SIZE - 1U);
+		uint32_t e = ((uint32_t)p + len + I2C_DCACHE_LINE_SIZE - 1U) &
+			     ~(I2C_DCACHE_LINE_SIZE - 1U);
+		flush_dcache((void *)s, (long)(e - s));
+	}
+}
+#else
+#define i2c_addr_in_cacheable_stack(p)  (false)
+#define i2c_cacheable_stack_clean(p, l) ((void)0)
+#endif
+
 static void i2c0_isr(void);
 #if (SOC_I2C_UNIT_NUM > 1)
 static void i2c1_isr(void);
@@ -437,6 +478,17 @@ static bk_err_t i2c1_master_write_data(i2c_id_t id)
 	} else {
 		data_size = empty_fifo_num;
 	}
+	/*
+	 * Push one byte per interrupt. Writing several bytes back to back into
+	 * the TX FIFO truncates the transfer on this controller: the STOP then
+	 * arrives before the last byte has actually been shifted out, and the
+	 * slave (e.g. the PMIC) silently discards the write. Letting the
+	 * FIFO-empty interrupt pace the bytes costs a few microseconds and keeps
+	 * every byte on the wire.
+	 */
+	if (data_size > 1) {
+		data_size = 1;
+	}
 	for (uint32_t i = 0; i < data_size; i++) {
 		i2c_master_write_byte(id, s_i2c[id].data_ptr[(s_i2c[id].data_offset)++]);
 	}
@@ -660,6 +712,8 @@ bk_err_t bk_i2c_master_write(i2c_id_t id, uint32_t dev_addr, const uint8_t *data
 	I2C_RETURN_ON_ID_NOT_INIT(id);
 	I2C_PM_CHECK_RESTORE(id);
 	BK_RETURN_ON_ERR(i2c_wait_sm_bus_idle(id, timeout_ms));
+	/* clean a cacheable task-stack source before the ISR reads it */
+	i2c_cacheable_stack_clean(data, size);
 	if (timeout_ms != 0xFFFFFFFF){
 		i2ccallback[id].asyncflag = 1;
 	}
@@ -719,6 +773,18 @@ bk_err_t bk_i2c_master_read(i2c_id_t id, uint32_t dev_addr, uint8_t *data, uint3
 	I2C_RETURN_ON_ID_NOT_INIT(id);
 	I2C_PM_CHECK_RESTORE(id);
 	BK_RETURN_ON_ERR(i2c_wait_sm_bus_idle(id, timeout_ms));
+
+	/* never invalidate a line that still holds live neighbouring stack data */
+	uint8_t *xfer = data;
+	bool bounced = false;
+	if (i2c_addr_in_cacheable_stack(data) && (size != 0U)) {
+		xfer = os_malloc(size);
+		if (xfer == NULL) {
+			return BK_ERR_NO_MEM;
+		}
+		bounced = true;
+	}
+
 	if (timeout_ms != 0xFFFFFFFF){
 		i2ccallback[id].asyncflag = 1;
 	}
@@ -727,7 +793,7 @@ bk_err_t bk_i2c_master_read(i2c_id_t id, uint32_t dev_addr, uint8_t *data, uint3
 	s_i2c[id].work_mode = I2C_MASTER_READ;
 	s_i2c[id].is_with_mem_addr = false;
 	s_i2c[id].dev_addr = dev_addr;
-	s_i2c[id].data_ptr = data;
+	s_i2c[id].data_ptr = xfer;
 	s_i2c[id].data_size = size;
 	s_i2c[id].data_offset = 0;
 	s_i2c[id].int_status = 0;
@@ -738,6 +804,10 @@ bk_err_t bk_i2c_master_read(i2c_id_t id, uint32_t dev_addr, uint8_t *data, uint3
 	rtos_exit_critical(int_level);
 
 	rtos_get_semaphore(&s_i2c[id].rx_sema, timeout_ms);
+	if (bounced) {
+		memcpy(data, xfer, size);
+		os_free(xfer);
+	}
 
 	return s_i2c[id].err_code;
 }
@@ -828,6 +898,8 @@ bk_err_t bk_i2c_memory_write(i2c_id_t id, const i2c_mem_param_t *mem_param)
 	I2C_PM_CHECK_RESTORE(id);
 	BK_RETURN_ON_ERR(i2c_wait_sm_bus_idle(id, mem_param->timeout_ms));
 
+	/* clean a cacheable task-stack source before the ISR reads it */
+	i2c_cacheable_stack_clean(mem_param->data, mem_param->data_size);
 	uint32_t int_level = rtos_enter_critical();
 	s_i2c[id].err_code = BK_OK;
 	s_i2c[id].work_mode = I2C_MASTER_WRITE;
@@ -856,6 +928,17 @@ bk_err_t bk_i2c_memory_read(i2c_id_t id, const i2c_mem_param_t *mem_param)
 	I2C_PM_CHECK_RESTORE(id);
 	BK_RETURN_ON_ERR(i2c_wait_sm_bus_idle(id, mem_param->timeout_ms));
 
+	/* never invalidate a line that still holds live neighbouring stack data */
+	uint8_t *xfer = mem_param->data;
+	bool bounced = false;
+	if (i2c_addr_in_cacheable_stack(mem_param->data) && (mem_param->data_size != 0U)) {
+		xfer = os_malloc(mem_param->data_size);
+		if (xfer == NULL) {
+			return BK_ERR_NO_MEM;
+		}
+		bounced = true;
+	}
+
 	uint32_t int_level = rtos_enter_critical();
 	s_i2c[id].err_code = BK_OK;
 	s_i2c[id].work_mode = I2C_MASTER_READ;
@@ -863,7 +946,7 @@ bk_err_t bk_i2c_memory_read(i2c_id_t id, const i2c_mem_param_t *mem_param)
 	s_i2c[id].dev_addr = mem_param->dev_addr;
 	s_i2c[id].mem_addr = mem_param->mem_addr;
 	s_i2c[id].mem_addr_size = mem_param->mem_addr_size;
-	s_i2c[id].data_ptr = mem_param->data;
+	s_i2c[id].data_ptr = xfer;
 	s_i2c[id].data_size = mem_param->data_size;
 	s_i2c[id].data_offset = 0;
 	s_i2c[id].int_status = 0;
@@ -873,6 +956,10 @@ bk_err_t bk_i2c_memory_read(i2c_id_t id, const i2c_mem_param_t *mem_param)
 	rtos_exit_critical(int_level);
 
 	rtos_get_semaphore(&s_i2c[id].rx_sema, mem_param->timeout_ms);
+	if (bounced) {
+		memcpy(mem_param->data, xfer, mem_param->data_size);
+		os_free(xfer);
+	}
 
 	return s_i2c[id].err_code;
 }

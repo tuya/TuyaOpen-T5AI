@@ -591,7 +591,7 @@ OPERATE_RET tkl_i2c_init(uint8_t port, const TUYA_IIC_BASE_CFG_T *cfg)
             return OPRT_INVALID_PARM;
         }
 
-        bk_printf("i2c pin not set, use hardware i2c port %d!\n", port);
+        bk_printf("i2c port %d uses the hardware controller\n", port);
 	    i2c_config_t i2c_cfg = {0};
         bk_i2c_driver_init();
 
@@ -746,12 +746,11 @@ OPERATE_RET tkl_i2c_master_send(TUYA_I2C_NUM_E port, uint16_t dev_addr, const vo
     if ((sg_i2c_pin[port].scl == TUYA_GPIO_NUM_MAX) || (sg_i2c_pin[port].sda == TUYA_GPIO_NUM_MAX) || (__check_i2c_pin_isvalid(port))) {
         if (port >= I2C_ID_MAX) {
             bk_printf("over hardware i2c port :%d\n", port);
+            tkl_mutex_unlock(sg_i2c_cfg[port].mutex);
             return OPRT_INVALID_PARM;
         }
-        
+
         ret = bk_i2c_master_write(port, dev_addr, data, size, I2C_WRITE_WAIT_MAX_MS);
-        if(ret < 0)
-            return OPRT_COM_ERROR;
     } else {
         delay_us = sg_i2c_cfg[port].delay_us;
         ret = __sw_i2c_write_data(port, dev_addr, data, (uint8_t)size, xfer_pending);
@@ -788,12 +787,11 @@ OPERATE_RET tkl_i2c_master_receive(TUYA_I2C_NUM_E port, uint16_t dev_addr, void 
     if ((sg_i2c_pin[port].scl == TUYA_GPIO_NUM_MAX) || (sg_i2c_pin[port].sda == TUYA_GPIO_NUM_MAX) || (__check_i2c_pin_isvalid(port))) {
         if (port >= I2C_ID_MAX) {
             bk_printf("over hardware i2c port :%d\n", port);
+            tkl_mutex_unlock(sg_i2c_cfg[port].mutex);
             return OPRT_INVALID_PARM;
         }
 
         ret = bk_i2c_master_read(port, dev_addr, data, size, I2C_READ_WAIT_MAX_MS);
-        if(ret < 0)
-            return OPRT_COM_ERROR;
     } else {
         delay_us = sg_i2c_cfg[port].delay_us;
         ret = __sw_i2c_read_data(port, dev_addr, data, (uint8_t)size, xfer_pending);
