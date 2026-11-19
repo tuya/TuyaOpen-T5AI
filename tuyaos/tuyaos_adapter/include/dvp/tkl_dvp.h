@@ -46,6 +46,23 @@ OPERATE_RET tkl_dvp_start(void);
  */
 OPERATE_RET tkl_dvp_stop(void);
 
+/**
+ * @brief Adjust the H.264 encoder target bitrate.
+ *
+ * The BK H.264 encoder has no absolute bitrate register. This selects the
+ * closest calibrated quality preset at or below @p kbps and asks the driver
+ * to apply it at the end of the next encoded frame.
+ *
+ * @param[in] kbps target bitrate in kbps
+ *
+ * @return OPRT_OK when the request was accepted;
+ *         OPRT_RESOURCE_NOT_READY when a previous request is still pending;
+ *         OPRT_NOT_SUPPORTED when the DVP is not in H.264 mode or @p kbps is
+ *         below the lowest calibrated preset;
+ *         OPRT_COM_ERROR when the DVP is not running.
+ */
+OPERATE_RET tkl_dvp_set_h264_bitrate(uint32_t kbps);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
