@@ -135,9 +135,9 @@ OPERATE_RET tkl_cellular_get_status(TKL_CELLULAR_STAT_E *status)
         return OPRT_COM_ERROR;
     }
 
-    ip = netif->ip_addr.addr;
-    mask = netif->netmask.addr;
-    gw = netif->gw.addr;
+    ip = ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr));
+    mask = ip4_addr_get_u32(ip_2_ip4(&netif->netmask));
+    gw = ip4_addr_get_u32(ip_2_ip4(&netif->gw));
 
     if (netif_is_up(netif) && ip && mask && gw) {
         *status = TKL_CELLULAR_LINK_UP;
@@ -192,14 +192,14 @@ OPERATE_RET tkl_cellular_get_ip(NW_IP_S *ip)
         return OPRT_COM_ERROR;
     }
 
-    if (0 != netif->ip_addr.addr) {
-        ip_addr = netif->ip_addr.addr;
+    if (0 != ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr))) {
+        ip_addr = ip4_addr_get_u32(ip_2_ip4(&netif->ip_addr));
         sprintf(ip->nwipstr, "%d.%d.%d.%d", IPADDR2STR(ip_addr));
 
-        ip_addr = netif->gw.addr;
+        ip_addr = ip4_addr_get_u32(ip_2_ip4(&netif->gw));
         sprintf(ip->nwgwstr, "%d.%d.%d.%d", IPADDR2STR(ip_addr));
 
-        ip_addr = netif->netmask.addr;
+        ip_addr = ip4_addr_get_u32(ip_2_ip4(&netif->netmask));
         sprintf(ip->nwmaskstr, "%d.%d.%d.%d", IPADDR2STR(ip_addr));
 
         return OPRT_OK;

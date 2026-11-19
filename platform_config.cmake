@@ -3,6 +3,10 @@ list_subdirectories(PLATFORM_PUBINC_1 ${PLATFORM_PATH}/tuyaos/tuyaos_adapter)
 # Type headers: the platform copy of tuya_cloud_types.h lacks INT_T / VOID_T /
 # CHAR_T; put the tuyaopen/include/common copy first.
 list(INSERT PLATFORM_PUBINC_1 0 "${CMAKE_CURRENT_LIST_DIR}/tuyaos/tuyaos_adapter/tuyaopen/include/common")
+# Core/P2P compile view: libre embeds struct sockaddr_in6. The T5AI lwIP port
+# itself stays on its own (IPv4) configuration; this view is only consumed by
+# the root build (tuyaopen-headers), never by the platform lwIP build.
+set(PLATFORM_CORE_LWIP_VIEW "${CMAKE_CURRENT_LIST_DIR}/tuyaos/tuyaos_adapter/include/lwip_view")
 
 # lwIP headers used by core_network.c
 
