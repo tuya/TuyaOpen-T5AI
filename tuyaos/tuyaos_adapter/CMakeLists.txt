@@ -252,6 +252,15 @@ armino_component_register(
     PRIV_REQUIRES ${priv_requires_list}
 )
 
+# tuyaopen-core_ops.c selects the Bluetooth ops members with ENABLE_BLUETOOTH;
+# without it the shared card is compiled as an all-NULL stub and BLE netcfg
+# fails with "operation gap_callback_register not available".
+if (CONFIG_BLUETOOTH_AP OR CONFIG_BLUETOOTH)
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE
+        ENABLE_BLUETOOTH=1
+        TUYAOPEN_HAS_TKL_BLE=1)
+endif()
+
 #add tuya lib
 if ("${CONFIG_CPU_INDEX}" STREQUAL "1")
 
