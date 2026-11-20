@@ -19,9 +19,8 @@ set(PLATFORM_PUBINC_2
     ${PLATFORM_PATH}/t5_os/ap/components/lwip_intf_v2_1/lwip-2.1.2/src/include
 )
 
-# Ops contract headers shared by core and the port.
-list(APPEND PLATFORM_PUBINC_1 "${TOP_SOURCE_DIR}/tuyaopen-core/port/tuyaopen/interface")
-
+# This platform implements the TKL file system API used by core's FS ops card.
+add_definitions(-DTUYAOPEN_HAS_TKL_FS=1)
 
 # POSIX-name shims over newlib/lwIP used by the P2P/library sources:
 # <netinet/in.h>, <netdb.h>, <sys/un.h>, <netinet/tcp.h>, <arch/sys_arch.h>.
