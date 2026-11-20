@@ -967,7 +967,13 @@ OPERATE_RET tkl_net_set_default_netif_by_ip(const TUYA_IP_ADDR_T addr)
         return OPRT_INVALID_PARM;
     }
 
+#if LWIP_IPV6
+    memset(&ip, 0, sizeof(ip));
+    ip.type = IPADDR_TYPE_V4;
+    ip.u_addr.ip4.addr = htonl(addr_v4);
+#else
     ip.addr = htonl(addr_v4);
+#endif
     netif = netif_get_by_ipaddr(ip);
     if (NULL == netif) {
         return OPRT_COM_ERROR;

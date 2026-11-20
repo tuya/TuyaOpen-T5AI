@@ -13,10 +13,12 @@
 #include <os/mem.h>
 
 #define CONFIG_HAVE_PSRAM 1
+
 extern void *tkl_system_calloc(size_t nitems, size_t size);
 extern void *tkl_system_realloc(void* ptr, size_t size);
 extern void *tkl_system_psram_malloc(const size_t size);
 extern void tkl_system_psram_free(void* ptr);
+extern void *pvPortRealloc(void *pv, size_t size);
 
 extern void bk_printf(const char *fmt, ...);
 
@@ -50,7 +52,11 @@ void* tkl_system_malloc(const size_t size)
     if (s_psram_malloc_force) {
         ptr = tkl_system_psram_malloc(size);
     } else {
+#if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM == 1)
+        ptr = tkl_system_psram_malloc(size);
+#else
         ptr = os_malloc(size);
+#endif
     }
 
     if(NULL == ptr) {
@@ -118,22 +124,24 @@ void *tkl_system_calloc(size_t nitems, size_t size)
 {
     void *ptr = NULL;
 
+    if (size && nitems > (~(size_t) 0) / size) {
+        return NULL;
+    }
+
+    size_t total = nitems * size;
+
     if (s_psram_malloc_force) {
-        if (size && nitems > (~(size_t) 0) / size)
-            return NULL;
-
-        ptr = psram_zalloc(nitems * size);
-        if (ptr == NULL) {
-            bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d\r\n", nitems * size,nitems,size);
-        }
+        ptr = psram_zalloc(total);
     } else {
-        if (size && nitems > (~(size_t) 0) / size)
-            return NULL;
+#if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM == 1)
+        ptr = psram_zalloc(total);
+#else
+        ptr = os_zalloc(total);
+#endif
+    }
 
-        ptr =  os_zalloc(nitems * size);
-        if (ptr == NULL) {
-            bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d\r\n", nitems * size,nitems,size);
-        }
+    if (ptr == NULL) {
+        bk_printf("tkl_system_calloc failed, total_size(%d)! nitems = %d size = %d\r\n", total, nitems, size);
     }
     return ptr;
 }
@@ -146,10 +154,25 @@ void *tkl_system_calloc(size_t nitems, size_t size)
  */
 void *tkl_system_realloc(void* ptr, size_t size)
 {
+    if (NULL == ptr) {
+        return tkl_system_malloc(size);
+    }
+    if (0 == size) {
+        tkl_system_free(ptr);
+        return NULL;
+    }
+
     if (s_psram_malloc_force) {
         return bk_psram_realloc(ptr, size);
     } else {
+#if defined(ENABLE_EXT_RAM) && (ENABLE_EXT_RAM == 1)
+        /* pvPortRealloc() is pointer-aware: it keeps the block in its
+         * current heap, copies min(old, new) and releases the old pointer
+         * through the matching heap. */
+        return pvPortRealloc(ptr, size);
+#else
         return os_realloc(ptr, size);
+#endif
     }
 }
 

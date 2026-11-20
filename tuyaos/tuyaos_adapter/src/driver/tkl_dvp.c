@@ -1424,3 +1424,89 @@ OPERATE_RET tkl_dvp_stop()
     g_dvp_module_manage.output_enable = false;
     return OPRT_OK;
 }
+
+/*
+ * H.264 quality ladder. BK exposes no absolute bitrate register: the encoder
+ * is driven by QP and the per-macroblock bit budget. These values are the
+ * starting points for 480x480@20; the 1024 entry matches the SDK's MIDDLE
+ * quality level. Measure the real output on a board and adjust the table when
+ * the resolution, frame rate or product scene changes.
+ */
+typedef struct
+{
+    uint32_t kbps;
+    uint8_t init_qp;
+    uint8_t i_max_qp;
+    uint8_t p_max_qp;
+    uint16_t imb_bits;
+    uint16_t pmb_bits;
+} DVP_H264_PRESET_T;
+
+static const DVP_H264_PRESET_T sg_dvp_h264_presets[] =
+{
+    {1024, 40, 40, 25, 160, 60},
+    { 700, 45, 45, 30, 120, 45},
+    { 450, 50, 50, 38,  76, 30},
+    { 250, 51, 51, 45,  40, 16},
+};
+
+OPERATE_RET tkl_dvp_set_h264_bitrate(uint32_t kbps)
+{
+    const DVP_H264_PRESET_T *preset = NULL;
+    compress_ratio_t ratio = {0};
+    bk_err_t ret;
+    uint32_t i;
+
+    if (kbps == 0)
+        return OPRT_INVALID_PARM;
+
+    if (g_dvp_module_manage.cur_work_mode != H264_MODE)
+        return OPRT_NOT_SUPPORTED;
+
+    if (g_dvp_module_manage.drv_stat != DVP_DRV_TURN_ON ||
+        !g_dvp_module_manage.output_enable)
+        return OPRT_COM_ERROR;
+
+    /* Highest preset not above the request. Never report a rate that the
+     * encoder cannot represent; callers retry with a valid value. */
+    for (i = 0; i < sizeof(sg_dvp_h264_presets) / sizeof(sg_dvp_h264_presets[0]); i++)
+    {
+        if (sg_dvp_h264_presets[i].kbps <= kbps &&
+            (preset == NULL || sg_dvp_h264_presets[i].kbps > preset->kbps))
+        {
+            preset = &sg_dvp_h264_presets[i];
+        }
+    }
+    if (preset == NULL)
+        return OPRT_NOT_SUPPORTED;
+
+    ratio.mode        = H264_MODE;
+    ratio.qp.init_qp  = preset->init_qp;
+    ratio.qp.i_min_qp = 0;
+    ratio.qp.i_max_qp = preset->i_max_qp;
+    ratio.qp.p_min_qp = 0;
+    ratio.qp.p_max_qp = preset->p_max_qp;
+    ratio.imb_bits    = preset->imb_bits;
+    ratio.pmb_bits    = preset->pmb_bits;
+    /* The driver applies these in the FINAL_OUT ISR, at the end of the next
+     * encoded frame. A second request before that returns BK_FAIL. */
+    ratio.enable      = 1;
+
+    ret = bk_h264_set_base_config(&ratio);
+    if (ret == BK_OK)
+    {
+        bk_printf("[tkl_dvp] h264 bitrate %u kbps -> preset %u kbps "
+                  "(qp %u/%u/%u, imb %u, pmb %u)\r\n",
+                  kbps, preset->kbps, preset->init_qp, preset->i_max_qp,
+                  preset->p_max_qp, preset->imb_bits, preset->pmb_bits);
+        return OPRT_OK;
+    }
+    if (ret == BK_FAIL)
+    {
+        /* h264_compress.enable is still set: the previous change has not
+         * reached a frame boundary yet. */
+        return OPRT_RESOURCE_NOT_READY;
+    }
+
+    return OPRT_COM_ERROR;
+}
