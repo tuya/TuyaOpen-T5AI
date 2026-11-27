@@ -139,6 +139,20 @@ bk_err_t uvc_stream_task_send_msg(uvc_event_t event, uint32_t param)
     return ret;
 }
 
+/* uvc_config_t.fps is a media FPSxx bit (FPS5 << n), the frame descriptors
+ * list dwFrameInterval values in 100 ns units */
+static uint32_t __uvc_fps_bit_to_interval(uint32_t fps)
+{
+    uint32_t rate = 5;
+
+    while (fps >>= 1)
+    {
+        rate += 5;
+    }
+
+    return 10000000 / rate;
+}
+
 static bk_err_t uvc_camera_stream_check_config(camera_param_t *param)
 {
     int ret = BK_OK;
@@ -146,6 +160,7 @@ static bk_err_t uvc_camera_stream_check_config(camera_param_t *param)
     uint8_t index = 0;
     uint8_t resolution_flag = false;
     uint8_t fps_flag = false;
+    uint32_t want_interval = 0;
 
     bk_usb_hub_port_info *uvc_port_info = param->port_info;
     uvc_config_t *user_config = param->info;
@@ -161,6 +176,7 @@ static bk_err_t uvc_camera_stream_check_config(camera_param_t *param)
     LOGV("BCD:0x%x\r\n", uvc_device_param->device_bcd);
     uvc_device_param_config->vendor_id = uvc_device_param->vendor_id;
     uvc_device_param_config->product_id = uvc_device_param->product_id;
+    want_interval = __uvc_fps_bit_to_interval(user_config->fps);
 
     switch (user_config->img_format)
     {
@@ -188,7 +204,7 @@ static bk_err_t uvc_camera_stream_check_config(camera_param_t *param)
                     LOGV("YUV fps:%d\r\n", uvc_device_param->all_frame.yuv_frame[index].fps[i]);
 
                     if (resolution_flag
-                        && uvc_device_param->all_frame.yuv_frame[index].fps[i] == user_config->fps)
+                        && uvc_device_param->all_frame.yuv_frame[index].fps[i] == want_interval)
                     {
                         uvc_device_param_config->fps = uvc_device_param->all_frame.yuv_frame[index].fps[i];
                         fps_flag = true;
@@ -233,7 +249,7 @@ static bk_err_t uvc_camera_stream_check_config(camera_param_t *param)
                     LOGV("MJPEG fps:%d\r\n", uvc_device_param->all_frame.mjpeg_frame[index].fps[i]);
 
                     if (resolution_flag
-                        && uvc_device_param->all_frame.mjpeg_frame[index].fps[i] == user_config->fps)
+                        && uvc_device_param->all_frame.mjpeg_frame[index].fps[i] == want_interval)
                     {
                         uvc_device_param_config->fps = uvc_device_param->all_frame.mjpeg_frame[index].fps[i];
                         fps_flag = true;
@@ -278,7 +294,7 @@ static bk_err_t uvc_camera_stream_check_config(camera_param_t *param)
                     LOGV("H264 fps:%d\r\n", uvc_device_param->all_frame.h264_frame[index].fps[i]);
 
                     if (resolution_flag
-                        && uvc_device_param->all_frame.h264_frame[index].fps[i] == user_config->fps)
+                        && uvc_device_param->all_frame.h264_frame[index].fps[i] == want_interval)
                     {
                         uvc_device_param_config->fps = uvc_device_param->all_frame.h264_frame[index].fps[i];
                         fps_flag = true;
@@ -323,7 +339,7 @@ static bk_err_t uvc_camera_stream_check_config(camera_param_t *param)
                     LOGV("H265 fps:%d\r\n", uvc_device_param->all_frame.h265_frame[index].fps[i]);
 
                     if (resolution_flag
-                        && uvc_device_param->all_frame.h265_frame[index].fps[i] == user_config->fps)
+                        && uvc_device_param->all_frame.h265_frame[index].fps[i] == want_interval)
                     {
                         uvc_device_param_config->fps = uvc_device_param->all_frame.h265_frame[index].fps[i];
                         fps_flag = true;
@@ -2235,6 +2251,12 @@ bk_err_t bk_uvc_set_start(camera_handle_t *handle, uvc_config_t *config)
     }
 
     rtos_wait_for_event_flags(&uvc_handle->handle, UVC_STREAM_START_BIT, true, true, BEKEN_WAIT_FOREVER);
+
+    /* the stream task only reports a failed start through the state */
+    if (uvc_param->camera_state != UVC_STREAMING_STATE)
+    {
+        ret = BK_FAIL;
+    }
 
     return ret;
 }

@@ -815,25 +815,28 @@ bk_err_t bk_usbh_hub_port_video_open_handle(bk_usb_hub_port_info *port_dev_info)
 	uint8_t frameindex  = config->frame_index;
 	uint32_t dwMaxVideoFrameSize      = (config->width) * (config->height) * 2;
 	uint32_t dwMaxPayloadTransferSize = config->ep_desc->wMaxPacketSize;
+	int probe_ret = 0;
 	uint8_t altsettings = 0;
 	int ret = BK_OK;
 	usbh_ep0_pipe_reconfigure(port_dev_info->hport->ep0, port_dev_info->hport->dev_addr, 0x40, port_dev_info->hport->speed);
 
-	usbh_videostreaming_get_cur_probe(uvc_device);
+	probe_ret |= usbh_videostreaming_get_cur_probe(uvc_device);
 	dwMaxVideoFrameSize = uvc_device->probe.dwMaxVideoFrameSize;
 	dwMaxPayloadTransferSize = uvc_device->probe.dwMaxPayloadTransferSize;
-	uvc_device->probe.dwFrameInterval = 10000000/config->fps;
-	usbh_videostreaming_set_cur_probe(uvc_device, formatindex, frameindex, dwMaxVideoFrameSize, dwMaxPayloadTransferSize);
+	/* config->fps is the dwFrameInterval of the frame descriptor in 100 ns units,
+	 * 10000000 / fps would send an unsupported interval to the camera */
+	uvc_device->probe.dwFrameInterval = config->fps;
+	probe_ret |= usbh_videostreaming_set_cur_probe(uvc_device, formatindex, frameindex, dwMaxVideoFrameSize, dwMaxPayloadTransferSize);
 
 	//! 实测更新FPS后，虽然USB返回生效了，但实际还是按照格式里指定的FPS
-	usbh_videostreaming_get_cur_probe(uvc_device);
+	probe_ret |= usbh_videostreaming_get_cur_probe(uvc_device);
 	dwMaxVideoFrameSize = uvc_device->probe.dwMaxVideoFrameSize;
 	dwMaxPayloadTransferSize = uvc_device->probe.dwMaxPayloadTransferSize;
 	USB_HUB_MD_LOGD("after get cur probe, dwMaxVideoFrameSize: %d, dwMaxPayloadTransferSize: %d, dwFrameInterval: %d\r\n", 
 		uvc_device->probe.dwMaxVideoFrameSize, uvc_device->probe.dwMaxPayloadTransferSize, uvc_device->probe.dwFrameInterval);
 
-	usbh_videostreaming_set_cur_commit(uvc_device, formatindex, frameindex, dwMaxVideoFrameSize, dwMaxPayloadTransferSize); /* select resolution from list */
-	usbh_videostreaming_get_cur_probe(uvc_device);
+	probe_ret |= usbh_videostreaming_set_cur_commit(uvc_device, formatindex, frameindex, dwMaxVideoFrameSize, dwMaxPayloadTransferSize); /* select resolution from list */
+	probe_ret |= usbh_videostreaming_get_cur_probe(uvc_device);
 	USB_HUB_MD_LOGD("after set cur commit, dwMaxVideoFrameSize: %d, dwMaxPayloadTransferSize: %d, dwFrameInterval: %d\r\n", 
 		uvc_device->probe.dwMaxVideoFrameSize, uvc_device->probe.dwMaxPayloadTransferSize, uvc_device->probe.dwFrameInterval);
 	
@@ -841,9 +844,11 @@ bk_err_t bk_usbh_hub_port_video_open_handle(bk_usb_hub_port_info *port_dev_info)
 	for (uint8_t i = 1; i < uvc_device->num_of_intf_altsettings; i++) {
 		altsettings = uvc_device->hport->config.intf[uvc_device->data_intf].altsetting[i].intf_desc.bAlternateSetting;
 	}
-	altsettings = frameindex - 1;
+	/* frameindex is the index of the frame descriptor (resolution), not the
+	 * alternate setting of the streaming interface: SET_INTERFACE stalls with it.
+	 * Keep the largest alternate setting found above. */
+	/* altsettings = frameindex - 1; */
 	USB_HUB_MD_LOGD("altsettings: %d, frameindex: %d\r\n", altsettings, frameindex);
-
 
 	ret = usbh_video_open(uvc_device, altsettings); /* select ep mps from altsettings ,just for reference now */
 	if(ret < 0) {
@@ -851,12 +856,7 @@ bk_err_t bk_usbh_hub_port_video_open_handle(bk_usb_hub_port_info *port_dev_info)
 			USB_HUB_MD_LOGW("usbh video has been opened.\n");
 		else {
 			USB_HUB_MD_LOGE("usbh_video_open:%d\r\n", ret);
-			ret = usbh_video_open(uvc_device, altsettings);
-			if(ret < 0) {
-				USB_HUB_MD_LOGE("CHECK VIDEO OPEN FAIL\n");
-			} else{
-				ret = BK_OK;
-			}
+			USB_HUB_MD_LOGE("CHECK VIDEO OPEN FAIL\n");
 		}
 	} else {
 		ret = BK_OK;
